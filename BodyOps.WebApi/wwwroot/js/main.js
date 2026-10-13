@@ -119,6 +119,7 @@
     if (before != null) root.classList.add('still');
     try {
       await BO.screens[screen](root, BO.query());
+      if (before == null) BO.revealIn(root);
     } catch (e) {
       root.innerHTML = `<div class="empty"><b>This page didn't load.</b><span>${BO.esc(e.message)}</span><button type="button" class="btn" id="retry">Try again</button></div>`;
       root.querySelector('#retry').onclick = () => route();

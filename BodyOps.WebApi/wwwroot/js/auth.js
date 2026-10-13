@@ -74,7 +74,7 @@
         <div class="day-demo reveal">
           <div class="day-top"><div class="sc num" data-score>0<small>/100</small></div>
             <div class="meter"><div class="lbl"><span>Day score</span><span data-left>6 things to do</span></div><div class="t">${STEPS.map((s, i) => `<i data-seg="${i}" style="background:${s.k}"></i>`).join('')}</div></div></div>
-          <div class="steps">${STEPS.map((s, i) => `<button type="button" class="step" style="--k:${s.k}" data-step="${i}" aria-pressed="false"><span class="tk">${icons.check}</span><span class="tm num">${s.tm}</span><span class="ic">${icons[s.ic]}</span><b>${s.b}</b><small>${s.s}</small></button>`).join('')}</div>
+          <div class="steps">${STEPS.map((s, i) => `<button type="button" class="step" style="--k:${s.k};--n:${i}" data-step="${i}" aria-pressed="false"><span class="tk">${icons.check}</span><span class="tm num">${s.tm}</span><span class="ic">${icons[s.ic]}</span><b>${s.b}</b><small>${s.s}</small></button>`).join('')}</div>
         </div>
       </section>
 
@@ -155,7 +155,34 @@
       }
     });
     revealOnScroll(root);
+    parallax(root);
   };
+
+  /** Depth in the hero while scrolling: the copy drifts and fades, the phone lags, the cards float up at their own speeds. */
+  function parallax(root) {
+    const hero = root.querySelector('.lp-hero');
+    const copy = root.querySelector('.lp-copy');
+    const phone = root.querySelector('.lp-phone');
+    const floats = [...root.querySelectorAll('.float')];
+    const rings = [...root.querySelectorAll('.ring-deco')];
+    const speeds = [0.30, 0.18, 0.24, 0.12];
+    let last = -1;
+    BO.onScrollFrame(y => {
+      if (!hero.isConnected) return false;
+      const h = hero.offsetHeight;
+      const p = Math.max(0, Math.min(y, h));
+      if (p === last) return true;
+      last = p;
+      // On a phone the cards sit right under the buttons, so everything only drifts a little.
+      const k = window.innerWidth < 760 ? 0.3 : 1;
+      copy.style.transform = `translate3d(0, ${(p * 0.18 * k).toFixed(1)}px, 0)`;
+      copy.style.opacity = String(Math.max(0, 1 - p / (h * 0.85)).toFixed(3));
+      if (phone) phone.style.translate = `0 ${(p * 0.08).toFixed(1)}px`;
+      floats.forEach((el, i) => { el.style.transform = `translate3d(0, ${(-p * speeds[i % speeds.length] * k).toFixed(1)}px, 0)`; });
+      rings.forEach((el, i) => { el.style.transform = `translate3d(0, ${(p * (i ? 0.12 : 0.32)).toFixed(1)}px, 0) scale(${(1 + p / h * 0.15).toFixed(3)})`; });
+      return true;
+    });
+  }
 
   /* ---------------- sign in / create account ---------------- */
 

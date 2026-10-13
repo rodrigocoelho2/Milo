@@ -171,9 +171,19 @@ select.field{appearance:none; background-image:linear-gradient(45deg,transparent
 .rise{animation:rise .5s var(--ease) both; animation-delay:calc(var(--i, 0) * 55ms)}
 .reveal{opacity:0; transform:translateY(28px); transition:opacity .8s var(--ease), transform .8s var(--ease); transition-delay:calc(var(--i, 0) * 80ms)}
 .reveal.in{opacity:1; transform:none}
+/* Blocks of an app screen sliding in as they scroll into view (BO.revealIn). */
+.rv{opacity:0; transform:translate3d(0, 26px, 0) scale(.985)}
+.rv.in{opacity:1; transform:none; transition:opacity .55s var(--ease) var(--d, 0ms), transform .75s cubic-bezier(.16,1,.3,1) var(--d, 0ms)}
+/* The landing's day cards follow their panel in, one after another. */
+.day-demo.reveal .step{opacity:0; transform:translate3d(0, 18px, 0)}
+.day-demo.reveal.in .step{opacity:1; transform:none; transition:opacity .5s var(--ease), transform .6s cubic-bezier(.16,1,.3,1), background .25s, color .25s; transition-delay:calc(var(--n, 0) * 70ms + 150ms), calc(var(--n, 0) * 70ms + 150ms), 0s, 0s}
+.day-demo.reveal.in .step:hover{transform:translateY(-3px); transition-delay:0s}
+.reveal.btile{transform:translate3d(0, 34px, 0) scale(.97)}
+.reveal.btile.in{transform:none}
+.lp-copy, .float, .ring-deco{will-change:transform}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms !important; animation-delay:0s !important; transition-duration:.01ms !important; transition-delay:0s !important}
-  .reveal{opacity:1; transform:none}
+  .reveal, .rv, .day-demo.reveal .step{opacity:1; transform:none}
 }
 
 /* ---------- loading, empty, toast ---------- */

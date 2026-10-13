@@ -343,6 +343,63 @@ BO.countUp = function countUp(el, to, { from = 0, suffix = '', duration = 600 } 
   requestAnimationFrame(step);
 };
 
+/* ---------- motion on scroll ---------- */
+
+BO.reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** The blocks of a screen that slide in as they scroll into view (only the outermost of nested ones). */
+const REVEAL = '.page-head, .card, .hero, .tile, .ti, .wk, .set-card, .drow, .empty, .lift, .dchips';
+
+/** Fades and lifts a freshly drawn screen's blocks in as they are scrolled to. What is already on screen keeps its
+    own first-paint animation (.rise). Once in, an element drops the classes, so re-renders never animate again. */
+BO.revealIn = function revealIn(root) {
+  if (!root || BO.reducedMotion() || !('IntersectionObserver' in window)) return;
+  const fold = window.innerHeight * 0.94;
+  const all = [...root.querySelectorAll(REVEAL)];
+  const items = all
+    .filter(el => !all.some(other => other !== el && other.contains(el)))
+    .filter(el => el.getBoundingClientRect().top > fold);
+  if (!items.length) return;
+  items.forEach(el => el.classList.remove('rise'));
+
+  const settle = el => { el.classList.remove('rv', 'in'); el.style.removeProperty('--d'); };
+  const show = (el, delay) => {
+    el.style.setProperty('--d', `${delay}ms`);
+    el.classList.add('in');
+    const end = event => {
+      if (event.target !== el || event.propertyName !== 'transform') return;
+      el.removeEventListener('transitionend', end);
+      settle(el);
+    };
+    el.addEventListener('transitionend', end);
+    setTimeout(() => settle(el), 1200 + delay);
+  };
+
+  const io = new IntersectionObserver(entries => {
+    let n = 0;
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      io.unobserve(entry.target);
+      show(entry.target, Math.min(n++, 8) * 55);
+    });
+  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.06 });
+
+  items.forEach(el => { el.classList.add('rv'); io.observe(el); });
+};
+
+/** Calls fn(scrollY) on every animation frame the page scrolls, until fn returns false. */
+BO.onScrollFrame = function onScrollFrame(fn) {
+  if (BO.reducedMotion()) return;
+  let queued = false;
+  const tick = () => {
+    queued = false;
+    if (fn(window.scrollY) === false) window.removeEventListener('scroll', onScroll);
+  };
+  const onScroll = () => { if (!queued) { queued = true; requestAnimationFrame(tick); } };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  tick();
+};
+
 /* ---------- sheets ---------- */
 
 /** Opens a bottom sheet (a centred card on a computer). render(el, close) fills it; returns close(). */
