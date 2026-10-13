@@ -1,4 +1,4 @@
-"""Signs up on a running BodyOps, imports the sample CorpoOps backup and screenshots every screen on a computer and a phone.
+"""Signs up on a running Milo (BodyOps), imports the sample CorpoOps backup and screenshots every screen on a computer and a phone.
 
 Usage: python screenshots.py <base-url> <output-folder>
 Fails (exit 1) when a page throws a JavaScript error.
@@ -64,9 +64,12 @@ with sync_playwright() as p:
         ("plan-meals", "/plan?day=2&tab=meals"),
         ("settings", "/settings"),
     ]
+    # Full-page shots: show the blocks that would slide in on scroll.
+    show_all = "document.querySelectorAll('.rv').forEach(e => e.classList.remove('rv'))"
     for name, path in screens:
         page.goto(base + path)
         page.wait_for_timeout(700)
+        page.evaluate(show_all)
         page.screenshot(path=str(out / f"desktop-{name}.png"), full_page=True)
 
     phone = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True)
@@ -76,6 +79,7 @@ with sync_playwright() as p:
     for name, path in screens:
         mobile.goto(base + path)
         mobile.wait_for_timeout(700)
+        mobile.evaluate(show_all)
         mobile.screenshot(path=str(out / f"phone-{name}.png"), full_page=True)
 
     # Session mode and the quick log sheet.

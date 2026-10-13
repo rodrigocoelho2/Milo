@@ -241,7 +241,7 @@
             const month = date.slice(0, 7);
             const n = records.filter(r => r.date.slice(0, 7) === month).length;
             const monthEl = body.querySelector('[data-month]');
-            if (monthEl) monthEl.textContent = n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${Math.max(1, n)}th`;
+            if (monthEl) monthEl.textContent = BO.ordinal(Math.max(1, n));
           } catch (err) { }
         }, 700);
       }, { label: 'New personal record', cls: 'pr-sheet' });

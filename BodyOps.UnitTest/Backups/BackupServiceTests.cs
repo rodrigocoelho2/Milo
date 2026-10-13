@@ -77,7 +77,7 @@ public sealed class BackupServiceTests
         var response = await Service().ImportAsync(1, Json(json));
 
         Assert.Equal(ServiceApiResponseStatus.ValidationProblems, response.Status);
-        Assert.Equal("This file is not a BodyOps or CorpoOps backup.", response.Problems!.Errors[0].Message);
+        Assert.Equal("This file is not a Milo (BodyOps) or CorpoOps backup.", response.Problems!.Errors[0].Message);
         Assert.Empty(_users.Cleared);
     }
 }

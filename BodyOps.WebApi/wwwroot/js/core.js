@@ -143,6 +143,8 @@ BO.volume = function volume(kg) {
   if (!kg) return '0 kg';
   return kg >= 1000 ? (kg / 1000).toFixed(1) + ' t' : Math.round(kg).toLocaleString('en-GB') + ' kg';
 };
+/** 1st, 2nd, 3rd, 4th … 11th, 12th, 13th … 21st, 22nd. */
+BO.ordinal = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'));
 BO.plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + 's')}`;
 
 /* ---------- dates (yyyy-MM-dd strings everywhere) ---------- */
@@ -265,7 +267,10 @@ BO.logoSVG = function logoSVG() {
   const id = 'bo-plate-' + (++logoSeq);
   return `<svg viewBox="0 0 32 32" aria-hidden="true"><mask id="${id}"><rect width="32" height="32" fill="#fff"/><circle cx="16" cy="16" r="3.2" fill="#000"/><circle cx="16" cy="16" r="10.6" fill="none" stroke="#000" stroke-width=".9"/><g fill="#000"><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(120 16 16)"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(240 16 16)"/></g></mask><circle cx="16" cy="16" r="14" fill="currentColor" mask="url(#${id})"/></svg>`;
 };
-BO.brandHTML = () => `<span class="brand"><span class="brand-mark">${BO.logoSVG()}</span>BodyOps</span>`;
+/** Why the app is called Milo (shown, faintly, at the foot of the landing page and of Settings). */
+BO.MILO = 'Milo of Croton lifted a newborn calf onto his shoulders and carried it every day. The calf grew, and so did he; when it was a bull, he was still carrying it.';
+
+BO.brandHTML = () => `<span class="brand"><span class="brand-mark">${BO.logoSVG()}</span>Milo</span>`;
 
 /* ---------- theme ---------- */
 

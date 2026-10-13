@@ -1,6 +1,6 @@
 {
-  "name": "BodyOps",
-  "short_name": "BodyOps",
+  "name": "Milo",
+  "short_name": "Milo",
   "description": "Plan the week, log every set, watch the scale.",
   "id": "/",
   "start_url": "/today",

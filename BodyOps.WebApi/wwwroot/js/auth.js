@@ -43,7 +43,7 @@
           <div class="lp-copy">
             <span class="chip lp-eyebrow" style="--i:0"><span style="color:#FFC53D;display:inline-flex">${icons.flame}</span>Training, meals and weight in one place</span>
             <h1 class="lp-h1" style="--i:1"><span>Show up.</span><span>Log it.</span><span class="gold">Beat it.</span></h1>
-            <p class="lp-lede" style="--i:2">BodyOps turns your plan into a day you can tick off: every set, every meal, every weigh-in. Then it shows you how to beat last week.</p>
+            <p class="lp-lede" style="--i:2">Milo turns your plan into a day you can tick off: every set, every meal, every weigh-in. Then it shows you how to beat last week.</p>
             <div class="lp-cta" style="--i:3">${create('Create your account')}<a class="btn ghost-w" href="/signin" data-link>Sign in</a></div>
             <div class="lp-proof" style="--i:4"><span class="dots"><i style="background:#8A5CF6">W</i><i style="background:#FF7A2F">M</i><i style="background:#0D1015">S</i></span>One weigh-in, five meals, eighteen sets: that's a 100 day.</div>
           </div>
@@ -70,7 +70,7 @@
       <div class="ticker" aria-hidden="true"><div class="track">${tick}${tick}</div></div>
 
       <section class="lp-sec" id="how">
-        <div class="reveal"><div class="kick">How it works</div><h2 class="lp-h2">A day in BodyOps.</h2><p class="lede">Your plan becomes today's list. Tick things off as you live them and watch the day score climb. Tap the cards.</p></div>
+        <div class="reveal"><div class="kick">How it works</div><h2 class="lp-h2">A day with Milo.</h2><p class="lede">Your plan becomes today's list. Tick things off as you live them and watch the day score climb. Tap the cards.</p></div>
         <div class="day-demo reveal">
           <div class="day-top"><div class="sc num" data-score>0<small>/100</small></div>
             <div class="meter"><div class="lbl"><span>Day score</span><span data-left>6 things to do</span></div><div class="t">${STEPS.map((s, i) => `<i data-seg="${i}" style="background:${s.k}"></i>`).join('')}</div></div></div>
@@ -104,7 +104,8 @@
         <div><h2>Your week starts Monday.</h2><p>Make an account, build your plan once, and let every day after that be a tick.</p></div>
         <div class="acts">${create('Create your account')}<a class="btn ghost-w" href="/signin" data-link>${canRegister ? 'I already have one' : 'Sign in'}</a></div>
       </section></div>
-      <footer class="lp-foot"><span>BodyOps · self-hosted</span><span>Plan the week. Log every set. Watch the scale.</span></footer>
+      <footer class="lp-foot"><span>Milo · self-hosted</span><span>Plan the week. Log every set. Watch the scale.</span></footer>
+      <p class="whisper">${BO.MILO}</p>
     </div>`;
 
     // The hero phone: score counts up, bars fill.
@@ -122,7 +123,7 @@
       });
     }, 1000);
 
-    // A day in BodyOps: tap to tick.
+    // A day with Milo: tap to tick.
     const on = new Set([0, 1, 2]);
     const scoreEl = root.querySelector('[data-score]');
     const left = root.querySelector('[data-left]');

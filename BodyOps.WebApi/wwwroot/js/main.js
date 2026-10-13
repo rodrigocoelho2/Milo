@@ -58,7 +58,7 @@
       <aside class="side">
         <a href="/today" data-link style="text-decoration:none">${BO.brandHTML()}</a>
         <nav aria-label="Main">${NAV.map(link).join('')}</nav>
-        <a class="me" href="/settings" data-link><span class="avatar">${BO.esc(initial)}</span><span><b style="font-size:14px">${BO.esc(BO.me.username)}</b><span class="sub" style="display:block" data-streak-label>BodyOps</span></span></a>
+        <a class="me" href="/settings" data-link><span class="avatar">${BO.esc(initial)}</span><span><b style="font-size:14px">${BO.esc(BO.me.username)}</b><span class="sub" style="display:block" data-streak-label>Milo</span></span></a>
       </aside>
       <main class="main" id="screen"></main>
       <nav class="tabs" aria-label="Main">
@@ -85,7 +85,7 @@
       BO.paintThemeColor('#3355FF');
       if (path === '/') BO.screens.landing(app);
       else BO.screens.auth(app, { mode: path === '/signup' ? 'signup' : 'signin' });
-      document.title = path === '/' ? 'BodyOps' : (path === '/signup' ? 'Create account · BodyOps' : 'Sign in · BodyOps');
+      document.title = path === '/' ? 'Milo' : (path === '/signup' ? 'Create account · Milo' : 'Sign in · Milo');
       return;
     }
 
@@ -106,7 +106,7 @@
         const root = shell('/today');
         BO.screens.today(root, {}).catch(() => { });
       }
-      document.title = 'Session · BodyOps';
+      document.title = 'Session · Milo';
       try { await BO.screens.session(BO.query()); } catch (e) { BO.toast(e.message, { error: true }); BO.go('/today', { replace: true }); }
       return;
     }
@@ -114,7 +114,7 @@
 
     const before = keepScroll && app.querySelector('#screen') ? app.querySelector('#screen').innerHTML : null;
     const root = shell(path);
-    document.title = `${NAV.find(n => n[0] === path)[1]} · BodyOps`;
+    document.title = `${NAV.find(n => n[0] === path)[1]} · Milo`;
     root.innerHTML = before != null ? before : '<div class="loading"><div class="spinner" aria-label="Loading"></div></div>';
     if (before != null) root.classList.add('still');
     try {

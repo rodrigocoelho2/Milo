@@ -65,7 +65,7 @@
             <section class="set-card ${firstPaint ? 'rise' : ''}" style="--i:4" aria-labelledby="h-data">
               <h3 id="h-data">Your data</h3>
               <div class="set-row"><div><b>Export backup</b><span class="sub">Downloads your plan, days and weigh-ins as JSON.</span></div><button type="button" class="btn" id="export">Export</button></div>
-              <div class="set-row"><div><b>Import backup</b><span class="sub">BodyOps or old CorpoOps file. Replaces your data, with Undo.</span></div>
+              <div class="set-row"><div><b>Import backup</b><span class="sub">Milo (BodyOps) or old CorpoOps file. Replaces your data, with Undo.</span></div>
                 <label class="btn" style="cursor:pointer">Import<input type="file" id="importFile" accept="application/json,.json" hidden></label></div>
               <div class="set-row"><div><b>Reset this week</b><span class="sub">Clears this week's ticks, sets and sessions.</span></div><button type="button" class="btn danger" id="resetWeek">Reset</button></div>
             </section>
@@ -73,10 +73,11 @@
             ${BO.me.isAdmin ? `<section class="set-card ${firstPaint ? 'rise' : ''}" style="--i:5" aria-labelledby="h-users">
               <h3 id="h-users">Users</h3>
               ${userRows || '<div class="set-row"><span class="sub">Nobody else has an account yet.</span></div>'}
-              <div class="set-row"><span class="sub">${BO.health && BO.health.registration ? 'Anyone who can open this site can create an account. Set BodyOps__AllowRegistration to false to stop that.' : 'New accounts are turned off on this server.'}</span></div>
+              <div class="set-row"><span class="sub">${BO.health && BO.health.registration ? 'Anyone who can open this site can create an account. Set BodyOps__AllowRegistration (BODYOPS_ALLOW_REGISTRATION) to false to stop that.' : 'New accounts are turned off on this server.'}</span></div>
             </section>` : ''}
           </div>
-        </div>`;
+        </div>
+        <p class="whisper" style="padding-top:28px">${BO.MILO}</p>`;
       firstPaint = false;
     }
 
@@ -103,7 +104,7 @@
       if (t.closest('#export')) {
         try {
           const backup = await BO.api('GET', '/api/backup');
-          BO.download(`bodyops-backup-${BO.localToday()}.json`, JSON.stringify(backup, null, 2));
+          BO.download(`milo-backup-${BO.localToday()}.json`, JSON.stringify(backup, null, 2));
         } catch (e) { BO.toast(e.message, { error: true }); }
         return;
       }
@@ -146,7 +147,7 @@
       if (event.target.id !== 'importFile' || !event.target.files.length) return;
       const file = event.target.files[0];
       let text;
-      try { text = await file.text(); JSON.parse(text); } catch (e) { BO.toast('That file is not JSON. Pick a BodyOps or CorpoOps backup.', { error: true }); return; }
+      try { text = await file.text(); JSON.parse(text); } catch (e) { BO.toast('That file is not JSON. Pick a Milo or CorpoOps backup.', { error: true }); return; }
       try {
         const before = await BO.api('GET', '/api/backup');
         const result = await BO.saving(BO.api('POST', '/api/backup', text));

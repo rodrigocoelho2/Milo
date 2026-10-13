@@ -76,7 +76,7 @@ internal sealed class GlobalizationHelper : IGlobalizationHelper
         [nameof(TranslationKeys.InvalidRest)] = "Rest must be between {0} and {1} seconds.",
 
         // Backups
-        [nameof(TranslationKeys.InvalidBackup)] = "This file is not a BodyOps or CorpoOps backup.",
+        [nameof(TranslationKeys.InvalidBackup)] = "This file is not a Milo (BodyOps) or CorpoOps backup.",
         [nameof(TranslationKeys.BackupTooLarge)] = "The backup is larger than {0} MB.",
     };
 
