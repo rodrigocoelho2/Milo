@@ -131,7 +131,7 @@ internal static class BodyOpsStartup
         {
             ContentTypeProvider = contentTypes,
             // Pages, scripts and styles are revalidated on every load (cheap 304s), so a new deploy shows up on the next launch.
-            // Fonts and icons never change name without changing content, so they can be kept.
+            // Fonts and icons are kept a week: give an icon a new file name whenever its picture changes.
             OnPrepareResponse = static context =>
             {
                 var name = context.File.Name;
