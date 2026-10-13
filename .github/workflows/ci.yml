@@ -101,7 +101,7 @@ jobs:
           base=http://localhost:8086
           for i in $(seq 1 60); do curl -fs $base/api/health && break; sleep 2; done
           echo
-          curl -fs $base/ | grep -q "<title>BodyOps</title>"
+          curl -fs $base/ | grep -q "<title>Milo</title>"
           # Every stylesheet and script the page links must be served.
           for f in $(curl -fs $base/ | grep -oE '(href|src)="/(css|js|fonts|icons)/[^"]+"' | cut -d'"' -f2); do
             curl -fs -o /dev/null "$base$f" || { echo "missing: $f"; exit 1; }
