@@ -1,0 +1,25 @@
+services:
+  corpoops:
+    build: .
+    # or, if you push it to a registry, replace build with:
+    # image: your-registry/corpoops:latest
+    container_name: corpoops
+    restart: unless-stopped
+    environment:
+      # REQUIRED: set a long random token. Generate one with:
+      #   openssl rand -hex 24
+      CORPOOPS_TOKEN: "${CORPOOPS_TOKEN}"
+      PORT: "8971"
+    volumes:
+      # SQLite lives here — this is your entire backup surface
+      - ./data:/data
+    networks:
+      - nas-net
+    # No host port is published: NPM reaches it over nas-net by container name.
+    # If you want to test locally without NPM, uncomment:
+    # ports:
+    #   - "8971:8971"
+
+networks:
+  nas-net:
+    external: true
