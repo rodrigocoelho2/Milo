@@ -10,6 +10,9 @@ public sealed class PlanDayDTO
     /// <summary>Gets or sets the weekday (1 = Monday … 7 = Sunday).</summary>
     public int Weekday { get; set; }
 
+    /// <summary>Gets or sets the name of the session ("Upper body"), or empty.</summary>
+    public string Name { get; set; } = string.Empty;
+
     /// <summary>Gets or sets the meals, in order.</summary>
     public List<PlanMealDTO> Meals { get; set; } = [];
 

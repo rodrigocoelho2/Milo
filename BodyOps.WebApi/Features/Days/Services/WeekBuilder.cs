@@ -5,6 +5,7 @@ using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Days.Models.Entities;
 using BodyOps.WebApi.Features.Plans.Models.Entities;
 using BodyOps.WebApi.Features.Plans.Services;
+using BodyOps.WebApi.Features.Weights.Models.Entities;
 
 namespace BodyOps.WebApi.Features.Days.Services;
 
@@ -22,10 +23,11 @@ internal static class WeekBuilder
     /// <param name="plan">The current plan.</param>
     /// <param name="logged">The logged days of that week.</param>
     /// <param name="history">Every logged strength exercise (for last session and records).</param>
+    /// <param name="weights">The weigh-ins (may include other dates), for the day score.</param>
     /// <returns>The week.</returns>
-    public static WeekDTO Week(DateOnly monday, DateOnly today, PlanData plan, DayRange logged, IReadOnlyList<ExerciseLogRow> history)
+    public static WeekDTO Week(DateOnly monday, DateOnly today, PlanData plan, DayRange logged, IReadOnlyList<ExerciseLogRow> history, IReadOnlyList<WeightEntry>? weights = null)
     {
-        var days = Enumerable.Range(0, 7).Select(offset => Day(monday.AddDays(offset), plan, logged, history)).ToList();
+        var days = Enumerable.Range(0, 7).Select(offset => Day(monday.AddDays(offset), plan, logged, history, weights)).ToList();
         return new WeekDTO
         {
             From = monday,
@@ -43,8 +45,85 @@ internal static class WeekBuilder
     /// <param name="plan">The current plan.</param>
     /// <param name="logged">Logged days (may include other dates).</param>
     /// <param name="history">Every logged strength exercise.</param>
+    /// <param name="weights">The weigh-ins (may include other dates).</param>
     /// <returns>The day.</returns>
-    public static DayDTO Day(DateOnly date, PlanData plan, DayRange logged, IReadOnlyList<ExerciseLogRow> history)
+    public static DayDTO Day(DateOnly date, PlanData plan, DayRange logged, IReadOnlyList<ExerciseLogRow> history, IReadOnlyList<WeightEntry>? weights = null)
+    {
+        var dto = Items(date, plan, logged, history);
+        dto.Name = plan.Names.FirstOrDefault(name => name.Weekday == dto.Weekday)?.Name ?? string.Empty;
+        dto.WeightKg = weights?.FirstOrDefault(entry => DateOnly.FromDateTime(entry.EntryDate) == date)?.WeightKg;
+        (dto.SetsDone, dto.SetsPlanned) = SetProgress(dto);
+        dto.Score = DayScore(dto);
+        return dto;
+    }
+
+    /// <summary>
+    /// How much of the planned training was done: each strength exercise counts its planned sets (one when the plan
+    /// names none) and each cardio exercise counts one. A day marked trained counts as all done.
+    /// </summary>
+    /// <param name="day">The day.</param>
+    /// <returns>Sets done and sets planned.</returns>
+    public static (int Done, int Planned) SetProgress(DayDTO day)
+    {
+        int done = 0, planned = 0;
+        foreach (var exercise in day.Exercises)
+        {
+            if (exercise.Type == ExerciseType.Cardio)
+            {
+                planned++;
+                done += exercise.CardioMinutes > 0 || exercise.CardioKm > 0 ? 1 : 0;
+                continue;
+            }
+
+            var target = Math.Max(1, exercise.Targets.Count);
+            var logged = exercise.Sets.Count(static set => set is not null);
+            planned += target;
+            done += Math.Min(target, logged);
+        }
+
+        if (day.TrainingState == TrainingState.Done)
+        {
+            done = planned;
+        }
+
+        return (done, planned);
+    }
+
+    /// <summary>
+    /// The day score, 0–100. Training weighs 50, meals 35 and the weigh-in 15; parts the day doesn't have (no
+    /// exercises on a rest day, no meals planned) are left out and the rest scaled up. A day marked as skipped
+    /// scores its training as zero.
+    /// </summary>
+    /// <param name="day">The day, with <see cref="DayDTO.SetsDone"/> and <see cref="DayDTO.SetsPlanned"/> filled in.</param>
+    /// <returns>The score.</returns>
+    public static int DayScore(DayDTO day)
+    {
+        double total = 0, weight = 0;
+        if (day.SetsPlanned > 0)
+        {
+            weight += 50;
+            total += day.TrainingState == TrainingState.Missed ? 0 : 50.0 * day.SetsDone / day.SetsPlanned;
+        }
+
+        if (day.Meals.Count > 0)
+        {
+            weight += 35;
+            total += 35.0 * day.Meals.Count(static meal => meal.Eaten) / day.Meals.Count;
+        }
+
+        weight += 15;
+        total += day.WeightKg is null ? 0 : 15;
+        return (int)Math.Round(100 * total / weight, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Whether a day takes part in the streak: it has something planned or a weigh-in.
+    /// </summary>
+    /// <param name="day">The day.</param>
+    /// <returns>True when it counts or breaks the streak.</returns>
+    public static bool Counts(DayDTO day) => day.SetsPlanned > 0 || day.Meals.Count > 0 || day.WeightKg is not null;
+
+    private static DayDTO Items(DateOnly date, PlanData plan, DayRange logged, IReadOnlyList<ExerciseLogRow> history)
     {
         var weekday = WeekMath.Weekday(date);
         var row = logged.Days.FirstOrDefault(day => DateOnly.FromDateTime(day.DayDate) == date);
@@ -55,7 +134,7 @@ internal static class WeekBuilder
             dto.Meals = logged.Meals
                 .Where(meal => meal.DayID == row.DayID)
                 .OrderBy(static meal => meal.SortOrder)
-                .Select(static meal => new DayMealDTO { PlanMealId = meal.PlanMealID, Name = meal.Name, Foods = meal.Foods, Eaten = meal.Eaten })
+                .Select(static meal => new DayMealDTO { PlanMealId = meal.PlanMealID, Name = meal.Name, Foods = meal.Foods, Eaten = meal.Eaten, Time = MealTimeText.Format(meal.MealTime) })
                 .ToList();
 
             var sets = logged.Sets.ToLookup(static set => set.DayExerciseID);
@@ -72,7 +151,7 @@ internal static class WeekBuilder
         dto.Meals = plan.Meals
             .Where(meal => meal.Weekday == weekday)
             .OrderBy(static meal => meal.SortOrder)
-            .Select(meal => new DayMealDTO { PlanMealId = meal.PlanMealID, Name = meal.Name, Foods = FoodsLine(foods[meal.PlanMealID]) })
+            .Select(meal => new DayMealDTO { PlanMealId = meal.PlanMealID, Name = meal.Name, Foods = FoodsLine(foods[meal.PlanMealID]), Time = MealTimeText.Format(meal.MealTime) })
             .ToList();
         dto.Exercises = plan.Exercises
             .Where(exercise => exercise.Weekday == weekday)

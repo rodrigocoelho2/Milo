@@ -45,4 +45,15 @@ public sealed class WeightServiceTests
         Assert.Equal(ServiceApiResponseStatus.ValidationProblems, (await settings.SaveAsync(1, new SettingsDTO { WeightGoalKg = 1000 })).Status);
         Assert.Null((await settings.SaveAsync(1, new SettingsDTO { WeightGoalKg = null })).Result!.WeightGoalKg);
     }
+
+    [Fact]
+    public async Task Settings_RestDefaultsTo90_IsChecked_AndKeptWhenNotSent()
+    {
+        var settings = new SettingService(_settings, TestSupport.Globalization);
+
+        Assert.Equal(90, (await settings.GetAsync(1)).Result!.RestSeconds);
+        Assert.Equal(120, (await settings.SaveAsync(1, new SettingsDTO { WeightGoalKg = 90, RestSeconds = 120 })).Result!.RestSeconds);
+        Assert.Equal(120, (await settings.SaveAsync(1, new SettingsDTO { WeightGoalKg = 88 })).Result!.RestSeconds);
+        Assert.Equal(ServiceApiResponseStatus.ValidationProblems, (await settings.SaveAsync(1, new SettingsDTO { RestSeconds = 5 })).Status);
+    }
 }

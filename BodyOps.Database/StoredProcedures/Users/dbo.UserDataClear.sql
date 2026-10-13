@@ -15,6 +15,7 @@ BEGIN
     DELETE FROM [dbo].[Day] WHERE [UserID] = @UserID;
     DELETE FROM [dbo].[PlanMeal] WHERE [UserID] = @UserID;
     DELETE FROM [dbo].[PlanExercise] WHERE [UserID] = @UserID;
+    DELETE FROM [dbo].[PlanDay] WHERE [UserID] = @UserID;
     DELETE FROM [dbo].[WeightEntry] WHERE [UserID] = @UserID;
     DELETE FROM [dbo].[UserSetting] WHERE [UserID] = @UserID;
 

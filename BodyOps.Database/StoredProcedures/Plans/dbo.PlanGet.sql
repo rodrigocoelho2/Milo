@@ -1,6 +1,7 @@
 /*
     PlanGet
-    The account's weekly plan in three result sets: meals, their foods, and exercises. @Weekday limits it to one day.
+    The account's weekly plan in four result sets: meals, their foods, exercises and the day names.
+    @Weekday limits it to one day.
 */
 CREATE PROCEDURE [dbo].[PlanGet]
     @UserID  BIGINT,
@@ -13,7 +14,8 @@ BEGIN
     SELECT pm.[PlanMealID],
            pm.[Weekday],
            pm.[Name],
-           pm.[SortOrder]
+           pm.[SortOrder],
+           pm.[MealTime]
     FROM [dbo].[PlanMeal] pm
     WHERE pm.[UserID] = @UserID
       AND (@Weekday IS NULL OR pm.[Weekday] = @Weekday)
@@ -43,4 +45,11 @@ BEGIN
     WHERE pe.[UserID] = @UserID
       AND (@Weekday IS NULL OR pe.[Weekday] = @Weekday)
     ORDER BY pe.[Weekday], pe.[SortOrder], pe.[PlanExerciseID];
+
+    SELECT pd.[Weekday],
+           pd.[Name]
+    FROM [dbo].[PlanDay] pd
+    WHERE pd.[UserID] = @UserID
+      AND (@Weekday IS NULL OR pd.[Weekday] = @Weekday)
+    ORDER BY pd.[Weekday];
 END

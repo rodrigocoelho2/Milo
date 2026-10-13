@@ -40,6 +40,9 @@ public sealed class BackupSettingsDTO
 {
     /// <summary>Gets or sets the weight goal.</summary>
     public decimal? WeightGoalKg { get; set; }
+
+    /// <summary>Gets or sets the rest between sets in seconds, or null for the default.</summary>
+    public int? RestSeconds { get; set; }
 }
 
 /// <summary>
@@ -49,6 +52,9 @@ public sealed class BackupPlanDayDTO
 {
     /// <summary>Gets or sets the weekday (1 = Monday … 7 = Sunday).</summary>
     public int Weekday { get; set; }
+
+    /// <summary>Gets or sets the name of the session ("Upper body"), or empty.</summary>
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the meals.</summary>
     public List<BackupMealDTO> Meals { get; set; } = [];
@@ -67,6 +73,9 @@ public sealed class BackupMealDTO
 
     /// <summary>Gets or sets the name.</summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets when it is usually eaten ("08:00"), or null.</summary>
+    public string? Time { get; set; }
 
     /// <summary>Gets or sets the foods.</summary>
     public List<BackupFoodDTO> Foods { get; set; } = [];

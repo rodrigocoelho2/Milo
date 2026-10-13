@@ -18,7 +18,10 @@ internal sealed class PlanRepository(ISqlConnectionFactory connectionFactory) : 
             new PlanData(
                 (await grid.ReadAsync<PlanMeal>()).AsList(),
                 (await grid.ReadAsync<PlanFood>()).AsList(),
-                (await grid.ReadAsync<PlanExercise>()).AsList()));
+                (await grid.ReadAsync<PlanExercise>()).AsList())
+            {
+                Names = (await grid.ReadAsync<PlanDayName>()).AsList(),
+            });
 
     /// <inheritdoc />
     public Task<PlanData> SaveMealsAsync(long userId, int weekday, string meals, DateOnly syncFrom) =>
@@ -42,4 +45,8 @@ internal sealed class PlanRepository(ISqlConnectionFactory connectionFactory) : 
             Part = (int)part,
             SyncFrom = Date(syncFrom),
         });
+
+    /// <inheritdoc />
+    public Task SaveDayNameAsync(long userId, int weekday, string name) =>
+        ExecuteAsync("[dbo].[PlanDayNameSave]", new { UserID = userId, Weekday = weekday, Name = name });
 }

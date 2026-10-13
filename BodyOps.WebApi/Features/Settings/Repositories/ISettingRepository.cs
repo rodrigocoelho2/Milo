@@ -19,6 +19,7 @@ internal interface ISettingRepository
     /// </summary>
     /// <param name="userId">The account.</param>
     /// <param name="weightGoalKg">The weight goal.</param>
+    /// <param name="restSeconds">The rest between sets, or null for the default.</param>
     /// <returns>The saved settings.</returns>
-    Task<UserSetting> SaveAsync(long userId, decimal? weightGoalKg);
+    Task<UserSetting> SaveAsync(long userId, decimal? weightGoalKg, int? restSeconds);
 }

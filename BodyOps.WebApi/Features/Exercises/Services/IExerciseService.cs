@@ -22,4 +22,12 @@ internal interface IExerciseService
     /// <param name="name">The exercise name.</param>
     /// <returns>The sessions (empty when none were logged).</returns>
     Task<ServiceApiResponse<ExerciseHistoryDTO>> HistoryAsync(long userId, string? name);
+
+    /// <summary>
+    /// Lists the personal records: sessions that beat every earlier load of their exercise.
+    /// </summary>
+    /// <param name="userId">The signed-in account.</param>
+    /// <param name="limit">How many, newest first (1–200).</param>
+    /// <returns>The records, newest first.</returns>
+    Task<ServiceApiResponse<List<RecordDTO>>> RecordsAsync(long userId, int limit);
 }

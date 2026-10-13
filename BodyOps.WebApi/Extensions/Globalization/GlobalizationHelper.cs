@@ -61,6 +61,7 @@ internal sealed class GlobalizationHelper : IGlobalizationHelper
         [nameof(TranslationKeys.TooManyItems)] = "At most {0} per day.",
         [nameof(TranslationKeys.InvalidAmount)] = "Amount must be between 0 and {0}.",
         [nameof(TranslationKeys.CopyToSameDay)] = "Pick at least one other day to copy to.",
+        [nameof(TranslationKeys.InvalidTime)] = "Use a time of day like 08:00.",
         [nameof(TranslationKeys.UnknownPlanItem)] = "That item is not in the plan for this day any more. Reload the page.",
 
         // Days
@@ -72,6 +73,7 @@ internal sealed class GlobalizationHelper : IGlobalizationHelper
 
         // Weights
         [nameof(TranslationKeys.InvalidWeight)] = "Weight must be between {0} and {1} kg.",
+        [nameof(TranslationKeys.InvalidRest)] = "Rest must be between {0} and {1} seconds.",
 
         // Backups
         [nameof(TranslationKeys.InvalidBackup)] = "This file is not a BodyOps or CorpoOps backup.",

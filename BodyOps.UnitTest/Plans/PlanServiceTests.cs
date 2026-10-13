@@ -105,4 +105,38 @@ public sealed class PlanServiceTests
     [Fact]
     public async Task Copy_OnlyToItself_IsAValidationProblem() =>
         Assert.Equal(ServiceApiResponseStatus.ValidationProblems, (await Service().CopyAsync(1, 3, new PlanCopyDTO { Targets = [3] })).Status);
+
+    [Fact]
+    public async Task SaveMeals_KeepsTheTime_AndRejectsOneThatIsNotATimeOfDay()
+    {
+        var breakfast = Breakfast();
+        breakfast.Time = "8:05";
+        var response = await Service().SaveMealsAsync(1, 2, [breakfast, new PlanMealSaveDTO { Name = "Lunch", Time = " " }]);
+
+        Assert.Equal("08:05", response.Result!.Meals[0].Time);
+        Assert.Null(response.Result.Meals[1].Time);
+
+        var bad = Breakfast();
+        bad.Time = "25:00";
+        var problem = await Service().SaveMealsAsync(1, 2, [bad]);
+        Assert.Equal(ServiceApiResponseStatus.ValidationProblems, problem.Status);
+        Assert.Equal("meals[0].time", problem.Problems!.Errors[0].Field);
+    }
+
+    [Fact]
+    public async Task SaveName_NamesTheDay_EmptyRemovesIt_AndCopyingExercisesCopiesIt()
+    {
+        var named = await Service().SaveNameAsync(1, 2, new PlanDayNameDTO { Name = "  Upper   body " });
+        Assert.Equal("Upper body", named.Result!.Name);
+
+        await Service().CopyAsync(1, 2, new PlanCopyDTO { Part = PlanPart.Exercises, Targets = [5] });
+        var plan = (await Service().GetAsync(1)).Result!;
+        Assert.Equal("Upper body", plan.Days[4].Name);
+
+        var cleared = await Service().SaveNameAsync(1, 2, new PlanDayNameDTO { Name = "" });
+        Assert.Equal(string.Empty, cleared.Result!.Name);
+
+        var tooLong = await Service().SaveNameAsync(1, 2, new PlanDayNameDTO { Name = new string('x', PlanService.MaxDayName + 1) });
+        Assert.Equal(ServiceApiResponseStatus.ValidationProblems, tooLong.Status);
+    }
 }

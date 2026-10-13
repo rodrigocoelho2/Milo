@@ -37,6 +37,9 @@ public sealed class DayMealBackupDTO
 
     /// <summary>Gets or sets a value indicating whether it was eaten.</summary>
     public bool Eaten { get; set; }
+
+    /// <summary>Gets or sets when it was planned ("08:00"), or null.</summary>
+    public string? Time { get; set; }
 }
 
 /// <summary>

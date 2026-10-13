@@ -25,6 +25,13 @@ internal interface IDayService
     Task<ServiceApiResponse<List<ConsistencyDayDTO>>> GetConsistencyAsync(long userId, int weeks);
 
     /// <summary>
+    /// Gets the streak of days scoring at least <see cref="DayService.StreakThreshold"/>.
+    /// </summary>
+    /// <param name="userId">The signed-in account.</param>
+    /// <returns>The streak.</returns>
+    Task<ServiceApiResponse<StreakDTO>> GetStreakAsync(long userId);
+
+    /// <summary>
     /// Ticks or unticks a meal.
     /// </summary>
     /// <param name="userId">The signed-in account.</param>

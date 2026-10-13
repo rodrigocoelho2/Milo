@@ -25,6 +25,7 @@ internal static class DayJson
             name = Truncate(NameText.Clean(meal.Name), PlanService.MaxMealName),
             foods = Truncate(meal.Foods ?? string.Empty, 2000),
             eaten = meal.Eaten,
+            time = MealTimeText.TryParse(meal.Time, out var time) ? MealTimeText.Format(time) : null,
         }).ToList(),
         exercises = day.Exercises.Select(static exercise => new
         {

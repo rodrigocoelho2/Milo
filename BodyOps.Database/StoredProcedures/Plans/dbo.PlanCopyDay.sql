@@ -1,7 +1,8 @@
 /*
     PlanCopyDay
     Copies the meals (@Part = 1, with their foods) or the exercises (@Part = 2) of @FromWeekday onto each weekday in
-    @ToWeekdays (a JSON array such as [2,4,5]), replacing what those days had. Logged days from @SyncFrom on follow.
+    @ToWeekdays (a JSON array such as [2,4,5]), replacing what those days had. Copying exercises also copies the
+    day's name ("Upper body"). Logged days from @SyncFrom on follow.
 */
 CREATE PROCEDURE [dbo].[PlanCopyDay]
     @UserID      BIGINT,
@@ -34,14 +35,14 @@ BEGIN
 
         MERGE [dbo].[PlanMeal] AS target
         USING (
-            SELECT pm.[PlanMealID], pm.[Name], pm.[SortOrder], t.[Weekday]
+            SELECT pm.[PlanMealID], pm.[Name], pm.[SortOrder], pm.[MealTime], t.[Weekday]
             FROM [dbo].[PlanMeal] pm
             CROSS JOIN @Targets t
             WHERE pm.[UserID] = @UserID AND pm.[Weekday] = @FromWeekday
         ) AS source
         ON 1 = 0
         WHEN NOT MATCHED THEN
-            INSERT ([UserID], [Weekday], [Name], [SortOrder]) VALUES (@UserID, source.[Weekday], source.[Name], source.[SortOrder])
+            INSERT ([UserID], [Weekday], [Name], [SortOrder], [MealTime]) VALUES (@UserID, source.[Weekday], source.[Name], source.[SortOrder], source.[MealTime])
         OUTPUT source.[PlanMealID], inserted.[PlanMealID] INTO @Map ([OldID], [NewID]);
 
         INSERT INTO [dbo].[PlanFood] ([PlanMealID], [Name], [Amount], [Unit], [SortOrder])
@@ -61,6 +62,17 @@ BEGIN
         FROM [dbo].[PlanExercise] pe
         CROSS JOIN @Targets t
         WHERE pe.[UserID] = @UserID AND pe.[Weekday] = @FromWeekday;
+
+        DELETE pd
+        FROM [dbo].[PlanDay] pd
+        INNER JOIN @Targets t ON t.[Weekday] = pd.[Weekday]
+        WHERE pd.[UserID] = @UserID;
+
+        INSERT INTO [dbo].[PlanDay] ([UserID], [Weekday], [Name])
+        SELECT @UserID, t.[Weekday], pd.[Name]
+        FROM [dbo].[PlanDay] pd
+        CROSS JOIN @Targets t
+        WHERE pd.[UserID] = @UserID AND pd.[Weekday] = @FromWeekday;
     END
 
     EXEC [dbo].[DaySyncFromPlan] @UserID = @UserID, @FromDate = @SyncFrom, @Weekday = NULL;

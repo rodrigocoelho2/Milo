@@ -1,6 +1,7 @@
 using BodyOps.Library.Enums;
 using BodyOps.Library.Services;
 using BodyOps.WebApi.Extensions.Globalization;
+using BodyOps.WebApi.Features.Days.Models.Entities;
 using BodyOps.WebApi.Features.Days.Repositories;
 using BodyOps.WebApi.Features.Days.Services;
 using BodyOps.WebApi.Features.Exercises.Models.DTOs;
@@ -23,6 +24,9 @@ internal sealed class ExerciseService(
     private readonly IDayRepository _dayRepository = dayRepository;
     private readonly IPlanRepository _planRepository = planRepository;
     private readonly IGlobalizationHelper _globalizationHelper = globalizationHelper;
+
+    /// <summary>How many sessions a trend line shows.</summary>
+    public const int TrendLength = 12;
 
     /// <inheritdoc />
     public async Task<ServiceApiResponse<List<ExerciseSummaryDTO>>> ListAsync(long userId)
@@ -48,6 +52,17 @@ internal sealed class ExerciseService(
             summary.Sessions = group.Count();
             summary.BestKg = group.Max(static row => row.LoadKg);
             summary.LastDate = DateOnly.FromDateTime(latest.DayDate);
+            if (summary.BestKg is { } best)
+            {
+                summary.BestDate = DateOnly.FromDateTime(group.Where(row => row.LoadKg == best).Min(static row => row.DayDate));
+            }
+
+            summary.Trend = group
+                .Where(static row => row.LoadKg is not null)
+                .OrderBy(static row => row.DayDate)
+                .TakeLast(TrendLength)
+                .Select(static row => new ExercisePointDTO { Date = DateOnly.FromDateTime(row.DayDate), LoadKg = row.LoadKg!.Value })
+                .ToList();
         }
 
         return ServiceApiResponse<List<ExerciseSummaryDTO>>.Success(byKey.Values.OrderBy(static summary => summary.Name, StringComparer.OrdinalIgnoreCase).ToList());
@@ -81,5 +96,39 @@ internal sealed class ExerciseService(
             BestKg = rows.Max(static row => row.LoadKg),
             Sessions = sessions,
         });
+    }
+
+    /// <inheritdoc />
+    public async Task<ServiceApiResponse<List<RecordDTO>>> RecordsAsync(long userId, int limit)
+    {
+        limit = Math.Clamp(limit, 1, 200);
+        var records = Records(await _dayRepository.ListExerciseLogAsync(userId));
+        return ServiceApiResponse<List<RecordDTO>>.Success(records.OrderByDescending(static record => record.Date).ThenBy(static record => record.Name).Take(limit).ToList());
+    }
+
+    /// <summary>
+    /// Finds the sessions whose load beat every earlier load of the same exercise (the first session sets the bar, it is not a record).
+    /// </summary>
+    /// <param name="log">The exercise log, any order.</param>
+    /// <returns>The records, oldest first.</returns>
+    internal static List<RecordDTO> Records(IEnumerable<ExerciseLogRow> log)
+    {
+        var records = new List<RecordDTO>();
+        foreach (var group in log.Where(static row => row.LoadKg is not null).GroupBy(static row => row.NameKey))
+        {
+            decimal? best = null;
+            foreach (var row in group.OrderBy(static row => row.DayDate))
+            {
+                var load = row.LoadKg!.Value;
+                if (best is { } previous && load > previous)
+                {
+                    records.Add(new RecordDTO { Date = DateOnly.FromDateTime(row.DayDate), Name = row.Name, LoadKg = load, PreviousKg = previous });
+                }
+
+                best = best is null ? load : Math.Max(best.Value, load);
+            }
+        }
+
+        return records.OrderBy(static record => record.Date).ToList();
     }
 }

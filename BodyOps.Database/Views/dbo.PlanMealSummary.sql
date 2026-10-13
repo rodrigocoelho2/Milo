@@ -9,6 +9,7 @@ SELECT pm.[PlanMealID],
        pm.[Weekday],
        pm.[Name],
        pm.[SortOrder],
+       pm.[MealTime],
        ISNULL(LEFT(fx.[Foods], 2000), N'') AS [Foods]
 FROM [dbo].[PlanMeal] pm
 OUTER APPLY (

@@ -41,4 +41,13 @@ internal interface IPlanService
     /// <param name="request">What to copy and where.</param>
     /// <returns>The whole plan, or validation problems.</returns>
     Task<ServiceApiResponse<PlanDTO>> CopyAsync(long userId, int weekday, PlanCopyDTO request);
+
+    /// <summary>
+    /// Names a weekday's session ("Upper body").
+    /// </summary>
+    /// <param name="userId">The signed-in account.</param>
+    /// <param name="weekday">1 = Monday … 7 = Sunday.</param>
+    /// <param name="request">The name; empty removes it.</param>
+    /// <returns>The weekday's plan, or validation problems.</returns>
+    Task<ServiceApiResponse<PlanDayDTO>> SaveNameAsync(long userId, int weekday, PlanDayNameDTO request);
 }

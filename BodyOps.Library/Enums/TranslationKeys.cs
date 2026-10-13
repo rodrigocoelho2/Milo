@@ -88,4 +88,10 @@ public enum TranslationKeys
 
     /// <summary>The backup is larger than allowed.</summary>
     BackupTooLarge,
+
+    /// <summary>A meal time that is not a time of day.</summary>
+    InvalidTime,
+
+    /// <summary>A rest between sets out of range.</summary>
+    InvalidRest,
 }

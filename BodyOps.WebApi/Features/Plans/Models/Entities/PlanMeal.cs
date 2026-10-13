@@ -16,4 +16,7 @@ public sealed class PlanMeal
 
     /// <summary>Gets or sets the position within the day.</summary>
     public int SortOrder { get; set; }
+
+    /// <summary>Gets or sets when the meal is usually eaten, or null.</summary>
+    public TimeSpan? MealTime { get; set; }
 }

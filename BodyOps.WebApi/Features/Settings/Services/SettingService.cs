@@ -14,6 +14,15 @@ namespace BodyOps.WebApi.Features.Settings.Services;
 /// <param name="globalizationHelper">Translations.</param>
 internal sealed class SettingService(ISettingRepository settingRepository, IGlobalizationHelper globalizationHelper) : ISettingService
 {
+    /// <summary>The rest between sets when none is set.</summary>
+    public const int DefaultRestSeconds = 90;
+
+    /// <summary>Shortest rest accepted.</summary>
+    public const int MinRestSeconds = 15;
+
+    /// <summary>Longest rest accepted.</summary>
+    public const int MaxRestSeconds = 900;
+
     private readonly ISettingRepository _settingRepository = settingRepository;
     private readonly IGlobalizationHelper _globalizationHelper = globalizationHelper;
 
@@ -21,7 +30,7 @@ internal sealed class SettingService(ISettingRepository settingRepository, IGlob
     public async Task<ServiceApiResponse<SettingsDTO>> GetAsync(long userId)
     {
         var setting = await _settingRepository.GetAsync(userId);
-        return ServiceApiResponse<SettingsDTO>.Success(new SettingsDTO { WeightGoalKg = setting?.WeightGoalKg });
+        return ServiceApiResponse<SettingsDTO>.Success(ToDTO(setting?.WeightGoalKg, setting?.RestSeconds));
     }
 
     /// <inheritdoc />
@@ -32,7 +41,16 @@ internal sealed class SettingService(ISettingRepository settingRepository, IGlob
             return await _globalizationHelper.ValidationProblemAsync<SettingsDTO>("weightGoalKg", nameof(TranslationKeys.InvalidWeight), WeightService.MinWeightKg, WeightService.MaxWeightKg);
         }
 
-        var saved = await _settingRepository.SaveAsync(userId, request.WeightGoalKg is { } goal ? Math.Round(goal, 1) : null);
-        return ServiceApiResponse<SettingsDTO>.Success(new SettingsDTO { WeightGoalKg = saved.WeightGoalKg });
+        if (request.RestSeconds is < MinRestSeconds or > MaxRestSeconds)
+        {
+            return await _globalizationHelper.ValidationProblemAsync<SettingsDTO>("restSeconds", nameof(TranslationKeys.InvalidRest), MinRestSeconds, MaxRestSeconds);
+        }
+
+        var rest = request.RestSeconds ?? (await _settingRepository.GetAsync(userId))?.RestSeconds;
+        var saved = await _settingRepository.SaveAsync(userId, request.WeightGoalKg is { } goal ? Math.Round(goal, 1) : null, rest);
+        return ServiceApiResponse<SettingsDTO>.Success(ToDTO(saved.WeightGoalKg, saved.RestSeconds));
     }
+
+    private static SettingsDTO ToDTO(decimal? weightGoalKg, int? restSeconds) =>
+        new() { WeightGoalKg = weightGoalKg, RestSeconds = restSeconds ?? DefaultRestSeconds };
 }

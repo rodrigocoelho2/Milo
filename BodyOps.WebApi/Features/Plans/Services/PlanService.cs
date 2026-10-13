@@ -24,6 +24,9 @@ internal sealed class PlanService(
     /// <summary>Longest meal or food name.</summary>
     public const int MaxMealName = 80;
 
+    /// <summary>Longest day name ("Upper body").</summary>
+    public const int MaxDayName = 40;
+
     /// <summary>Longest exercise name.</summary>
     public const int MaxExerciseName = 100;
 
@@ -80,6 +83,11 @@ internal sealed class PlanService(
                 return await _globalizationHelper.ValidationProblemAsync<PlanDayDTO>($"meals[{i}].name", nameof(TranslationKeys.InvalidName), MaxMealName);
             }
 
+            if (!MealTimeText.TryParse(meal.Time, out var time))
+            {
+                return await _globalizationHelper.ValidationProblemAsync<PlanDayDTO>($"meals[{i}].time", nameof(TranslationKeys.InvalidTime));
+            }
+
             var foods = meal.Foods ?? [];
             if (foods.Count > MaxFoods)
             {
@@ -104,7 +112,7 @@ internal sealed class PlanService(
                 cleanFoods.Add((foodName, Math.Round(food.Amount, 2), Enum.IsDefined(food.Unit) ? food.Unit : FoodUnit.Grams));
             }
 
-            items.Add(PlanJson.Meal(meal.Id, name, cleanFoods));
+            items.Add(PlanJson.Meal(meal.Id, name, time, cleanFoods));
         }
 
         await _planRepository.SaveMealsAsync(userId, weekday, PlanJson.Serialize(items), WeekMath.Monday(_clock.Today));
@@ -180,6 +188,24 @@ internal sealed class PlanService(
         return ServiceApiResponse<PlanDTO>.Success(ToDTO(await _planRepository.GetAsync(userId)));
     }
 
+    /// <inheritdoc />
+    public async Task<ServiceApiResponse<PlanDayDTO>> SaveNameAsync(long userId, int weekday, PlanDayNameDTO request)
+    {
+        if (await WeekdayProblemAsync<PlanDayDTO>(weekday) is { } weekdayProblem)
+        {
+            return weekdayProblem;
+        }
+
+        var name = NameText.Clean(request.Name);
+        if (name.Length > MaxDayName)
+        {
+            return await _globalizationHelper.ValidationProblemAsync<PlanDayDTO>("name", nameof(TranslationKeys.InvalidName), MaxDayName);
+        }
+
+        await _planRepository.SaveDayNameAsync(userId, weekday, name);
+        return ServiceApiResponse<PlanDayDTO>.Success(ToDayDTO(weekday, await _planRepository.GetAsync(userId, weekday)));
+    }
+
     /// <summary>
     /// Builds the seven-day plan from the stored rows.
     /// </summary>
@@ -202,6 +228,7 @@ internal sealed class PlanService(
         var day = new PlanDayDTO
         {
             Weekday = weekday,
+            Name = plan.Names.FirstOrDefault(name => name.Weekday == weekday)?.Name ?? string.Empty,
             Meals = plan.Meals
                 .Where(meal => meal.Weekday == weekday)
                 .OrderBy(static meal => meal.SortOrder)

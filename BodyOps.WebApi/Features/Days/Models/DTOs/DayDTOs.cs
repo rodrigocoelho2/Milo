@@ -40,6 +40,21 @@ public sealed class DayDTO
     /// <summary>Gets or sets whether the session happened.</summary>
     public TrainingState TrainingState { get; set; }
 
+    /// <summary>Gets or sets the name of the day's session in the plan ("Upper body"), or empty.</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the weigh-in of that day, if any.</summary>
+    public decimal? WeightKg { get; set; }
+
+    /// <summary>Gets or sets the planned sets (strength sets, one per cardio exercise).</summary>
+    public int SetsPlanned { get; set; }
+
+    /// <summary>Gets or sets how many of the planned sets were done.</summary>
+    public int SetsDone { get; set; }
+
+    /// <summary>Gets or sets the day score, 0–100: training, meals and the weigh-in (see <c>WeekBuilder.DayScore</c>).</summary>
+    public int Score { get; set; }
+
     /// <summary>Gets or sets the meals.</summary>
     public List<DayMealDTO> Meals { get; set; } = [];
 
@@ -63,6 +78,9 @@ public sealed class DayMealDTO
 
     /// <summary>Gets or sets a value indicating whether it was eaten.</summary>
     public bool Eaten { get; set; }
+
+    /// <summary>Gets or sets when it is planned ("08:00"), or null.</summary>
+    public string? Time { get; set; }
 }
 
 /// <summary>
@@ -225,4 +243,26 @@ public sealed class ExerciseLogDTO
 
     /// <summary>Gets or sets the kilometres (cardio).</summary>
     public decimal? CardioKm { get; set; }
+}
+
+/// <summary>
+/// The run of good days: days scoring at least <see cref="Threshold"/> in a row. Days with nothing planned and no
+/// weigh-in neither count nor break it.
+/// </summary>
+public sealed class StreakDTO
+{
+    /// <summary>Gets or sets the score a day needs to count.</summary>
+    public int Threshold { get; set; }
+
+    /// <summary>Gets or sets the run up to and including yesterday (today can still be added).</summary>
+    public int ThroughYesterday { get; set; }
+
+    /// <summary>Gets or sets today's score.</summary>
+    public int TodayScore { get; set; }
+
+    /// <summary>Gets or sets the current run, today included when it already counts.</summary>
+    public int Current { get; set; }
+
+    /// <summary>Gets or sets the longest run in the last year.</summary>
+    public int Best { get; set; }
 }

@@ -21,7 +21,9 @@ public sealed class DayServiceTests
         plans.SaveExercisesAsync(1, 2, [new PlanExerciseSaveDTO { Name = "Pec deck", Detail = "3x12" }]).Wait();
     }
 
-    private DayService Service() => new(_days, _plan, _clock, TestSupport.Globalization);
+    private readonly FakeWeightRepository _weights = new();
+
+    private DayService Service() => new(_days, _plan, _weights, _clock, TestSupport.Globalization);
 
     private long MealId(string name) => _plan.Meals.Single(meal => meal.Name == name).PlanMealID;
 

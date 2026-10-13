@@ -7,6 +7,7 @@ using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Days.Repositories;
 using BodyOps.WebApi.Features.Plans.Repositories;
 using BodyOps.WebApi.Features.Plans.Services;
+using BodyOps.WebApi.Features.Weights.Repositories;
 
 namespace BodyOps.WebApi.Features.Days.Services;
 
@@ -16,14 +17,22 @@ namespace BodyOps.WebApi.Features.Days.Services;
 /// </summary>
 /// <param name="dayRepository">Day data access.</param>
 /// <param name="planRepository">Plan data access.</param>
+/// <param name="weightRepository">Weigh-ins (for the day score).</param>
 /// <param name="clock">Today in the configured time zone.</param>
 /// <param name="globalizationHelper">Translations.</param>
 internal sealed class DayService(
     IDayRepository dayRepository,
     IPlanRepository planRepository,
+    IWeightRepository weightRepository,
     IAppClock clock,
     IGlobalizationHelper globalizationHelper) : IDayService
 {
+    /// <summary>The day score a day needs to keep the streak going.</summary>
+    public const int StreakThreshold = 60;
+
+    /// <summary>How far back the streak looks.</summary>
+    public const int StreakWindowDays = 400;
+
     /// <summary>Heaviest load accepted.</summary>
     public const decimal MaxLoadKg = 1000m;
 
@@ -38,6 +47,7 @@ internal sealed class DayService(
 
     private readonly IDayRepository _dayRepository = dayRepository;
     private readonly IPlanRepository _planRepository = planRepository;
+    private readonly IWeightRepository _weightRepository = weightRepository;
     private readonly IAppClock _clock = clock;
     private readonly IGlobalizationHelper _globalizationHelper = globalizationHelper;
 
@@ -187,13 +197,62 @@ internal sealed class DayService(
         return ServiceApiResponse<WeekDTO>.Success(await BuildWeekAsync(userId, monday));
     }
 
+    /// <inheritdoc />
+    public async Task<ServiceApiResponse<StreakDTO>> GetStreakAsync(long userId)
+    {
+        var today = _clock.Today;
+        var from = today.AddDays(-StreakWindowDays);
+        var plan = await _planRepository.GetAsync(userId);
+        var logged = await _dayRepository.ListRangeAsync(userId, from, today);
+        var weights = await _weightRepository.ListAsync(userId);
+        var days = new List<DayDTO>(StreakWindowDays + 1);
+        for (var date = from; date <= today; date = date.AddDays(1))
+        {
+            days.Add(WeekBuilder.Day(date, plan, logged, [], weights));
+        }
+
+        return ServiceApiResponse<StreakDTO>.Success(Streak(days));
+    }
+
+    /// <summary>
+    /// Works out the streak from consecutive days, oldest first, the last one being today.
+    /// </summary>
+    /// <param name="days">The days up to today.</param>
+    /// <returns>The streak.</returns>
+    internal static StreakDTO Streak(IReadOnlyList<DayDTO> days)
+    {
+        var streak = new StreakDTO { Threshold = StreakThreshold, TodayScore = days.Count > 0 ? days[^1].Score : 0 };
+
+        // Every day before today: a good day extends the run, a poor one ends it.
+        var run = 0;
+        for (var i = 0; i < days.Count - 1; i++)
+        {
+            if (!WeekBuilder.Counts(days[i]))
+            {
+                continue;
+            }
+
+            run = days[i].Score >= StreakThreshold ? run + 1 : 0;
+            streak.Best = Math.Max(streak.Best, run);
+        }
+
+        streak.ThroughYesterday = run;
+
+        // Today only adds to the run; it can still be finished, so it never breaks it.
+        var todayCounts = days.Count > 0 && WeekBuilder.Counts(days[^1]) && days[^1].Score >= StreakThreshold;
+        streak.Current = run + (todayCounts ? 1 : 0);
+        streak.Best = Math.Max(streak.Best, streak.Current);
+        return streak;
+    }
+
     private async Task<WeekDTO> BuildWeekAsync(long userId, DateOnly date)
     {
         var monday = WeekMath.Monday(date);
         var plan = await _planRepository.GetAsync(userId);
         var logged = await _dayRepository.ListRangeAsync(userId, monday, monday.AddDays(6));
         var history = await _dayRepository.ListExerciseLogAsync(userId);
-        return WeekBuilder.Week(monday, _clock.Today, plan, logged, history);
+        var weights = await _weightRepository.ListAsync(userId);
+        return WeekBuilder.Week(monday, _clock.Today, plan, logged, history, weights);
     }
 
     private async Task<ServiceApiResponse<T>?> DateProblemAsync<T>(DateOnly date)

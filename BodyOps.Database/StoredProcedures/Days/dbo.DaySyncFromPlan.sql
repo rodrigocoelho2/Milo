@@ -39,13 +39,14 @@ BEGIN
     UPDATE dm
     SET [Name] = pm.[Name],
         [Foods] = pm.[Foods],
-        [SortOrder] = pm.[SortOrder]
+        [SortOrder] = pm.[SortOrder],
+        [MealTime] = pm.[MealTime]
     FROM [dbo].[DayMeal] dm
     INNER JOIN @Days d ON d.[DayID] = dm.[DayID]
     INNER JOIN [dbo].[PlanMealSummary] pm ON pm.[PlanMealID] = dm.[PlanMealID];
 
-    INSERT INTO [dbo].[DayMeal] ([DayID], [PlanMealID], [Name], [Foods], [SortOrder])
-    SELECT d.[DayID], pm.[PlanMealID], pm.[Name], pm.[Foods], pm.[SortOrder]
+    INSERT INTO [dbo].[DayMeal] ([DayID], [PlanMealID], [Name], [Foods], [SortOrder], [MealTime])
+    SELECT d.[DayID], pm.[PlanMealID], pm.[Name], pm.[Foods], pm.[SortOrder], pm.[MealTime]
     FROM @Days d
     INNER JOIN [dbo].[PlanMealSummary] pm ON pm.[UserID] = @UserID AND pm.[Weekday] = d.[Weekday]
     WHERE NOT EXISTS (SELECT 1 FROM [dbo].[DayMeal] dm WHERE dm.[DayID] = d.[DayID] AND dm.[PlanMealID] = pm.[PlanMealID]);

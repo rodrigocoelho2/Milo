@@ -40,6 +40,20 @@ internal sealed class ExerciseController(IExerciseService exerciseService) : Int
     }
 
     /// <summary>
+    /// Lists the personal records, newest first.
+    /// </summary>
+    /// <param name="limit">How many (1–200, default 30).</param>
+    /// <returns>The records.</returns>
+    [HttpGet("records")]
+    [ProducesResponseType<List<RecordDTO>>((int)HttpStatusCode.OK)]
+    [SwaggerOperation(Summary = "ExerciseRecords", OperationId = "ExerciseRecords")]
+    public async Task<ActionResult<List<RecordDTO>>> ExerciseRecordsAsync([FromQuery] int limit = 30)
+    {
+        var apiResponse = await _exerciseService.RecordsAsync(User.RequiredUserID(), limit);
+        return apiResponse.ToActionResult();
+    }
+
+    /// <summary>
     /// Gets every logged session of one exercise.
     /// </summary>
     /// <param name="name">The exercise name.</param>

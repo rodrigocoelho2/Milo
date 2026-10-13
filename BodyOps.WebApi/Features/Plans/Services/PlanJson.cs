@@ -14,12 +14,14 @@ internal static class PlanJson
     /// </summary>
     /// <param name="id">The meal id, or null for a new one.</param>
     /// <param name="name">The name.</param>
+    /// <param name="time">When it is usually eaten, or null.</param>
     /// <param name="foods">The foods in order.</param>
     /// <returns>The JSON object.</returns>
-    public static object Meal(long? id, string name, IEnumerable<(string Name, decimal Amount, FoodUnit Unit)> foods) => new
+    public static object Meal(long? id, string name, TimeSpan? time, IEnumerable<(string Name, decimal Amount, FoodUnit Unit)> foods) => new
     {
         id,
         name,
+        time = MealTimeText.Format(time),
         foods = foods.Select(static food => new { name = food.Name, amount = food.Amount, unit = (int)food.Unit }).ToList(),
     };
 

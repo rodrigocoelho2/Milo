@@ -26,7 +26,8 @@ BEGIN
            dm.[Name],
            dm.[Foods],
            dm.[SortOrder],
-           dm.[Eaten]
+           dm.[Eaten],
+           dm.[MealTime]
     FROM [dbo].[DayMeal] dm
     INNER JOIN [dbo].[Day] d ON d.[DayID] = dm.[DayID]
     WHERE d.[UserID] = @UserID

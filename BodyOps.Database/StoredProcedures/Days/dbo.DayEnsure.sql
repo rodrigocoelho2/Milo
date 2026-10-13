@@ -29,8 +29,8 @@ BEGIN
 
     SET @DayID = SCOPE_IDENTITY();
 
-    INSERT INTO [dbo].[DayMeal] ([DayID], [PlanMealID], [Name], [Foods], [SortOrder])
-    SELECT @DayID, pm.[PlanMealID], pm.[Name], pm.[Foods], pm.[SortOrder]
+    INSERT INTO [dbo].[DayMeal] ([DayID], [PlanMealID], [Name], [Foods], [SortOrder], [MealTime])
+    SELECT @DayID, pm.[PlanMealID], pm.[Name], pm.[Foods], pm.[SortOrder], pm.[MealTime]
     FROM [dbo].[PlanMealSummary] pm
     WHERE pm.[UserID] = @UserID
       AND pm.[Weekday] = @Weekday;

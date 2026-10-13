@@ -83,6 +83,22 @@ internal sealed class PlanController(
     }
 
     /// <summary>
+    /// Names a weekday's session ("Upper body"); an empty name removes it.
+    /// </summary>
+    /// <param name="weekday">1 = Monday … 7 = Sunday.</param>
+    /// <param name="request">The name.</param>
+    /// <returns>The weekday's plan.</returns>
+    [HttpPut("{weekday:int}/name")]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType<PlanDayDTO>((int)HttpStatusCode.OK)]
+    [SwaggerOperation(Summary = "PlanSaveName", OperationId = "PlanSaveName")]
+    public async Task<ActionResult<PlanDayDTO>> PlanSaveNameAsync(int weekday, [FromBody] PlanDayNameDTO request)
+    {
+        var apiResponse = await _planService.SaveNameAsync(User.RequiredUserID(), weekday, request);
+        return apiResponse.ToActionResult();
+    }
+
+    /// <summary>
     /// Copies a weekday's meals or exercises onto other weekdays, replacing theirs.
     /// </summary>
     /// <param name="weekday">The weekday to copy (1 = Monday … 7 = Sunday).</param>

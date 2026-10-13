@@ -194,10 +194,26 @@ internal sealed class FakePlanRepository : IPlanRepository
 
     public List<DateOnly> SyncDates { get; } = [];
 
+    public List<PlanDayName> Names { get; } = [];
+
     public Task<PlanData> GetAsync(long userId, int? weekday = null) => Task.FromResult(new PlanData(
         Meals.Where(meal => weekday is null || meal.Weekday == weekday).OrderBy(meal => meal.Weekday).ThenBy(meal => meal.SortOrder).ToList(),
         Foods.Where(food => Meals.Any(meal => meal.PlanMealID == food.PlanMealID && (weekday is null || meal.Weekday == weekday))).ToList(),
-        Exercises.Where(exercise => weekday is null || exercise.Weekday == weekday).OrderBy(exercise => exercise.Weekday).ThenBy(exercise => exercise.SortOrder).ToList()));
+        Exercises.Where(exercise => weekday is null || exercise.Weekday == weekday).OrderBy(exercise => exercise.Weekday).ThenBy(exercise => exercise.SortOrder).ToList())
+    {
+        Names = Names.Where(name => weekday is null || name.Weekday == weekday).OrderBy(name => name.Weekday).ToList(),
+    });
+
+    public Task SaveDayNameAsync(long userId, int weekday, string name)
+    {
+        Names.RemoveAll(existing => existing.Weekday == weekday);
+        if (name.Length > 0)
+        {
+            Names.Add(new PlanDayName { Weekday = weekday, Name = name });
+        }
+
+        return Task.CompletedTask;
+    }
 
     public Task<PlanData> SaveMealsAsync(long userId, int weekday, string meals, DateOnly syncFrom)
     {
@@ -211,6 +227,7 @@ internal sealed class FakePlanRepository : IPlanRepository
             var meal = Meals.FirstOrDefault(candidate => candidate.PlanMealID == id && candidate.Weekday == weekday)
                 ?? new PlanMeal { PlanMealID = ++_nextId, Weekday = weekday };
             meal.Name = item.GetProperty("name").GetString()!;
+            meal.MealTime = item.TryGetProperty("time", out var time) && time.ValueKind == JsonValueKind.String ? TimeSpan.Parse(time.GetString()!, System.Globalization.CultureInfo.InvariantCulture) : null;
             meal.SortOrder = order++;
             keep.Add(meal);
 
@@ -280,7 +297,7 @@ internal sealed class FakePlanRepository : IPlanRepository
 
                 foreach (var meal in Meals.Where(meal => meal.Weekday == fromWeekday).ToList())
                 {
-                    var copy = new PlanMeal { PlanMealID = ++_nextId, Weekday = target, Name = meal.Name, SortOrder = meal.SortOrder };
+                    var copy = new PlanMeal { PlanMealID = ++_nextId, Weekday = target, Name = meal.Name, SortOrder = meal.SortOrder, MealTime = meal.MealTime };
                     Meals.Add(copy);
                     Foods.AddRange(Foods.Where(food => food.PlanMealID == meal.PlanMealID).ToList().Select(food => new PlanFood
                     {
@@ -296,6 +313,8 @@ internal sealed class FakePlanRepository : IPlanRepository
             else
             {
                 Exercises.RemoveAll(exercise => exercise.Weekday == target);
+                Names.RemoveAll(name => name.Weekday == target);
+                Names.AddRange(Names.Where(name => name.Weekday == fromWeekday).ToList().Select(name => new PlanDayName { Weekday = target, Name = name.Name }));
                 Exercises.AddRange(Exercises.Where(exercise => exercise.Weekday == fromWeekday).ToList().Select(exercise => new PlanExercise
                 {
                     PlanExerciseID = ++_nextId,
@@ -441,7 +460,7 @@ internal sealed class FakeDayRepository(FakePlanRepository plan) : IDayRepositor
         var weekday = WeekMath.Weekday(date);
         foreach (var meal in plan.Meals.Where(meal => meal.Weekday == weekday))
         {
-            Data.Meals.Add(new DayMealRow { DayID = row.DayID, DayMealID = ++_nextId, PlanMealID = meal.PlanMealID, Name = meal.Name, SortOrder = meal.SortOrder });
+            Data.Meals.Add(new DayMealRow { DayID = row.DayID, DayMealID = ++_nextId, PlanMealID = meal.PlanMealID, Name = meal.Name, SortOrder = meal.SortOrder, MealTime = meal.MealTime });
         }
 
         foreach (var exercise in plan.Exercises.Where(exercise => exercise.Weekday == weekday))
@@ -499,9 +518,9 @@ internal sealed class FakeSettingRepository : ISettingRepository
 
     public Task<UserSetting?> GetAsync(long userId) => Task.FromResult(Setting);
 
-    public Task<UserSetting> SaveAsync(long userId, decimal? weightGoalKg)
+    public Task<UserSetting> SaveAsync(long userId, decimal? weightGoalKg, int? restSeconds)
     {
-        Setting = new UserSetting { UserID = userId, WeightGoalKg = weightGoalKg, UpdatedAt = DateTime.UtcNow };
+        Setting = new UserSetting { UserID = userId, WeightGoalKg = weightGoalKg, RestSeconds = restSeconds, UpdatedAt = DateTime.UtcNow };
         return Task.FromResult(Setting);
     }
 }

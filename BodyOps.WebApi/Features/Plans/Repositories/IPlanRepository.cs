@@ -13,7 +13,7 @@ internal interface IPlanRepository
     /// </summary>
     /// <param name="userId">The account.</param>
     /// <param name="weekday">One weekday, or null for the whole week.</param>
-    /// <returns>The meals, foods and exercises.</returns>
+    /// <returns>The meals, foods, exercises and day names.</returns>
     Task<PlanData> GetAsync(long userId, int? weekday = null);
 
     /// <summary>
@@ -46,4 +46,13 @@ internal interface IPlanRepository
     /// <param name="syncFrom">The first date whose logged days follow the plan.</param>
     /// <returns>A task that completes when copied.</returns>
     Task CopyDayAsync(long userId, int fromWeekday, IReadOnlyCollection<int> toWeekdays, PlanPart part, DateOnly syncFrom);
+
+    /// <summary>
+    /// Names a weekday's session (dbo.PlanDayNameSave).
+    /// </summary>
+    /// <param name="userId">The account.</param>
+    /// <param name="weekday">The weekday.</param>
+    /// <param name="name">The name; empty removes it.</param>
+    /// <returns>A task that completes when saved.</returns>
+    Task SaveDayNameAsync(long userId, int weekday, string name);
 }

@@ -30,6 +30,7 @@ internal static class DayBackupMapper
                 Name = meal.Name,
                 Foods = meal.Foods,
                 Eaten = meal.Eaten,
+                Time = MealTimeText.Format(meal.MealTime),
             }).ToList(),
             Exercises = exercises[day.DayID].OrderBy(static exercise => exercise.SortOrder).Select(exercise =>
             {

@@ -16,6 +16,12 @@ public sealed class ExerciseSummaryDTO
 
     /// <summary>Gets or sets the most recent session.</summary>
     public DateOnly? LastDate { get; set; }
+
+    /// <summary>Gets or sets when <see cref="BestKg"/> was first lifted.</summary>
+    public DateOnly? BestDate { get; set; }
+
+    /// <summary>Gets or sets the loads of the last sessions that had one (at most 12), oldest first.</summary>
+    public List<ExercisePointDTO> Trend { get; set; } = [];
 }
 
 /// <summary>
@@ -49,4 +55,34 @@ public sealed class ExerciseSessionDTO
 
     /// <summary>Gets or sets reps × load (null without either).</summary>
     public decimal? VolumeKg { get; set; }
+}
+
+/// <summary>
+/// One session's load, for a trend line.
+/// </summary>
+public sealed class ExercisePointDTO
+{
+    /// <summary>Gets or sets the date.</summary>
+    public DateOnly Date { get; set; }
+
+    /// <summary>Gets or sets the load.</summary>
+    public decimal LoadKg { get; set; }
+}
+
+/// <summary>
+/// A personal record: a session whose load beat every earlier one of that exercise.
+/// </summary>
+public sealed class RecordDTO
+{
+    /// <summary>Gets or sets the date.</summary>
+    public DateOnly Date { get; set; }
+
+    /// <summary>Gets or sets the exercise name.</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the new best load.</summary>
+    public decimal LoadKg { get; set; }
+
+    /// <summary>Gets or sets the best load before it.</summary>
+    public decimal PreviousKg { get; set; }
 }

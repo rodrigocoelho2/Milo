@@ -42,6 +42,9 @@ public sealed class DayMealRow
 
     /// <summary>Gets or sets a value indicating whether the meal was eaten.</summary>
     public bool Eaten { get; set; }
+
+    /// <summary>Gets or sets when the meal is planned, or null.</summary>
+    public TimeSpan? MealTime { get; set; }
 }
 
 /// <summary>

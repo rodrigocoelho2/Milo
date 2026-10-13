@@ -11,6 +11,9 @@ public sealed class UserSetting
     /// <summary>Gets or sets the body weight goal.</summary>
     public decimal? WeightGoalKg { get; set; }
 
+    /// <summary>Gets or sets the rest between sets in seconds, or null for the default.</summary>
+    public int? RestSeconds { get; set; }
+
     /// <summary>Gets or sets when it was last saved (UTC).</summary>
     public DateTime UpdatedAt { get; set; }
 }

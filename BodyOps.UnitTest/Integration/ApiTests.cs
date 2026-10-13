@@ -147,6 +147,66 @@ public sealed class ApiTests
     }
 
     [SqlFact]
+    public async Task DayNamesMealTimesScoreStreakAndRecords()
+    {
+        using var app = new TestApp();
+        var client = app.NewClient();
+        await Register(client, "Rodas");
+
+        var weekday = Weekday(Today);
+        var named = await Json(await client.PutAsJsonAsync($"/api/plan/{weekday}/name", new { name = "Upper body" }));
+        Assert.Equal("Upper body", named.GetProperty("name").GetString());
+
+        var plan = await SaveExercises(client, weekday, new { name = "Pec deck", detail = "3x12" });
+        var exerciseId = plan.GetProperty("exercises")[0].GetProperty("id").GetInt64();
+        var meals = await SaveMeals(client, weekday, new { name = "Breakfast", time = "8:00", foods = Array.Empty<object>() });
+        Assert.Equal("08:00", meals.GetProperty("meals")[0].GetProperty("time").GetString());
+        var mealId = meals.GetProperty("meals")[0].GetProperty("id").GetInt64();
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PutAsJsonAsync($"/api/plan/{weekday}/meals", new[] { new { name = "Lunch", time = "noon" } })).StatusCode);
+
+        // Copying exercises carries the name along.
+        var target = weekday == 7 ? 1 : weekday + 1;
+        var copied = await Json(await client.PostAsJsonAsync($"/api/plan/{weekday}/copy", new { part = "exercises", targets = new[] { target } }));
+        Assert.Equal("Upper body", copied.GetProperty("days")[target - 1].GetProperty("name").GetString());
+
+        // A week ago: 65 kg; today 70 kg, all sets, breakfast and a weigh-in.
+        await Json(await client.PutAsJsonAsync($"/api/days/{Iso(Today.AddDays(-7))}/exercises/{exerciseId}", new { loadKg = 65, sets = new int?[] { 12, 12, 12 } }));
+        await Json(await client.PutAsJsonAsync($"/api/days/{Iso(Today)}/meals/{mealId}", new { eaten = true }));
+        await Json(await client.PutAsJsonAsync($"/api/weights/{Iso(Today)}", new { weightKg = 97.6 }));
+        var week = await Json(await client.PutAsJsonAsync($"/api/days/{Iso(Today)}/exercises/{exerciseId}", new { loadKg = 70, sets = new int?[] { 12, 12, 12 } }));
+
+        var day = DayOf(week, Today);
+        Assert.Equal("Upper body", day.GetProperty("name").GetString());
+        Assert.Equal("08:00", day.GetProperty("meals")[0].GetProperty("time").GetString());
+        Assert.Equal(97.6m, day.GetProperty("weightKg").GetDecimal());
+        Assert.Equal(3, day.GetProperty("setsDone").GetInt32());
+        Assert.Equal(100, day.GetProperty("score").GetInt32());
+
+        var streak = await Json(await client.GetAsync("/api/days/streak"));
+        Assert.Equal(100, streak.GetProperty("todayScore").GetInt32());
+        Assert.Equal(1, streak.GetProperty("current").GetInt32());
+
+        var records = await Json(await client.GetAsync("/api/exercises/records"));
+        Assert.Equal(70m, records[0].GetProperty("loadKg").GetDecimal());
+        Assert.Equal(65m, records[0].GetProperty("previousKg").GetDecimal());
+
+        var exercises = await Json(await client.GetAsync("/api/exercises"));
+        Assert.Equal(2, exercises[0].GetProperty("trend").GetArrayLength());
+
+        // Rest between sets: 90 by default, kept when only the goal is saved.
+        Assert.Equal(90, (await Json(await client.GetAsync("/api/settings"))).GetProperty("restSeconds").GetInt32());
+        await Json(await client.PutAsJsonAsync("/api/settings", new { weightGoalKg = 90, restSeconds = 120 }));
+        var settings = await Json(await client.PutAsJsonAsync("/api/settings", new { weightGoalKg = 88 }));
+        Assert.Equal(120, settings.GetProperty("restSeconds").GetInt32());
+
+        // The backup carries the name, the times and the rest.
+        var backup = await Json(await client.GetAsync("/api/backup"));
+        Assert.Equal("Upper body", backup.GetProperty("plan")[weekday - 1].GetProperty("name").GetString());
+        Assert.Equal("08:00", backup.GetProperty("plan")[weekday - 1].GetProperty("meals")[0].GetProperty("time").GetString());
+        Assert.Equal(120, backup.GetProperty("settings").GetProperty("restSeconds").GetInt32());
+    }
+
+    [SqlFact]
     public async Task ResetWeek_CanBeUndone()
     {
         using var app = new TestApp();

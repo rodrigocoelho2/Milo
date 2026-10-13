@@ -1,4 +1,5 @@
 using BodyOps.WebApi.Features.Plans.Models.Entities;
+using BodyOps.WebApi.Features.Plans.Services;
 
 namespace BodyOps.WebApi.Features.Plans.Models.DTOs;
 
@@ -23,6 +24,7 @@ public sealed class PlanMealDTO
     {
         Id = entity.PlanMealID;
         Name = entity.Name;
+        Time = MealTimeText.Format(entity.MealTime);
         Foods = foods.Select(static food => new PlanFoodDTO(food)).ToList();
     }
 
@@ -31,6 +33,9 @@ public sealed class PlanMealDTO
 
     /// <summary>Gets or sets the name.</summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets when the meal is usually eaten ("08:00"), or null.</summary>
+    public string? Time { get; set; }
 
     /// <summary>Gets or sets the foods, in order.</summary>
     public List<PlanFoodDTO> Foods { get; set; } = [];

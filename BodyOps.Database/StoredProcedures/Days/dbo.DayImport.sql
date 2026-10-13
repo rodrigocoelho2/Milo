@@ -2,7 +2,7 @@
     DayImport
     Writes logged days from a backup (or puts back a week after Reset week), replacing those dates. @Json:
     [{"date":"2026-07-21","trainingState":1,
-      "meals":[{"planMealId":12,"name":"Breakfast","foods":"Whey 25 g","eaten":true}],
+      "meals":[{"planMealId":12,"name":"Breakfast","foods":"Whey 25 g","eaten":true,"time":"08:00"}],
       "exercises":[{"planExerciseId":40,"type":1,"name":"Pec deck","detail":"3x12","notes":"","muscles":null,
                     "loadKg":70,"cardioMinutes":null,"cardioKm":null,"sets":[10,10,10]}]}, …]
 */
@@ -71,8 +71,8 @@ BEGIN
         INSERT ([UserID], [DayDate], [TrainingState]) VALUES (@UserID, source.[DayDate], source.[TrainingState])
     OUTPUT source.[DayDate], inserted.[DayID] INTO @DayMap ([DayDate], [DayID]);
 
-    INSERT INTO [dbo].[DayMeal] ([DayID], [PlanMealID], [Name], [Foods], [SortOrder], [Eaten])
-    SELECT map.[DayID], m.[PlanMealID], m.[Name], ISNULL(m.[Foods], N''), CAST(j.[key] AS INT), ISNULL(m.[Eaten], 0)
+    INSERT INTO [dbo].[DayMeal] ([DayID], [PlanMealID], [Name], [Foods], [SortOrder], [Eaten], [MealTime])
+    SELECT map.[DayID], m.[PlanMealID], m.[Name], ISNULL(m.[Foods], N''), CAST(j.[key] AS INT), ISNULL(m.[Eaten], 0), TRY_CONVERT(TIME (0), m.[MealTime])
     FROM @Days d
     INNER JOIN @DayMap map ON map.[DayDate] = d.[DayDate]
     CROSS APPLY OPENJSON(ISNULL(d.[Meals], N'[]')) j
@@ -80,7 +80,8 @@ BEGIN
         [PlanMealID] BIGINT          '$.planMealId',
         [Name]       NVARCHAR (80)   '$.name',
         [Foods]      NVARCHAR (2000) '$.foods',
-        [Eaten]      BIT             '$.eaten') m;
+        [Eaten]      BIT             '$.eaten',
+        [MealTime]   NVARCHAR (8)    '$.time') m;
 
     MERGE [dbo].[DayExercise] AS target
     USING (

@@ -12,6 +12,7 @@ using BodyOps.WebApi.Features.Days.Services;
 using BodyOps.WebApi.Features.Plans.Repositories;
 using BodyOps.WebApi.Features.Plans.Services;
 using BodyOps.WebApi.Features.Settings.Repositories;
+using BodyOps.WebApi.Features.Settings.Services;
 using BodyOps.WebApi.Features.Weights.Repositories;
 using BodyOps.WebApi.Features.Weights.Services;
 using Microsoft.Extensions.Options;
@@ -66,14 +67,16 @@ internal sealed class BackupService(
         var backup = new BackupDTO
         {
             ExportedAt = _timeProvider.GetUtcNow().UtcDateTime,
-            Settings = new BackupSettingsDTO { WeightGoalKg = setting?.WeightGoalKg },
+            Settings = new BackupSettingsDTO { WeightGoalKg = setting?.WeightGoalKg, RestSeconds = setting?.RestSeconds },
             Plan = Enumerable.Range(1, 7).Select(weekday => new BackupPlanDayDTO
             {
                 Weekday = weekday,
+                Name = plan.Names.FirstOrDefault(name => name.Weekday == weekday)?.Name ?? string.Empty,
                 Meals = plan.Meals.Where(meal => meal.Weekday == weekday).OrderBy(static meal => meal.SortOrder).Select(meal => new BackupMealDTO
                 {
                     Id = meal.PlanMealID,
                     Name = meal.Name,
+                    Time = MealTimeText.Format(meal.MealTime),
                     Foods = foods[meal.PlanMealID].OrderBy(static food => food.SortOrder)
                         .Select(static food => new BackupFoodDTO { Name = food.Name, Amount = food.Amount, Unit = food.Unit }).ToList(),
                 }).ToList(),
@@ -153,14 +156,20 @@ internal sealed class BackupService(
 
         foreach (var day in backup.Plan.Where(static day => day.Weekday is >= 1 and <= 7).GroupBy(static day => day.Weekday).Select(static group => group.First()))
         {
+            var dayName = Truncate(NameText.Clean(day.Name), PlanService.MaxDayName);
+            if (dayName.Length > 0)
+            {
+                await _planRepository.SaveDayNameAsync(userId, day.Weekday, dayName);
+            }
+
             var meals = day.Meals
-                .Select(static meal => (meal.Id, Name: Truncate(NameText.Clean(meal.Name), PlanService.MaxMealName), meal.Foods))
+                .Select(static meal => (meal.Id, Name: Truncate(NameText.Clean(meal.Name), PlanService.MaxMealName), Time: MealTimeText.TryParse(meal.Time, out var time) ? time : null, meal.Foods))
                 .Where(static meal => meal.Name.Length > 0)
                 .Take(PlanService.MaxMeals)
                 .ToList();
             if (meals.Count > 0)
             {
-                var json = PlanJson.Serialize(meals.Select(static meal => PlanJson.Meal(null, meal.Name, (meal.Foods ?? [])
+                var json = PlanJson.Serialize(meals.Select(static meal => PlanJson.Meal(null, meal.Name, meal.Time, (meal.Foods ?? [])
                     .Select(static food => (Name: Truncate(NameText.Clean(food.Name), PlanService.MaxMealName), Amount: Math.Clamp(Math.Round(food.Amount, 2), 0, PlanService.MaxAmount), Unit: Enum.IsDefined(food.Unit) ? food.Unit : FoodUnit.Grams))
                     .Where(static food => food.Name.Length > 0)
                     .Take(PlanService.MaxFoods))));
@@ -246,7 +255,8 @@ internal sealed class BackupService(
         result.Weights = weights.Count;
 
         var goal = backup.Settings?.WeightGoalKg is >= WeightService.MinWeightKg and <= WeightService.MaxWeightKg ? backup.Settings.WeightGoalKg : null;
-        await _settingRepository.SaveAsync(userId, goal is { } value ? Math.Round(value, 1) : null);
+        var rest = backup.Settings?.RestSeconds is >= SettingService.MinRestSeconds and <= SettingService.MaxRestSeconds ? backup.Settings.RestSeconds : null;
+        await _settingRepository.SaveAsync(userId, goal is { } value ? Math.Round(value, 1) : null, rest);
         return result;
     }
 }

@@ -30,6 +30,7 @@
     <Build Include="Tables\dbo.DayExercise.sql" />
     <Build Include="Tables\dbo.DayMeal.sql" />
     <Build Include="Tables\dbo.DaySet.sql" />
+    <Build Include="Tables\dbo.PlanDay.sql" />
     <Build Include="Tables\dbo.PlanExercise.sql" />
     <Build Include="Tables\dbo.PlanFood.sql" />
     <Build Include="Tables\dbo.PlanMeal.sql" />
@@ -48,6 +49,7 @@
     <Build Include="StoredProcedures\Days\dbo.DaySyncFromPlan.sql" />
     <Build Include="StoredProcedures\Days\dbo.ExerciseLogList.sql" />
     <Build Include="StoredProcedures\Plans\dbo.PlanCopyDay.sql" />
+    <Build Include="StoredProcedures\Plans\dbo.PlanDayNameSave.sql" />
     <Build Include="StoredProcedures\Plans\dbo.PlanExercisesSave.sql" />
     <Build Include="StoredProcedures\Plans\dbo.PlanGet.sql" />
     <Build Include="StoredProcedures\Plans\dbo.PlanMealsSave.sql" />

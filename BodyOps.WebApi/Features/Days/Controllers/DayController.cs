@@ -46,6 +46,19 @@ internal sealed class DayController(
     }
 
     /// <summary>
+    /// Gets the streak: days in a row scoring at least 60.
+    /// </summary>
+    /// <returns>The streak.</returns>
+    [HttpGet("streak")]
+    [ProducesResponseType<StreakDTO>((int)HttpStatusCode.OK)]
+    [SwaggerOperation(Summary = "DayStreak", OperationId = "DayStreak")]
+    public async Task<ActionResult<StreakDTO>> DayStreakAsync()
+    {
+        var apiResponse = await _dayService.GetStreakAsync(User.RequiredUserID());
+        return apiResponse.ToActionResult();
+    }
+
+    /// <summary>
     /// Gets how complete each day was over the last weeks (the consistency grid).
     /// </summary>
     /// <param name="weeks">How many weeks, this one included (1–53, default 21).</param>
