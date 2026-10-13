@@ -1,7 +1,7 @@
-/* BodyOps service worker.
+/* Milo (BodyOps) service worker.
    One job: when the server can't be reached, show offline.html instead of the browser's error page.
    Everything else goes straight to the network, so a new deploy shows up on the next launch. */
-const CACHE = 'bodyops-shell-v2';
+const CACHE = 'bodyops-shell-v3';
 const SHELL = ['/offline.html', '/icons/icon.svg'];
 
 self.addEventListener('install', e => {
