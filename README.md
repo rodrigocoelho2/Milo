@@ -12,7 +12,7 @@
   <img alt="SQL Server" src="https://img.shields.io/badge/SQL%20Server-Dapper%20%2B%20stored%20procedures-CC2927?logo=microsoftsqlserver&logoColor=white">
   <img alt="PWA" src="https://img.shields.io/badge/PWA-installs%20on%20the%20phone-3355FF">
   <img alt="Docker" src="https://img.shields.io/badge/Docker-UGREEN%20NAS-2496ED?logo=docker&logoColor=white">
-  <img alt="CI" src="https://github.com/rodrigocoelho2/bodyOps/actions/workflows/ci.yml/badge.svg?branch=main">
+  <img alt="CI" src="https://github.com/rodrigocoelho2/Milo/actions/workflows/ci.yml/badge.svg?branch=main">
 </p>
 
 <p align="center">
@@ -110,7 +110,7 @@ the landing page with sign-in (`bodyops-welcome.html`). Open them in a browser.
 ## Quick start (Docker on the NAS)
 
 ```bash
-git clone https://github.com/rodrigocoelho2/bodyOps.git && cd bodyOps
+git clone https://github.com/rodrigocoelho2/Milo.git && cd Milo
 cp .env.example .env          # then set SQL_SA_PASSWORD
 docker network create nas-net # once, if it doesn't exist yet
 docker compose up -d --build
