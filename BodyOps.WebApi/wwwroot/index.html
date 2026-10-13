@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0F14">
+<title>BodyOps</title>
+<meta name="description" content="Plan the week, log every set, watch the scale: training plan, meals and weigh-ins in one place.">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BodyOps">
+<script>
+  // Apply the saved theme before the first paint (Settings › Appearance).
+  try { document.documentElement.dataset.theme = localStorage.getItem('bodyops.theme') || 'dark'; } catch (e) { }
+</script>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/css/app.css">
+<script src="/js/core.js" defer></script>
+<script src="/js/charts.js" defer></script>
+<script src="/js/auth.js" defer></script>
+<script src="/js/today.js" defer></script>
+<script src="/js/week.js" defer></script>
+<script src="/js/plan.js" defer></script>
+<script src="/js/weight.js" defer></script>
+<script src="/js/settings.js" defer></script>
+<script src="/js/main.js" defer></script>
+</head>
+<body>
+<div id="app"><div class="loading"><div class="spinner" aria-label="Loading"></div></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<noscript>BodyOps needs JavaScript turned on.</noscript>
+</body>
+</html>

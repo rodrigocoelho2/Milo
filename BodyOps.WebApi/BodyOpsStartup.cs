@@ -19,6 +19,7 @@ using BodyOps.WebApi.Features.Settings.Services;
 using BodyOps.WebApi.Features.Weights.Repositories;
 using BodyOps.WebApi.Features.Weights.Services;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace BodyOps.WebApi;
 
@@ -122,8 +123,13 @@ internal static class BodyOpsStartup
         app.UseExceptionHandler();
         app.UseResponseCompression();
         app.UseDefaultFiles();
+
+        // .webmanifest is not in ASP.NET's default list of file types.
+        var contentTypes = new FileExtensionContentTypeProvider();
+        contentTypes.Mappings[".webmanifest"] = "application/manifest+json";
         app.UseStaticFiles(new StaticFileOptions
         {
+            ContentTypeProvider = contentTypes,
             // Pages, scripts and styles are revalidated on every load (cheap 304s), so a new deploy shows up on the next launch.
             // Fonts and icons never change name without changing content, so they can be kept.
             OnPrepareResponse = static context =>

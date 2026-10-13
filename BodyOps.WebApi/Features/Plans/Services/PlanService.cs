@@ -2,6 +2,7 @@ using BodyOps.Library.Enums;
 using BodyOps.Library.Services;
 using BodyOps.WebApi.Extensions.Globalization;
 using BodyOps.WebApi.Extensions.Time;
+using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Plans.Models.DTOs;
 using BodyOps.WebApi.Features.Plans.Models.Entities;
 using BodyOps.WebApi.Features.Plans.Repositories;
@@ -198,7 +199,7 @@ internal sealed class PlanService(
     internal static PlanDayDTO ToDayDTO(int weekday, PlanData plan)
     {
         var foods = plan.Foods.ToLookup(static food => food.PlanMealID);
-        return new PlanDayDTO
+        var day = new PlanDayDTO
         {
             Weekday = weekday,
             Meals = plan.Meals
@@ -212,6 +213,23 @@ internal sealed class PlanService(
                 .Select(static exercise => new PlanExerciseDTO(exercise))
                 .ToList(),
         };
+
+        // Planned sets per muscle: each exercise counts its planned sets (one when the plan doesn't say) times how much the muscle works.
+        var muscles = new Dictionary<Muscle, double>();
+        foreach (var exercise in plan.Exercises.Where(exercise => exercise.Weekday == weekday))
+        {
+            var sets = Math.Max(1, ExerciseDetailParser.Targets(exercise.Detail).Count);
+            foreach (var (muscle, weight) in MuscleDetector.Detect(exercise.Name, exercise.ExerciseType, exercise.Muscles))
+            {
+                muscles[muscle] = muscles.GetValueOrDefault(muscle) + sets * weight;
+            }
+        }
+
+        day.Muscles = muscles
+            .OrderByDescending(static pair => pair.Value)
+            .Select(static pair => new MuscleSetsDTO { Muscle = pair.Key, Sets = Math.Round(pair.Value, 1) })
+            .ToList();
+        return day;
     }
 
     private async Task<ServiceApiResponse<T>?> WeekdayProblemAsync<T>(int weekday) =>

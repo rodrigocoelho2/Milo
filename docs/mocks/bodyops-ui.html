@@ -1,0 +1,1194 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>[hidden]{display:none!important}body{margin:0}</style></head><body>
+<title>BodyOps UI Mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: mock canvas — screens stacked with a caption each; phone frames side by side, desktop frames fluid inside their own scroller.
+   Colours keep the original CorpoOps palette: navy ground, teal-green accent, amber for trained days and records, coral for skipped.
+   (Token names --blue/--green are legacy names: --blue is the accent, --green the "done" colour.) */
+:root{
+  --bg:#0B0F14; --s1:#121821; --s2:#1A2230; --s3:#232C39; --line:#232C39;
+  --fg:#E7EDF3; --mute:#8B98A9; --faint:#57667A;
+  --blue:#4FD1C5; --blue-soft:rgba(79,209,197,.15); --on-blue:#062521;
+  --green:#F2B84B; --green-soft:rgba(242,184,75,.15);
+  --red:#FF6B6B; --red-soft:rgba(255,107,107,.15);
+  --yellow:#F2B84B; --on-yellow:#2A1C00;
+  --canvas:#070A0E;
+  --display:"Big Shoulders Display","Oswald","Arial Narrow",sans-serif;
+  --body:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F2F5F7; --s1:#FFFFFF; --s2:#F6F8FA; --s3:#E8EDF1; --line:#D9E0E6;
+    --fg:#121821; --mute:#566476; --faint:#8794A4;
+    --blue:#0E8C80; --blue-soft:rgba(14,140,128,.10); --on-blue:#FFFFFF;
+    --green:#A86A00; --green-soft:rgba(242,184,75,.18);
+    --red:#C93139; --red-soft:rgba(201,49,57,.09);
+    --yellow:#F2B84B; --on-yellow:#2A1C00;
+    --canvas:#E4E6E2; color-scheme:light;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0F14; --s1:#121821; --s2:#1A2230; --s3:#232C39; --line:#232C39;
+  --fg:#E7EDF3; --mute:#8B98A9; --faint:#57667A;
+  --blue:#4FD1C5; --blue-soft:rgba(79,209,197,.15); --on-blue:#062521;
+  --green:#F2B84B; --green-soft:rgba(242,184,75,.15);
+  --red:#FF6B6B; --red-soft:rgba(255,107,107,.15);
+  --yellow:#F2B84B; --on-yellow:#2A1C00;
+  --canvas:#070A0E; color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F2F5F7; --s1:#FFFFFF; --s2:#F6F8FA; --s3:#E8EDF1; --line:#D9E0E6;
+  --fg:#121821; --mute:#566476; --faint:#8794A4;
+  --blue:#0E8C80; --blue-soft:rgba(14,140,128,.10); --on-blue:#FFFFFF;
+  --green:#A86A00; --green-soft:rgba(242,184,75,.18);
+  --red:#C93139; --red-soft:rgba(201,49,57,.09);
+  --yellow:#F2B84B; --on-yellow:#2A1C00;
+  --canvas:#E4E6E2; color-scheme:light;
+}
+
+*{box-sizing:border-box}
+body{background:var(--canvas); color:var(--fg); font:15px/1.45 var(--body); padding-inline:16px; padding-block:28px 64px}
+button{font:inherit; color:inherit; cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--blue); outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- mock canvas chrome ---------- */
+.canvas{max-width:1320px; margin:0 auto; display:flex; flex-direction:column; gap:48px}
+.intro{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:16px}
+.intro h1{font:800 44px/1 var(--display); letter-spacing:.01em; margin:0; text-wrap:balance}
+.intro p{margin:8px 0 0; color:var(--mute); max-width:62ch}
+.theme-switch{display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:3px; background:var(--s1)}
+.theme-switch button{border:0; background:none; padding:6px 14px; border-radius:999px; color:var(--mute); font-weight:600; font-size:13px}
+.theme-switch button[aria-pressed="true"]{background:var(--s3); color:var(--fg)}
+.screen{display:flex; flex-direction:column; gap:14px}
+.screen-cap{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px}
+.screen-cap h2{font:700 26px/1.1 var(--display); margin:0}
+.screen-cap p{margin:0; color:var(--mute); max-width:70ch}
+.phones{display:flex; flex-wrap:wrap; gap:28px; align-items:flex-start}
+.phone-col{display:flex; flex-direction:column; gap:10px; max-width:100%}
+.phone-col > span{color:var(--mute); font-size:13px}
+.scroller{overflow-x:auto; padding-bottom:6px}
+
+/* ---------- shared app pieces ---------- */
+.app{background:var(--bg); color:var(--fg); border:1px solid var(--line)}
+.phone{width:390px; max-width:100%; height:844px; border-radius:38px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 30px 60px -30px rgba(0,0,0,.45)}
+.phone-body{flex:1; min-height:0; overflow-y:auto; padding:18px 16px 24px; display:flex; flex-direction:column; gap:20px}
+.statusbar{display:flex; justify-content:space-between; padding:14px 28px 0; font-size:13px; font-weight:600}
+.tabbar{display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); background:var(--s1); padding:8px 6px 22px}
+.tabbar button{border:0; background:none; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; font-weight:600; color:var(--faint); padding:4px 0}
+.tabbar button[aria-current="page"]{color:var(--blue)}
+.tabbar svg{width:22px; height:22px}
+
+.title-xl{font:800 40px/.95 var(--display); margin:0; letter-spacing:.005em}
+.title-l{font:700 22px/1.1 var(--display); margin:0; letter-spacing:.01em}
+.sub{color:var(--mute); font-size:13px}
+.row{display:flex; align-items:center; gap:10px}
+.spread{display:flex; align-items:center; justify-content:space-between; gap:12px}
+.sync{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--mute); font-weight:500}
+.sync i{width:7px; height:7px; border-radius:50%; background:var(--green)}
+
+/* day strip */
+.days{display:grid; grid-template-columns:repeat(7,1fr); gap:4px}
+.day{border:1px solid transparent; background:none; border-radius:12px; padding:7px 0 8px; display:flex; flex-direction:column; align-items:center; gap:2px}
+.day b{font:700 19px/1 var(--display)}
+.day small{font-size:11px; color:var(--mute); font-weight:600}
+.day.today small{color:var(--blue)}
+.day[aria-pressed="true"]{background:var(--s2); border-color:var(--line)}
+.marks{display:flex; gap:3px; height:5px; margin-top:3px}
+.marks i{width:5px; height:5px; border-radius:50%; background:var(--line)}
+.marks i.m-part{background:var(--blue); opacity:.45}
+.marks i.m-full{background:var(--blue)}
+.marks i.t-done{background:var(--green)}
+.marks i.t-miss{background:var(--red)}
+
+/* segmented */
+.seg{display:inline-flex; background:var(--s2); border:1px solid var(--line); border-radius:10px; padding:3px; gap:2px}
+.seg button{border:0; background:none; padding:6px 11px; border-radius:7px; font-size:13px; font-weight:600; color:var(--mute)}
+.seg button[aria-pressed="true"]{background:var(--s1); color:var(--fg); box-shadow:0 1px 0 var(--line)}
+.seg button.is-done[aria-pressed="true"]{background:var(--green); color:var(--bg)}
+
+/* exercise log card (phone) */
+.ex{background:var(--s1); border:1px solid var(--line); border-radius:16px; padding:13px 13px 12px; display:flex; flex-direction:column; gap:10px}
+.ex.active{border-color:var(--blue)}
+.ex-head{display:flex; justify-content:space-between; gap:10px; align-items:flex-start}
+.ex-name{font-weight:650; font-weight:600; font-size:15px; line-height:1.25}
+.ex-meta{font-size:12px; color:var(--mute); margin-top:2px}
+.plan-tag{font:700 15px/1 var(--display); color:var(--mute); white-space:nowrap; padding-top:2px}
+.ex-log{display:flex; gap:8px; align-items:stretch}
+.load{display:flex; align-items:center; background:var(--s2); border:1px solid var(--line); border-radius:11px; overflow:hidden; flex:0 0 auto}
+.load button{border:0; background:none; width:30px; height:40px; color:var(--mute); font-size:18px}
+.load span{min-width:58px; text-align:center; font:700 22px/1 var(--display)}
+.load span small{font:600 11px var(--body); color:var(--mute); margin-left:2px}
+.sets{display:flex; gap:6px; flex:1; min-width:0}
+.set{flex:1; min-width:0; border:1px dashed var(--line); background:none; border-radius:11px; height:42px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1}
+.set b{font:700 20px/1 var(--display)}
+.set small{font-size:10px; color:var(--faint); margin-top:2px; font-weight:600}
+.set.filled{border:1px solid transparent; background:var(--blue); color:var(--on-blue)}
+.set.filled small{color:inherit; opacity:.75}
+.pr{display:inline-flex; align-items:center; gap:4px; background:var(--yellow); color:var(--on-yellow); font-size:11px; font-weight:700; padding:2px 7px; border-radius:6px; white-space:nowrap}
+.ex-foot{display:flex; justify-content:space-between; font-size:12px; color:var(--mute)}
+.ex-foot .up{color:var(--green); font-weight:600}
+
+/* cardio */
+.cardio-line{display:flex; gap:8px}
+.cardio-line .field{flex:1}
+
+/* meals checklist */
+.meals{display:flex; flex-direction:column; border:1px solid var(--line); border-radius:16px; background:var(--s1); overflow:hidden}
+.meal{display:flex; gap:12px; align-items:flex-start; padding:12px 13px; border:0; background:none; text-align:left; width:100%}
+.meal + .meal{border-top:1px solid var(--line)}
+.tick{flex:0 0 22px; height:22px; border-radius:7px; border:1.5px solid var(--faint); display:grid; place-items:center; margin-top:1px}
+.tick svg{width:13px; height:13px; opacity:0}
+.meal[aria-checked="true"] .tick{background:var(--blue); border-color:var(--blue); color:var(--on-blue)}
+.meal[aria-checked="true"] .tick svg{opacity:1}
+.meal[aria-checked="true"] .meal-name{color:var(--mute); text-decoration:line-through; text-decoration-color:var(--faint)}
+.meal-name{font-weight:600}
+.meal-foods{font-size:12.5px; color:var(--mute); margin-top:1px}
+.meal-time{margin-left:auto; font-size:12px; color:var(--faint); white-space:nowrap}
+
+.section-head{display:flex; justify-content:space-between; align-items:center; gap:10px}
+.link-btn{border:0; background:none; color:var(--blue); font-weight:600; font-size:13px; padding:4px 0}
+
+/* progress rings */
+.ring{--p:0; width:44px; height:44px; border-radius:50%; background:conic-gradient(var(--blue) calc(var(--p)*1%), var(--s3) 0); display:grid; place-items:center; flex:0 0 auto}
+.ring::before{content:""; grid-area:1/1; width:34px; height:34px; border-radius:50%; background:var(--s1)}
+.ring span{grid-area:1/1; font:700 14px/1 var(--display); position:relative}
+
+/* summary chips on phone */
+.today-sum{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.sum{background:var(--s1); border:1px solid var(--line); border-radius:14px; padding:10px 12px; display:flex; align-items:center; gap:10px}
+.sum b{font:700 20px/1 var(--display); display:block}
+.sum span{font-size:12px; color:var(--mute)}
+
+/* ---------- desktop ---------- */
+.desk{width:100%; min-width:1080px; max-width:1320px; border-radius:16px; overflow:hidden; display:grid; grid-template-columns:212px 1fr; min-height:780px}
+.rail{background:var(--s1); border-right:1px solid var(--line); padding:20px 14px; display:flex; flex-direction:column; gap:22px}
+.brand{display:flex; align-items:center; gap:10px; padding:0 6px}
+.brand-mark{width:32px; height:32px; border-radius:9px; background:var(--blue); color:#0B0F14; display:grid; place-items:center}
+.brand-mark svg{width:24px; height:24px}
+.brand strong{font:800 22px/1 var(--display); letter-spacing:.02em}
+.nav{display:flex; flex-direction:column; gap:2px}
+.nav button{border:0; background:none; display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:10px; font-weight:600; color:var(--mute); text-align:left}
+.nav button svg{width:19px; height:19px; flex:0 0 auto}
+.nav button[aria-current="page"]{background:var(--blue-soft); color:var(--fg)}
+.nav button[aria-current="page"] svg{color:var(--blue)}
+.rail-foot{margin-top:auto; display:flex; flex-direction:column; gap:8px; padding:0 6px}
+.rail-foot .sub{font-size:12px}
+.main{padding:24px 28px 28px; display:flex; flex-direction:column; gap:20px; min-width:0}
+.page-head{display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap}
+.week-nav{display:flex; align-items:center; gap:8px}
+.icon-btn{width:36px; height:36px; border-radius:10px; border:1px solid var(--line); background:var(--s1); display:grid; place-items:center; color:var(--mute)}
+.icon-btn svg{width:16px; height:16px}
+.btn{border:1px solid var(--line); background:var(--s1); border-radius:10px; padding:8px 13px; font-weight:600; font-size:13px}
+.btn-primary{background:var(--blue); border-color:var(--blue); color:var(--on-blue)}
+.week-totals{display:flex; gap:26px; flex-wrap:wrap}
+.wt b{font:700 26px/1 var(--display); display:block}
+.wt span{font-size:12px; color:var(--mute)}
+
+/* week ribbon */
+.ribbon{display:grid; grid-template-columns:repeat(7,1fr); gap:8px}
+.rday{border:1px solid var(--line); background:var(--s1); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:10px; text-align:left}
+.rday[aria-pressed="true"]{border-color:var(--blue); box-shadow:inset 0 0 0 1px var(--blue)}
+.rday .top{display:flex; justify-content:space-between; align-items:baseline}
+.rday .top b{font:700 24px/1 var(--display)}
+.rday .top small{font-size:12px; font-weight:600; color:var(--mute)}
+.rday.today .top small{color:var(--blue)}
+.mealbar{display:flex; gap:3px}
+.mealbar i{flex:1; height:6px; border-radius:3px; background:var(--s3)}
+.mealbar i.on{background:var(--blue)}
+.chip{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; padding:3px 8px; border-radius:7px; background:var(--s2); color:var(--mute); width:max-content}
+.chip.done{background:var(--green-soft); color:var(--green)}
+.chip.miss{background:var(--red-soft); color:var(--red)}
+.chip.rest{background:none; padding-left:0}
+.rday .what{font-size:12px; color:var(--mute); line-height:1.3; min-height:2.6em}
+
+.week-grid{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:16px; align-items:start}
+.panel{background:var(--s1); border:1px solid var(--line); border-radius:16px; padding:16px 18px; display:flex; flex-direction:column; gap:14px; min-width:0}
+.panel-head{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap}
+.stack{display:flex; flex-direction:column; gap:16px; min-width:0}
+
+table.log{width:100%; border-collapse:collapse; font-size:14px}
+table.log th{text-align:left; font-size:12px; color:var(--mute); font-weight:600; padding:0 8px 8px; border-bottom:1px solid var(--line)}
+table.log td{white-space:nowrap; padding:9px 8px; border-bottom:1px solid var(--line); vertical-align:middle}
+table.log td:first-child{white-space:normal}
+table.log tr:last-child td{border-bottom:0}
+table.log td.r, table.log th.r{text-align:right}
+.mini-sets{display:flex; gap:4px}
+.mini-sets i{font:700 14px/1 var(--display); font-style:normal; min-width:26px; height:24px; border-radius:6px; display:grid; place-items:center; background:var(--blue); color:var(--on-blue)}
+.mini-sets i.e{background:none; border:1px dashed var(--line); color:var(--faint)}
+.kg{font:700 18px/1 var(--display)}
+
+.desk-meals{display:grid; grid-template-columns:repeat(5,1fr); gap:8px}
+.dm{border:1px solid var(--line); border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:6px; background:var(--s2); text-align:left}
+.dm[aria-checked="true"]{background:var(--blue-soft); border-color:transparent}
+.dm .row{justify-content:space-between}
+.dm .tick{flex-basis:20px; width:20px; height:20px}
+.dm-foods{font-size:12px; color:var(--mute); line-height:1.35}
+
+/* charts */
+svg.chart{width:100%; height:auto; display:block}
+.ax{fill:var(--faint); font:600 11px var(--body)}
+.grid-l{stroke:var(--line); stroke-dasharray:2 4}
+.target-l{stroke:var(--green); stroke-dasharray:5 5; stroke-width:1.5}
+.series{fill:none; stroke:var(--blue); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round}
+.area{fill:var(--blue-soft)}
+.dot{fill:var(--s1); stroke:var(--blue); stroke-width:2.5}
+.dot-end{fill:var(--blue)}
+.lbl{fill:var(--fg); font:700 14px var(--display)}
+.lbl-t{fill:var(--green); font:600 11px var(--body)}
+
+/* body map */
+.bodymap{width:100%; height:auto}
+.bm-n{fill:var(--s3)}
+.bm-m{stroke:var(--s1); stroke-width:1}
+.bm-cap{fill:var(--faint); font:600 11px var(--body)}
+.mrank{display:flex; flex-direction:column; gap:6px}
+.mr{display:grid; grid-template-columns:88px 1fr 56px; gap:10px; align-items:center; font-size:13px}
+.mr .bar{height:6px; border-radius:3px; background:var(--s3); overflow:hidden}
+.mr .bar i{display:block; height:100%; background:var(--blue); border-radius:3px}
+.mr .v{text-align:right; color:var(--mute)}
+
+/* heatmap */
+.heat{display:grid; grid-template-columns:repeat(21,1fr); gap:3px}
+.heat .col{display:grid; grid-template-rows:repeat(7,1fr); gap:3px}
+.heat i{aspect-ratio:1; border-radius:3px; background:var(--s3); max-width:100%}
+.heat i.f{background:none; border:1px dashed var(--line)}
+.heat-legend{display:flex; align-items:center; gap:4px; font-size:11px; color:var(--faint)}
+.heat-legend i{width:11px; height:11px; border-radius:3px}
+
+/* plan editor */
+.plan-grid{display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); gap:16px; align-items:start}
+.daytabs{display:flex; gap:6px; flex-wrap:wrap}
+.daytab{border:1px solid var(--line); background:var(--s1); border-radius:12px; padding:8px 12px; text-align:left; min-width:104px}
+.daytab b{display:block; font:700 17px/1 var(--display)}
+.daytab span{font-size:12px; color:var(--mute)}
+.daytab[aria-pressed="true"]{border-color:var(--blue); background:var(--blue-soft)}
+.prow{display:grid; grid-template-columns:18px 98px minmax(0,1.6fr) 92px minmax(0,1fr) 30px; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line)}
+.prow:last-of-type{border-bottom:0}
+.prow.head{font-size:12px; color:var(--mute); font-weight:600; padding-top:0}
+.grip{color:var(--faint); cursor:grab}
+.field{background:var(--s2); border:1px solid var(--line); border-radius:9px; padding:8px 10px; font:inherit; font-size:14px; color:var(--fg); width:100%; min-width:0}
+.field.small{text-align:center; font-weight:600}
+.mtags{grid-column:3 / 6; display:flex; gap:5px; flex-wrap:wrap; margin-top:-2px}
+.mtag{font-size:11.5px; padding:2px 8px; border-radius:6px; background:var(--s2); color:var(--mute); border:1px solid var(--line)}
+.mtag.auto{border-style:dashed}
+.del{border:0; background:none; color:var(--faint); width:30px; height:30px; border-radius:8px}
+.del:hover{color:var(--red); background:var(--red-soft)}
+.foodrow{display:grid; grid-template-columns:minmax(0,1fr) 84px 82px 30px; gap:8px; align-items:center}
+.unit{display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden}
+.unit button{border:0; background:var(--s2); padding:7px 9px; font-size:12px; font-weight:600; color:var(--mute)}
+.unit button[aria-pressed="true"]{background:var(--blue); color:var(--on-blue)}
+.mealcard{border:1px solid var(--line); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; background:var(--s2)}
+.mealcard .field{background:var(--s1)}
+.mealcard .unit button{background:var(--s1)}
+.mealcard .unit button[aria-pressed="true"]{background:var(--blue)}
+.meal-list{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.copyto{display:flex; gap:6px; flex-wrap:wrap}
+.copyto button{border:1px solid var(--line); background:var(--s2); border-radius:8px; padding:5px 9px; font-size:12px; font-weight:600; color:var(--mute)}
+.copyto button[aria-pressed="true"]{background:var(--blue); border-color:var(--blue); color:var(--on-blue)}
+
+/* weight phone */
+.big-w{display:flex; align-items:flex-end; gap:8px}
+.big-w b{font:800 92px/.82 var(--display); letter-spacing:-.01em}
+.big-w span{font:700 24px/1 var(--display); color:var(--mute); padding-bottom:6px}
+.trip{display:flex; flex-direction:column; gap:6px}
+.trip-bar{position:relative; height:10px; border-radius:5px; background:var(--s3)}
+.trip-bar i{position:absolute; inset:0 auto 0 0; border-radius:5px; background:var(--blue)}
+.trip-ends{display:flex; justify-content:space-between; font-size:12px; color:var(--mute)}
+.wlist{display:flex; flex-direction:column; background:var(--s1); border:1px solid var(--line); border-radius:16px}
+.wrow{display:grid; grid-template-columns:1fr auto 64px; gap:10px; padding:11px 14px; align-items:center}
+.wrow + .wrow{border-top:1px solid var(--line)}
+.wrow b{font:700 19px/1 var(--display)}
+.delta{font-size:12.5px; font-weight:600; text-align:right}
+.delta.down{color:var(--green)} .delta.up{color:var(--red)}
+.addw{display:grid; grid-template-columns:1fr 1fr auto; gap:8px}
+
+/* settings sheet */
+.sheet{background:var(--s1); border:1px solid var(--line); border-radius:16px; padding:6px 0}
+.srow{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 14px}
+.srow + .srow{border-top:1px solid var(--line)}
+.srow .sub{display:block}
+
+.toast{display:flex; align-items:center; gap:14px; background:var(--fg); color:var(--bg); border-radius:12px; padding:10px 14px; font-size:13px; font-weight:600}
+.toast button{border:0; background:none; color:var(--blue); font-weight:700; margin-left:auto}
+:root[data-theme="light"] .toast button{color:#8FB0FF}
+
+.note{font-size:13px; color:var(--mute); border-left:3px solid var(--blue); padding:4px 0 4px 12px; max-width:80ch}
+ul.changes{margin:0; padding-left:18px; color:var(--mute); display:grid; gap:4px; max-width:90ch}
+ul.changes b{color:var(--fg); font-weight:600}
+
+/* ---------- landing ---------- */
+.land{width:100%; min-width:1080px; max-width:1320px; border-radius:16px; overflow:hidden; display:flex; flex-direction:column}
+.land-nav{display:flex; justify-content:space-between; align-items:center; padding:20px 40px; border-bottom:1px solid var(--line)}
+.land-nav .row{gap:14px}
+.land-hero{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:48px; padding:64px 40px 56px; align-items:center}
+.hero-title{font:800 84px/.9 var(--display); letter-spacing:-.005em; margin:0; text-wrap:balance}
+.hero-lede{font-size:18px; color:var(--mute); max-width:46ch; margin:20px 0 28px}
+.btn-lg{padding:13px 20px; font-size:15px; border-radius:12px}
+.hero-art{position:relative; height:430px}
+.hero-art .ex{position:absolute; width:340px; box-shadow:0 24px 48px -24px rgba(0,0,0,.6)}
+.hero-art .a1{left:0; top:24px}
+.hero-art .a2{right:0; top:150px}
+.hero-art .a3{left:40px; bottom:0; width:300px}
+.wcard{background:var(--s1); border:1px solid var(--line); border-radius:16px; padding:14px 16px; display:flex; flex-direction:column; gap:6px}
+.wcard .big{font:800 54px/.9 var(--display)}
+.land-feats{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border-top:1px solid var(--line)}
+.feat{background:var(--bg); padding:28px 40px 32px; display:flex; flex-direction:column; gap:8px}
+.feat h3{font:700 26px/1.05 var(--display); margin:0}
+.feat p{margin:0; color:var(--mute); max-width:38ch}
+.feat .sample{margin-top:10px}
+.land-foot{display:flex; justify-content:space-between; align-items:center; gap:16px; padding:22px 40px; border-top:1px solid var(--line); color:var(--mute); font-size:13px}
+
+/* phone landing */
+.pl-hero{display:flex; flex-direction:column; gap:14px}
+.pl-hero .hero-title{font-size:54px}
+.pl-hero .hero-lede{font-size:16px; margin:0}
+.pl-cta{display:flex; flex-direction:column; gap:8px}
+.pl-cta .btn{width:100%; text-align:center}
+
+/* auth */
+.auth{width:100%; min-width:1080px; max-width:1320px; border-radius:16px; overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); min-height:640px}
+.auth-side{background:var(--s1); border-right:1px solid var(--line); padding:40px; display:flex; flex-direction:column; justify-content:space-between; gap:24px}
+.auth-side .hero-title{font-size:64px}
+.auth-main{display:grid; place-items:center; padding:40px}
+.auth-card{width:100%; max-width:380px; display:flex; flex-direction:column; gap:16px}
+.auth-tabs{display:grid; grid-template-columns:1fr 1fr; background:var(--s2); border:1px solid var(--line); border-radius:12px; padding:4px}
+.auth-tabs button{border:0; background:none; padding:9px; border-radius:9px; font-weight:600; color:var(--mute)}
+.auth-tabs button[aria-selected="true"]{background:var(--s1); color:var(--fg); box-shadow:0 1px 0 var(--line)}
+.lbl-f{display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600}
+.lbl-f .field{padding:11px 12px; font-size:15px}
+.lbl-f small{font-weight:500; color:var(--faint)}
+.lbl-f.err .field{border-color:var(--red)}
+.lbl-f.err small{color:var(--red)}
+.check{display:flex; align-items:center; gap:9px; font-size:14px; color:var(--mute)}
+.check input{width:18px; height:18px; accent-color:var(--blue)}
+.form-err{background:var(--red-soft); color:var(--red); border-radius:10px; padding:10px 12px; font-size:13.5px; font-weight:600}
+.auth-card .btn-primary{padding:12px; font-size:15px}
+.fine{font-size:12.5px; color:var(--faint)}
+
+/* ---------- logo ---------- */
+.logos{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px}
+.logo-opt{background:var(--s1); border:1px solid var(--line); border-radius:18px; padding:20px; display:flex; flex-direction:column; gap:18px}
+.logo-opt.pick{border-color:var(--blue); box-shadow:inset 0 0 0 1px var(--blue)}
+.logo-row{display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap}
+.app-icon{width:96px; height:96px; border-radius:22px; display:grid; place-items:center; background:#0B0F14; color:#4FD1C5; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.app-icon svg{width:60px; height:60px}
+.app-icon.ink{background:#15181D; color:#EDEFF2; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.fav{width:32px; height:32px; border-radius:8px; display:grid; place-items:center; background:#0B0F14; color:#4FD1C5}
+.fav svg{width:22px; height:22px}
+.lockup{display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:12px}
+.lockup.on-dark{background:#0B0F14; color:#E7EDF3}
+.lockup.on-light{background:#F2F5F7; color:#121821}
+.lockup svg{width:30px; height:30px}
+.lockup .on-dark-blue{color:#4FD1C5}
+.lockup .on-light-blue{color:#0E8C80}
+.wordmark{font:800 26px/1 var(--display); letter-spacing:.03em}
+.logo-opt h3{font:700 22px/1 var(--display); margin:0}
+.logo-opt p{margin:0; color:var(--mute); font-size:14px}
+.rec{font-size:12px; font-weight:700; color:var(--blue)}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important; animation:none!important}}
+</style>
+
+<div class="canvas">
+
+  <header class="intro">
+    <div>
+      <h1>BodyOps · new interface</h1>
+      <p>Mock for review before anything is built. Your plan, meals, weigh-ins and last Tuesday's loads are real data, translated to English. Today's logged sets, Monday's session and the PR are examples.</p>
+    </div>
+    <div class="theme-switch" role="group" aria-label="Theme">
+      <button type="button" data-theme-set="dark" aria-pressed="true">Dark</button>
+      <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
+    </div>
+  </header>
+
+  <section class="screen" aria-labelledby="cap-changes">
+    <div class="screen-cap"><h2 id="cap-changes">What changes</h2></div>
+    <ul class="changes">
+      <li><b>Today is the home screen.</b> At the gym you open the app and log, without scrolling past charts.</li>
+      <li><b>Sets replace the "real" text field.</b> Tap a set to log its reps; load has − / + steppers. Volume and PRs come from the sets, so nothing is guessed from "3x12" text.</li>
+      <li><b>Last session sits on every exercise</b> (load, reps and date), so you know what to beat.</li>
+      <li><b>Diet and Training merge into Plan</b>, with one day picker, copy-to-days and the muscle map beside the editor.</li>
+      <li><b>Week replaces the dashboard.</b> One ribbon shows meals and training for all 7 days; charts, muscle map and consistency sit underneath.</li>
+      <li><b>Accounts replace the shared token.</b> Each person signs up with a username and password and gets a plan of their own. The first account is the admin and can reset passwords.</li>
+      <li><b>Settings holds your account, backup import/export and reset week</b>, which used to crowd the sidebar.</li>
+    </ul>
+  </section>
+
+  <!-- ================= LOGO ================= -->
+  <section class="screen" aria-labelledby="cap-logo">
+    <div class="screen-cap"><h2 id="cap-logo">Logo</h2><p>Grip plate is your pick and is used on every screen below.</p></div>
+    <div class="logos">
+      <div class="logo-opt">
+        <h3>Loaded bar</h3>
+        <div class="logo-row">
+          <span class="app-icon ink" data-logo="bar"></span>
+          <span class="fav" style="background:#15181D" data-logo="bar"></span>
+        </div>
+        <div class="lockup on-dark"><span data-logo="bar"></span><span class="wordmark">BODYOPS</span></div>
+        <div class="lockup on-light" style="padding-left:14px"><span class="app-icon ink" style="width:34px;height:34px;border-radius:9px" ><svg viewBox="0 0 32 32" style="width:24px;height:24px" data-logo-inline="bar"></svg></span><span class="wordmark">BODYOPS</span></div>
+        <p>A barbell sleeve loaded with competition plates: green 10, yellow 15, blue 20, red 25 kg. Read left to right it is also a rising bar chart, which is what the app shows you.</p>
+      </div>
+      <div class="logo-opt">
+        <h3>Plate B</h3>
+        <div class="logo-row">
+          <span class="app-icon" data-logo="b"></span>
+          <span class="fav" data-logo="b"></span>
+        </div>
+        <div class="lockup on-dark"><span class="on-dark-blue" data-logo="b"></span><span class="wordmark">BODYOPS</span></div>
+        <div class="lockup on-light"><span class="on-light-blue" data-logo="b"></span><span class="wordmark">BODYOPS</span></div>
+        <p>The letter B built from a bar and two plates seen from the front. Single colour, so it works on the blue accent.</p>
+      </div>
+      <div class="logo-opt pick">
+        <div class="spread"><h3>Grip plate</h3><span class="rec">Your pick</span></div>
+        <div class="logo-row">
+          <span class="app-icon" data-logo="plate"></span>
+          <span class="fav" data-logo="plate"></span>
+        </div>
+        <div class="lockup on-dark"><span class="on-dark-blue" data-logo="plate"></span><span class="wordmark">BODYOPS</span></div>
+        <div class="lockup on-light"><span class="on-light-blue" data-logo="plate"></span><span class="wordmark">BODYOPS</span></div>
+        <p>A bumper plate with three grip holes, in the app’s teal on navy. Reads clearly even at favicon size.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LANDING ================= -->
+  <section class="screen" aria-labelledby="cap-landing">
+    <div class="screen-cap"><h2 id="cap-landing">Landing · desktop</h2><p>What someone sees at the address before signing in.</p></div>
+    <div class="scroller">
+      <div class="app land">
+        <header class="land-nav">
+          <div class="brand"><span class="brand-mark" data-logo="plate"></span><strong>BODYOPS</strong></div>
+          <div class="row"><button type="button" class="btn" style="border-color:transparent;background:none">Sign in</button><button type="button" class="btn btn-primary">Create account</button></div>
+        </header>
+        <div class="land-hero">
+          <div>
+            <h1 class="hero-title">Plan the week. Log every set. Watch the scale.</h1>
+            <p class="hero-lede">BodyOps keeps your training plan, your meals and your weigh-ins in one place. Each account has its own plan, and it syncs between your phone at the gym and your computer at home.</p>
+            <div class="row"><button type="button" class="btn btn-primary btn-lg">Create your account</button><button type="button" class="btn btn-lg">I already have one</button></div>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <article class="ex a1">
+              <div class="ex-head"><div><div class="ex-name">Incline chest press <span class="pr">PR</span></div><div class="ex-meta">Last: 100 kg · 3×10 · 21 Jul</div></div><span class="plan-tag">3 × 12</span></div>
+              <div class="ex-log"><div class="load"><button type="button" tabindex="-1">−</button><span class="num">102.5<small>kg</small></span><button type="button" tabindex="-1">+</button></div>
+                <div class="sets"><span class="set filled"><b>12</b><small>set 1</small></span><span class="set filled"><b>11</b><small>set 2</small></span><span class="set filled"><b>10</b><small>set 3</small></span></div></div>
+            </article>
+            <div class="wcard a2" style="position:absolute;width:250px">
+              <span class="sub">Weight</span>
+              <span class="big num">98.0<span style="font-size:22px;color:var(--mute)"> kg</span></span>
+              <span class="sub">−2.4 kg since 14 Jul · goal 90</span>
+              <div class="trip-bar" style="margin-top:6px"><i style="width:23%"></i></div>
+            </div>
+            <div class="meals a3" style="position:absolute;width:300px;box-shadow:0 24px 48px -24px rgba(0,0,0,.6)">
+              <span class="meal" aria-checked="true"><span class="tick">✓</span><span><span class="meal-name">Breakfast</span><span class="meal-foods" style="display:block">Whey 25 g · Rice flour 50 g · Banana 1 pc</span></span></span>
+              <span class="meal" aria-checked="false"><span class="tick"></span><span><span class="meal-name">Lunch</span><span class="meal-foods" style="display:block">Chicken breast 200 g · Pasta / rice 150 g</span></span></span>
+            </div>
+          </div>
+        </div>
+        <div class="land-feats">
+          <div class="feat"><h3>Your plan, day by day</h3><p>Set exercises with sets × reps and meals with grams for each weekday. Copy a day to the others in one go.</p></div>
+          <div class="feat"><h3>Log it at the gym</h3><p>Tap each set as you finish it. Last session's load is on every exercise, and a new personal record gets flagged.</p></div>
+          <div class="feat"><h3>See how the week went</h3><p>Meals eaten, days trained, volume lifted, muscles worked and your weight against your goal.</p></div>
+        </div>
+        <footer class="land-foot"><span>Runs on your own server. Your data stays there.</span><span>BodyOps</span></footer>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" aria-labelledby="cap-auth-phone">
+    <div class="screen-cap"><h2 id="cap-auth-phone">Landing and sign-in · phone</h2><p>Sign in and Create account share one form with two tabs.</p></div>
+    <div class="phones">
+      <div class="phone-col">
+        <div class="app phone">
+          <div class="statusbar"><span class="num">09:12</span><span>●●● 5G</span></div>
+          <div class="phone-body" style="justify-content:space-between">
+            <div class="brand" style="padding:0"><span class="brand-mark" data-logo="plate"></span><strong>BODYOPS</strong></div>
+            <div class="pl-hero">
+              <h1 class="hero-title">Plan the week. Log every set. Watch the scale.</h1>
+              <p class="hero-lede">Training plan, meals and weigh-ins in one place, synced between your phone and your computer.</p>
+            </div>
+            <article class="ex" aria-hidden="true">
+              <div class="ex-head"><div><div class="ex-name">Incline chest press <span class="pr">PR</span></div><div class="ex-meta">Last: 100 kg · 3×10</div></div><span class="plan-tag">3 × 12</span></div>
+              <div class="ex-log"><div class="load"><span class="num" style="padding:0 6px">102.5<small>kg</small></span></div>
+                <div class="sets"><span class="set filled"><b>12</b><small>set 1</small></span><span class="set filled"><b>11</b><small>set 2</small></span><span class="set filled"><b>10</b><small>set 3</small></span></div></div>
+            </article>
+            <div class="pl-cta">
+              <button type="button" class="btn btn-primary btn-lg">Create your account</button>
+              <button type="button" class="btn btn-lg">Sign in</button>
+            </div>
+          </div>
+        </div>
+        <span>Landing</span>
+      </div>
+
+      <div class="phone-col">
+        <div class="app phone">
+          <div class="statusbar"><span class="num">09:13</span><span>●●● 5G</span></div>
+          <div class="phone-body">
+            <div class="brand" style="padding:0"><span class="brand-mark" data-logo="plate"></span><strong>BODYOPS</strong></div>
+            <div><p class="title-xl">Welcome back</p><span class="sub">Sign in to see your plan.</span></div>
+            <div class="auth-tabs" role="tablist"><button type="button" role="tab" aria-selected="true">Sign in</button><button type="button" role="tab" aria-selected="false">Create account</button></div>
+            <label class="lbl-f">Username<input class="field" id="pUser" value="Rodas" autocomplete="username"></label>
+            <label class="lbl-f">Password<input class="field" id="pPass" type="password" value="••••••••••" autocomplete="current-password"></label>
+            <label class="check"><input type="checkbox" id="pRemember" checked>Keep me signed in on this device</label>
+            <button type="button" class="btn btn-primary btn-lg">Sign in</button>
+            <p class="fine">Forgot your password? Ask the server admin to reset it from Settings › Users.</p>
+          </div>
+        </div>
+        <span>Sign in</span>
+      </div>
+
+      <div class="phone-col">
+        <div class="app phone">
+          <div class="statusbar"><span class="num">09:14</span><span>●●● 5G</span></div>
+          <div class="phone-body">
+            <div class="brand" style="padding:0"><span class="brand-mark" data-logo="plate"></span><strong>BODYOPS</strong></div>
+            <div><p class="title-xl">Create your account</p><span class="sub">You start with an empty plan of your own.</span></div>
+            <div class="auth-tabs" role="tablist"><button type="button" role="tab" aria-selected="false">Sign in</button><button type="button" role="tab" aria-selected="true">Create account</button></div>
+            <label class="lbl-f err">Username<input class="field" id="rUser" value="rodas" autocomplete="username"><small>That username is taken.</small></label>
+            <label class="lbl-f">Password<input class="field" id="rPass" type="password" value="••••••••••" autocomplete="new-password"><small>At least 8 characters.</small></label>
+            <label class="lbl-f">Weight goal <span class="sub" style="font-weight:500">(optional)</span><input class="field" id="rGoal" placeholder="kg" inputmode="decimal"></label>
+            <button type="button" class="btn btn-primary btn-lg">Create account</button>
+            <p class="fine">The first account on a new server becomes its admin.</p>
+          </div>
+        </div>
+        <span>Create account, with an error</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" aria-labelledby="cap-auth-desk">
+    <div class="screen-cap"><h2 id="cap-auth-desk">Sign-in · desktop</h2></div>
+    <div class="scroller">
+      <div class="app auth">
+        <aside class="auth-side">
+          <div class="brand" style="padding:0"><span class="brand-mark" data-logo="plate"></span><strong>BODYOPS</strong></div>
+          <h1 class="hero-title">Plan the week. Log every set. Watch the scale.</h1>
+          <div class="today-sum" style="max-width:420px">
+            <div class="sum"><div class="ring" style="--p:60"><span>3/5</span></div><div><b>Meals</b><span>today</span></div></div>
+            <div class="sum"><div class="ring" style="--p:100"><span>18</span></div><div><b>Sets</b><span>all logged</span></div></div>
+          </div>
+        </aside>
+        <main class="auth-main">
+          <div class="auth-card">
+            <div><p class="title-xl">Welcome back</p><span class="sub">Sign in to see your plan.</span></div>
+            <div class="auth-tabs" role="tablist"><button type="button" role="tab" aria-selected="true">Sign in</button><button type="button" role="tab" aria-selected="false">Create account</button></div>
+            <div class="form-err" role="alert">Wrong username or password.</div>
+            <label class="lbl-f">Username<input class="field" id="dUser" value="Rodas" autocomplete="username"></label>
+            <label class="lbl-f">Password<input class="field" id="dPass" type="password" value="••••••" autocomplete="current-password"></label>
+            <label class="check"><input type="checkbox" id="dRemember" checked>Keep me signed in on this device</label>
+            <button type="button" class="btn btn-primary">Sign in</button>
+            <p class="fine">Forgot your password? Ask the server admin to reset it from Settings › Users.</p>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PHONE: TODAY ================= -->
+  <section class="screen" aria-labelledby="cap-today">
+    <div class="screen-cap"><h2 id="cap-today">Today · phone</h2><p>What you see at the gym. Tap the sets and meals to try it.</p></div>
+    <div class="phones">
+
+      <div class="phone-col">
+        <div class="app phone">
+          <div class="statusbar"><span class="num">18:42</span><span>●●● 5G</span></div>
+          <div class="phone-body">
+            <div class="spread">
+              <div>
+                <p class="title-xl">Tuesday</p>
+                <span class="sub">13 October · week of 12–18 Oct</span>
+              </div>
+              <span class="sync"><i></i>Synced</span>
+            </div>
+
+            <div class="days" id="phoneDays"></div>
+
+            <div class="today-sum">
+              <div class="sum"><div class="ring" id="ringMeals" style="--p:20"><span>1/5</span></div><div><b>Meals</b><span id="mealsLeft">4 left today</span></div></div>
+              <div class="sum"><div class="ring" id="ringSets" style="--p:28"><span class="num">5/18</span></div><div><b>Sets</b><span>Session started</span></div></div>
+            </div>
+
+            <div class="section-head">
+              <h3 class="title-l">Training</h3>
+              <div class="seg" role="group" aria-label="Session state">
+                <button type="button" aria-pressed="false">Not yet</button>
+                <button type="button" class="is-done" aria-pressed="true">Trained</button>
+                <button type="button" aria-pressed="false">Skipped</button>
+              </div>
+            </div>
+
+            <div class="stack" id="phoneSession" style="gap:10px"></div>
+
+            <div class="section-head">
+              <h3 class="title-l">Meals</h3>
+              <button type="button" class="link-btn" id="markAll">Mark all eaten</button>
+            </div>
+            <div class="meals" id="phoneMeals"></div>
+          </div>
+          <nav class="tabbar" aria-label="Main">
+            <button type="button" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Today</button>
+            <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Week</button>
+            <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 12h2M19.5 12h2M6.5 7.5v9M17.5 7.5v9M4.5 9.5v5M19.5 9.5v5M6.5 12h11"/></svg>Plan</button>
+            <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 10a4 4 0 0 1 8 0M12 10l1.6-1.8"/></svg>Weight</button>
+          </nav>
+        </div>
+        <span>Logging Tuesday's session</span>
+      </div>
+
+      <!-- PHONE: WEIGHT -->
+      <div class="phone-col">
+        <div class="app phone">
+          <div class="statusbar"><span class="num">07:58</span><span>●●● 5G</span></div>
+          <div class="phone-body">
+            <div class="spread">
+              <p class="title-xl">Weight</p>
+              <span class="sync"><i></i>Synced</span>
+            </div>
+            <div>
+              <div class="big-w"><b class="num">98.0</b><span>kg</span></div>
+              <span class="sub">28 Jul · −0.8 kg vs previous · −2.4 kg since 14 Jul</span>
+            </div>
+            <div class="trip">
+              <div class="spread"><span style="font-weight:600">Goal 90.0 kg</span><span class="sub">8.0 kg to go</span></div>
+              <div class="trip-bar"><i style="width:23%"></i></div>
+              <div class="trip-ends num"><span>Start 100.4</span><span>23% of the way</span></div>
+            </div>
+            <div class="panel" style="padding:12px 12px 8px">
+              <svg class="chart" id="wChartPhone" viewBox="0 0 340 190" role="img" aria-label="Weight from 100.4 kg to 98.0 kg, goal 90 kg"></svg>
+            </div>
+            <div class="addw">
+              <input class="field" type="date" id="wDate" value="2026-10-13" aria-label="Date">
+              <input class="field" type="number" step="0.1" id="wValue" placeholder="kg" aria-label="Weight in kg">
+              <button type="button" class="btn btn-primary">Log</button>
+            </div>
+            <div class="wlist">
+              <div class="wrow"><div><b class="num">98.0 kg</b><div class="sub">Tue 28 Jul 2026</div></div><span class="delta down num">−0.8</span><button type="button" class="del" aria-label="Delete">✕</button></div>
+              <div class="wrow"><div><b class="num">98.8 kg</b><div class="sub">Tue 21 Jul 2026</div></div><span class="delta down num">−1.6</span><button type="button" class="del" aria-label="Delete">✕</button></div>
+              <div class="wrow"><div><b class="num">100.4 kg</b><div class="sub">Tue 14 Jul 2026</div></div><span class="delta"></span><button type="button" class="del" aria-label="Delete">✕</button></div>
+            </div>
+          </div>
+          <nav class="tabbar" aria-label="Main">
+            <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Today</button>
+            <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Week</button>
+            <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 12h2M19.5 12h2M6.5 7.5v9M17.5 7.5v9M4.5 9.5v5M19.5 9.5v5M6.5 12h11"/></svg>Plan</button>
+            <button type="button" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 10a4 4 0 0 1 8 0M12 10l1.6-1.8"/></svg>Weight</button>
+          </nav>
+        </div>
+        <span>Weigh-ins and goal</span>
+      </div>
+
+      <!-- PHONE: SETTINGS -->
+      <div class="phone-col">
+        <div class="app phone">
+          <div class="statusbar"><span class="num">21:10</span><span>●●● 5G</span></div>
+          <div class="phone-body">
+            <p class="title-xl">Settings</p>
+            <div class="sheet">
+              <div class="srow"><div><b>Rodas</b><span class="sub">Admin · saved 2 min ago</span></div><button type="button" class="btn">Sign out</button></div>
+              <div class="srow"><div><b>Password</b><span class="sub">Signs out your other devices</span></div><button type="button" class="btn">Change</button></div>
+              <div class="srow"><div><b>Users</b><span class="sub">3 accounts · reset passwords, remove</span></div><button type="button" class="btn">Manage</button></div>
+            </div>
+            <div class="sheet">
+              <div class="srow"><div><b>Weight goal</b><span class="sub">Shown as a line on the charts</span></div><span class="kg num">90.0 kg</span></div>
+              <div class="srow"><div><b>Week starts on</b><span class="sub">Used by the week view and the plan</span></div><span class="sub" style="color:var(--fg);font-weight:600">Monday</span></div>
+            </div>
+            <div class="sheet">
+              <div class="srow"><div><b>Export backup</b><span class="sub">Downloads everything as JSON</span></div><button type="button" class="btn">Export</button></div>
+              <div class="srow"><div><b>Import backup</b><span class="sub">Replaces current data, with undo</span></div><button type="button" class="btn">Import</button></div>
+              <div class="srow"><div><b>Reset this week</b><span class="sub">Clears this week's ticks and sets</span></div><button type="button" class="btn" style="color:var(--red)">Reset</button></div>
+            </div>
+            <div class="toast" role="status">Week of 12–18 Oct reset<button type="button">Undo</button></div>
+          </div>
+          <nav class="tabbar" aria-label="Main">
+            <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Today</button>
+            <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Week</button>
+            <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 12h2M19.5 12h2M6.5 7.5v9M17.5 7.5v9M4.5 9.5v5M19.5 9.5v5M6.5 12h11"/></svg>Plan</button>
+            <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 10a4 4 0 0 1 8 0M12 10l1.6-1.8"/></svg>Weight</button>
+          </nav>
+        </div>
+        <span>Opened from the gear on Today</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DESKTOP: WEEK ================= -->
+  <section class="screen" aria-labelledby="cap-week">
+    <div class="screen-cap"><h2 id="cap-week">Week · desktop</h2><p>Click a day in the ribbon to open it below.</p></div>
+    <div class="scroller">
+      <div class="app desk">
+        <aside class="rail" data-rail="week"></aside>
+        <main class="main">
+          <div class="page-head">
+            <div>
+              <span class="sub">This week</span>
+              <p class="title-xl" style="font-size:44px">12 – 18 October</p>
+            </div>
+            <div class="week-nav">
+              <button type="button" class="icon-btn" aria-label="Previous week"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 3 5 8l5 5"/></svg></button>
+              <button type="button" class="btn">Today</button>
+              <button type="button" class="icon-btn" aria-label="Next week"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 3 5 5-5 5"/></svg></button>
+              <button type="button" class="icon-btn" aria-label="Pick a date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 6.5h12"/></svg></button>
+            </div>
+          </div>
+
+          <div class="week-totals">
+            <div class="wt"><b class="num">6 / 35</b><span>meals eaten</span></div>
+            <div class="wt"><b class="num">2 / 5</b><span>training days done</span></div>
+            <div class="wt"><b class="num">24.6 t</b><span>volume lifted</span></div>
+            <div class="wt"><b class="num">98.0 kg</b><span>latest weigh-in</span></div>
+          </div>
+
+          <div class="ribbon" id="ribbon"></div>
+
+          <div class="week-grid">
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-head">
+                  <div><h3 class="title-l" id="deskDayTitle">Tuesday 13 Oct</h3><span class="sub">6 exercises · 5 of 18 sets logged</span></div>
+                  <div class="seg" role="group" aria-label="Session state">
+                    <button type="button" aria-pressed="false">Not yet</button>
+                    <button type="button" class="is-done" aria-pressed="true">Trained</button>
+                    <button type="button" aria-pressed="false">Skipped</button>
+                  </div>
+                </div>
+                <table class="log">
+                  <thead><tr><th>Exercise</th><th>Plan</th><th class="r">Load</th><th>Sets</th><th class="r">Volume</th><th class="r">Last time</th></tr></thead>
+                  <tbody id="deskSession"></tbody>
+                </table>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><div><h3 class="title-l">Meals</h3><span class="sub" id="deskMealsSub">1 of 5 eaten</span></div><button type="button" class="link-btn">Mark all eaten</button></div>
+                <div class="desk-meals" id="deskMeals"></div>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-head"><h3 class="title-l">Muscles this week</h3><span class="sub">sets per muscle</span></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:center">
+                  <svg class="bodymap" id="bodyWeek" viewBox="0 0 300 245" role="img" aria-label="Muscle map, front and back"></svg>
+                  <div class="mrank" id="rankWeek"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h3 class="title-l">Weight</h3><span class="sub">8.0 kg to goal</span></div>
+                <svg class="chart" id="wChartDesk" viewBox="0 0 340 170" role="img" aria-label="Weight trend"></svg>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h3 class="title-l">Consistency</h3><span class="sub">last 21 weeks</span></div>
+                <div class="heat" id="heat"></div>
+                <div class="heat-legend"><span>Less</span><i style="background:var(--s3)"></i><i style="background:var(--blue);opacity:.3"></i><i style="background:var(--blue);opacity:.55"></i><i style="background:var(--blue);opacity:.8"></i><i style="background:var(--blue)"></i><span>More</span><span style="margin-left:8px">dashed = no plan yet</span></div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DESKTOP: PLAN ================= -->
+  <section class="screen" aria-labelledby="cap-plan">
+    <div class="screen-cap"><h2 id="cap-plan">Plan · desktop</h2><p>Training and Diet share one screen. Switch between them at the top right.</p></div>
+    <div class="scroller">
+      <div class="app desk">
+        <aside class="rail" data-rail="plan"></aside>
+        <main class="main">
+          <div class="page-head">
+            <div><span class="sub">Repeats every week</span><p class="title-xl" style="font-size:44px">Plan</p></div>
+            <div class="seg" role="group" aria-label="Plan section" id="planSeg">
+              <button type="button" aria-pressed="true" data-plan="training">Training</button>
+              <button type="button" aria-pressed="false" data-plan="diet">Diet</button>
+            </div>
+          </div>
+          <div class="daytabs" id="planDays"></div>
+
+          <div class="plan-grid" id="planTraining">
+            <div class="panel">
+              <div class="panel-head">
+                <div><h3 class="title-l">Tuesday</h3><span class="sub">6 exercises · 18 sets planned</span></div>
+                <div class="row"><button type="button" class="btn" id="copyBtn">Copy to other days</button><button type="button" class="btn btn-primary">Add exercise</button></div>
+              </div>
+              <div id="copyBox" hidden class="mealcard" style="background:var(--s2)">
+                <span class="sub">Replace these days with Tuesday's exercises</span>
+                <div class="copyto" id="copyDays"></div>
+                <div class="row" style="justify-content:flex-end"><button type="button" class="btn" id="copyCancel">Cancel</button><button type="button" class="btn btn-primary">Copy</button></div>
+              </div>
+              <div>
+                <div class="prow head"><span></span><span>Type</span><span>Exercise</span><span>Sets × reps</span><span>Notes</span><span></span></div>
+                <div id="planRows"></div>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-head"><h3 class="title-l">Tuesday works</h3><span class="sub">planned sets</span></div>
+                <svg class="bodymap" id="bodyDay" viewBox="0 0 300 245" role="img" aria-label="Muscles worked on Tuesday"></svg>
+                <div class="mrank" id="rankDay"></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><div><h3 class="title-l">Incline chest press</h3><span class="sub">best load per session</span></div><span class="pr">PR 102.5 kg</span></div>
+                <svg class="chart" id="progChart" viewBox="0 0 340 150" role="img" aria-label="Incline chest press progression"></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" id="planDiet" hidden>
+            <div class="panel-head">
+              <div><h3 class="title-l">Tuesday</h3><span class="sub">5 meals · same as every other day</span></div>
+              <div class="row"><button type="button" class="btn">Copy to other days</button><button type="button" class="btn btn-primary">Add meal</button></div>
+            </div>
+            <div class="meal-list" id="dietCards"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <p class="note">Body weight, food amounts and loads stay in kg and g, with "pc" for countable food such as eggs and bananas. Next step after your OK: build it into the new solution and push to the repo.</p>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(s,r){ return (r||document).querySelector(s); };
+  var $$ = function(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+  var esc = function(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
+
+  // theme switch for the mock
+  $$('[data-theme-set]').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.documentElement.setAttribute('data-theme', b.dataset.themeSet);
+      $$('[data-theme-set]').forEach(function(x){ x.setAttribute('aria-pressed', String(x===b)); });
+    });
+  });
+  // the app opens in dark by default, so the mock does too
+  document.documentElement.setAttribute('data-theme','dark');
+
+  var CHECK = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5 6 10l5-6"/></svg>';
+
+  // ---------- real plan (translated) ----------
+  var MEALS = [
+    {name:'Breakfast', time:'08:00', foods:'Whey 25 g · Rice flour 50 g · Creatine 5 g · Banana 1 pc', done:true},
+    {name:'Lunch', time:'13:00', foods:'Chicken breast 200 g · Egg 1 pc · Pasta / rice 150 g', done:false},
+    {name:'Snack', time:'17:00', foods:'Whey 25 g · Rice flour 40 g', done:false},
+    {name:'Dinner', time:'20:30', foods:'Chicken breast 200 g · Egg 1 pc · Pasta / rice 150 g · Chocolate 25 g', done:false},
+    {name:'Supper', time:'23:00', foods:'Plain Greek yoghurt 200 g · Peanut butter 15 g · Corn flakes 0% 30 g', done:false}
+  ];
+  // last = real values from Tue 21 Jul; today = example
+  var SESSION = [
+    {name:'Incline chest press', plan:'3 × 12', last:{kg:100, reps:'3×10', date:'21 Jul'}, kg:102.5, sets:[12,11,10], pr:true, muscles:['Chest','Triceps','Shoulders']},
+    {name:'Wide-grip lat pulldown', plan:'3 × 12', last:{kg:79, reps:'3×10', date:'21 Jul'}, kg:79, sets:[12,12,null], active:true, muscles:['Lats','Biceps','Traps']},
+    {name:'Machine shoulder press', plan:'3 × 12', last:{kg:50, reps:'3×12', date:'21 Jul'}, kg:50, sets:[null,null,null], muscles:['Shoulders','Triceps']},
+    {name:'Pec deck', plan:'3 × 12', last:{kg:70, reps:'3×10', date:'21 Jul'}, kg:70, sets:[null,null,null], muscles:['Chest','Triceps','Shoulders']},
+    {name:'Machine biceps curl', plan:'3 × 15', last:{kg:45, reps:'2×10', date:'21 Jul'}, kg:45, sets:[null,null,null], muscles:['Biceps','Forearms']},
+    {name:'Machine triceps pushdown', plan:'3 × 15', last:{kg:22.5, reps:'3×12', date:'21 Jul'}, kg:22.5, sets:[null,null,null], muscles:['Triceps']}
+  ];
+  var PLAN_DAYS = [
+    {d:'Mon', n:12, what:'Legs · 6 exercises', ex:6},
+    {d:'Tue', n:13, what:'Upper · 6 exercises', ex:6},
+    {d:'Wed', n:14, what:'Cycling 20 km', ex:1},
+    {d:'Thu', n:15, what:'Chest & arms · 6', ex:6},
+    {d:'Fri', n:16, what:'Back & arms · 6', ex:6},
+    {d:'Sat', n:17, what:'Cycling 20 km', ex:1},
+    {d:'Sun', n:18, what:'Rest day', ex:0}
+  ];
+  var WEEK_STATE = {Mon:{meals:5, train:'done'}, Tue:{meals:1, train:'done'}, Wed:{meals:0}, Thu:{meals:0}, Fri:{meals:0}, Sat:{meals:0}, Sun:{meals:0}};
+
+  // ---------- phone day strip ----------
+  function phoneDays(){
+    $('#phoneDays').innerHTML = PLAN_DAYS.map(function(p){
+      var st = WEEK_STATE[p.d], marks = '';
+      marks += '<i class="'+(st.meals===5?'m-full':(st.meals>0?'m-part':''))+'"></i>';
+      if(st.train==='done') marks += '<i class="t-done"></i>';
+      return '<button type="button" class="day'+(p.d==='Tue'?' today':'')+'" aria-pressed="'+(p.d==='Tue')+'"><small>'+p.d+'</small><b>'+p.n+'</b><span class="marks">'+marks+'</span></button>';
+    }).join('');
+  }
+
+  // ---------- phone session ----------
+  function setsLogged(){ return SESSION.reduce(function(a,e){ return a + e.sets.filter(function(s){return s!==null;}).length; },0); }
+  function phoneSession(){
+    $('#phoneSession').innerHTML = SESSION.map(function(e,i){
+      var setsHTML = e.sets.map(function(s,j){
+        var target = parseInt(e.plan.split('×')[1],10);
+        return '<button type="button" class="set'+(s!==null?' filled':'')+'" data-ex="'+i+'" data-set="'+j+'" aria-label="Set '+(j+1)+'">' +
+          '<b class="num">'+(s!==null?s:target)+'</b><small>set '+(j+1)+'</small></button>';
+      }).join('');
+      var vol = e.sets.reduce(function(a,s){ return a+(s||0); },0)*e.kg;
+      return '<article class="ex'+(e.active?' active':'')+'">' +
+        '<div class="ex-head"><div><div class="ex-name">'+esc(e.name)+(e.pr?' <span class="pr">PR</span>':'')+'</div>' +
+        '<div class="ex-meta">Last: '+e.last.kg+' kg · '+e.last.reps+' · '+e.last.date+'</div></div>' +
+        '<span class="plan-tag">'+e.plan+'</span></div>' +
+        '<div class="ex-log"><div class="load"><button type="button" aria-label="Less load">−</button><span class="num">'+e.kg+'<small>kg</small></span><button type="button" aria-label="More load">+</button></div>' +
+        '<div class="sets">'+setsHTML+'</div></div>' +
+        (vol>0 ? '<div class="ex-foot"><span>Volume '+Math.round(vol).toLocaleString('en-GB')+' kg</span>'+(e.kg>e.last.kg?'<span class="up">+'+(e.kg-e.last.kg)+' kg vs last time</span>':'<span>same load as last time</span>')+'</div>' : '') +
+      '</article>';
+    }).join('') +
+    '<article class="ex"><div class="ex-head"><div><div class="ex-name">Wednesday · Cycling</div><div class="ex-meta">Cardio logs time and distance instead of sets</div></div><span class="plan-tag">20 km</span></div>' +
+    '<div class="cardio-line"><input class="field" placeholder="Minutes" aria-label="Minutes" id="cMin"><input class="field" placeholder="Distance, km" aria-label="Distance in km" id="cKm"></div></article>';
+    var n = setsLogged();
+    $('#ringSets').style.setProperty('--p', Math.round(n/18*100));
+    $('#ringSets span').textContent = n+'/18';
+  }
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest('.set[data-ex]');
+    if(!b) return;
+    var e = SESSION[+b.dataset.ex], j = +b.dataset.set;
+    var target = parseInt(e.plan.split('×')[1],10);
+    e.sets[j] = e.sets[j]===null ? target : (e.sets[j] > target-3 ? e.sets[j]-1 : null);
+    phoneSession(); deskSession();
+  });
+
+  // ---------- meals ----------
+  function mealsDone(){ return MEALS.filter(function(m){return m.done;}).length; }
+  function phoneMeals(){
+    $('#phoneMeals').innerHTML = MEALS.map(function(m,i){
+      return '<button type="button" class="meal" role="checkbox" aria-checked="'+m.done+'" data-meal="'+i+'"><span class="tick">'+CHECK+'</span>' +
+        '<span style="min-width:0"><span class="meal-name">'+m.name+'</span><span class="meal-foods" style="display:block">'+m.foods+'</span></span>' +
+        '<span class="meal-time num">'+m.time+'</span></button>';
+    }).join('');
+    $('#deskMeals').innerHTML = MEALS.map(function(m,i){
+      return '<button type="button" class="dm" role="checkbox" aria-checked="'+m.done+'" data-meal="'+i+'"><span class="row"><b>'+m.name+'</b><span class="tick">'+CHECK+'</span></span>' +
+        '<span class="dm-foods">'+m.foods.replace(/ · /g,'<br>')+'</span></button>';
+    }).join('');
+    var n = mealsDone();
+    $('#ringMeals').style.setProperty('--p', n*20);
+    $('#ringMeals span').textContent = n+'/5';
+    $('#mealsLeft').textContent = n===5 ? 'All eaten' : (5-n)+' left today';
+    $('#deskMealsSub').textContent = n+' of 5 eaten';
+    $('#markAll').textContent = n===5 ? 'Clear all' : 'Mark all eaten';
+    WEEK_STATE.Tue.meals = n; phoneDays(); ribbon();
+  }
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest('[data-meal]');
+    if(!b) return;
+    var m = MEALS[+b.dataset.meal]; m.done = !m.done; phoneMeals();
+  });
+  $('#markAll').addEventListener('click', function(){
+    var all = mealsDone()===5;
+    MEALS.forEach(function(m){ m.done = !all; }); phoneMeals();
+  });
+
+  // ---------- desktop rail ----------
+  var NAV = [
+    ['today','Today','<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'],
+    ['week','Week','<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'],
+    ['plan','Plan','<path d="M2.5 12h2M19.5 12h2M6.5 7.5v9M17.5 7.5v9M4.5 9.5v5M19.5 9.5v5M6.5 12h11"/>'],
+    ['weight','Weight','<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 10a4 4 0 0 1 8 0M12 10l1.6-1.8"/>'],
+    ['settings','Settings','<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>']
+  ];
+  $$('.rail').forEach(function(r){
+    var cur = r.dataset.rail;
+    r.innerHTML = '<div class="brand"><span class="brand-mark" data-logo="plate"></span><strong>BODYOPS</strong></div>' +
+      '<nav class="nav" aria-label="Main">'+NAV.map(function(n){
+        return '<button type="button"'+(n[0]===cur?' aria-current="page"':'')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">'+n[2]+'</svg>'+n[1]+'</button>';
+      }).join('')+'</nav>' +
+      '<div class="rail-foot"><span class="sync"><i></i>Synced 2 min ago</span><span class="sub">Saved on this device too, so it keeps working offline.</span></div>';
+  });
+
+  // ---------- ribbon ----------
+  var selectedDay = 'Tue';
+  function ribbon(){
+    $('#ribbon').innerHTML = PLAN_DAYS.map(function(p){
+      var st = WEEK_STATE[p.d], bars = '';
+      for(var k=0;k<5;k++) bars += '<i class="'+(k<st.meals?'on':'')+'"></i>';
+      var chip = p.ex===0 ? '<span class="chip rest">Rest</span>'
+        : st.train==='done' ? '<span class="chip done">'+CHECK.replace('<svg','<svg width="11" height="11"')+'Trained</span>'
+        : st.train==='miss' ? '<span class="chip miss">Skipped</span>'
+        : '<span class="chip">Planned</span>';
+      return '<button type="button" class="rday'+(p.d==='Tue'?' today':'')+'" data-rday="'+p.d+'" aria-pressed="'+(p.d===selectedDay)+'">' +
+        '<span class="top"><small>'+(p.d==='Tue'?'Today':p.d)+'</small><b>'+p.n+'</b></span>' +
+        '<span class="mealbar" aria-label="'+st.meals+' of 5 meals">'+bars+'</span>' +
+        chip + '<span class="what">'+p.what+'</span></button>';
+    }).join('');
+  }
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest('[data-rday]');
+    if(!b) return;
+    selectedDay = b.dataset.rday;
+    var p = PLAN_DAYS.filter(function(x){return x.d===selectedDay;})[0];
+    var full = {Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday',Sat:'Saturday',Sun:'Sunday'}[p.d];
+    $('#deskDayTitle').textContent = full+' '+p.n+' Oct';
+    ribbon();
+  });
+
+  // ---------- desktop session table ----------
+  function deskSession(){
+    $('#deskSession').innerHTML = SESSION.map(function(e){
+      var sets = e.sets.map(function(s){ return s===null ? '<i class="e">–</i>' : '<i>'+s+'</i>'; }).join('');
+      var vol = e.sets.reduce(function(a,s){ return a+(s||0); },0)*e.kg;
+      return '<tr><td><b style="font-weight:600">'+esc(e.name)+'</b>'+(e.pr?' <span class="pr">PR</span>':'')+'</td>' +
+        '<td class="sub">'+e.plan+'</td><td class="r"><span class="kg num">'+e.kg+'</span> <span class="sub">kg</span></td>' +
+        '<td><span class="mini-sets">'+sets+'</span></td>' +
+        '<td class="r num">'+(vol? Math.round(vol).toLocaleString('en-GB')+' kg' : '<span class="sub">–</span>')+'</td>' +
+        '<td class="r sub num">'+e.last.kg+' kg · '+e.last.reps+'</td></tr>';
+    }).join('');
+  }
+
+  // ---------- weight chart ----------
+  function weightChart(el, w, h){
+    var pts = [{x:'14 Jul', v:100.4},{x:'21 Jul', v:98.8},{x:'28 Jul', v:98.0}];
+    var L=34, R=w-14, T=14, B=h-26, lo=88, hi=102;
+    var y = function(v){ return T + (hi-v)/(hi-lo)*(B-T); };
+    var x = function(i){ return L + i*(R-L)/(pts.length-1); };
+    var s = '';
+    [90,94,98,102].forEach(function(v){ s += '<line class="grid-l" x1="'+L+'" x2="'+R+'" y1="'+y(v)+'" y2="'+y(v)+'"/><text class="ax" x="'+(L-6)+'" y="'+(y(v)+4)+'" text-anchor="end">'+v+'</text>'; });
+    s += '<line class="target-l" x1="'+L+'" x2="'+R+'" y1="'+y(90)+'" y2="'+y(90)+'"/><text class="lbl-t" x="'+R+'" y="'+(y(90)-6)+'" text-anchor="end">goal 90 kg</text>';
+    var d = pts.map(function(p,i){ return (i?'L':'M')+x(i)+','+y(p.v); }).join(' ');
+    s += '<path class="area" d="'+d+' L'+x(pts.length-1)+','+B+' L'+x(0)+','+B+' Z"/>';
+    s += '<path class="series" d="'+d+'"/>';
+    pts.forEach(function(p,i){
+      var last = i===pts.length-1;
+      s += '<circle class="'+(last?'dot dot-end':'dot')+'" cx="'+x(i)+'" cy="'+y(p.v)+'" r="'+(last?5:4)+'"/>';
+      s += '<text class="ax" x="'+x(i)+'" y="'+(h-8)+'" text-anchor="'+(i===0?'start':(last?'end':'middle'))+'">'+p.x+'</text>';
+    });
+    s += '<text class="lbl" x="'+(x(pts.length-1)-8)+'" y="'+(y(98)-12)+'" text-anchor="end">98.0</text>';
+    el.innerHTML = s;
+  }
+  weightChart($('#wChartPhone'), 340, 190);
+  weightChart($('#wChartDesk'), 340, 170);
+
+  // ---------- progression chart (one real point + example today) ----------
+  (function(){
+    var el = $('#progChart'), w=340, h=150, L=34, R=w-14, T=16, B=h-26, lo=90, hi=105;
+    var pts = [{x:'21 Jul', v:100},{x:'13 Oct', v:102.5}];
+    var y = function(v){ return T + (hi-v)/(hi-lo)*(B-T); };
+    var x = function(i){ return L + 20 + i*(R-L-40); };
+    var s = '';
+    [90,95,100,105].forEach(function(v){ s += '<line class="grid-l" x1="'+L+'" x2="'+R+'" y1="'+y(v)+'" y2="'+y(v)+'"/><text class="ax" x="'+(L-6)+'" y="'+(y(v)+4)+'" text-anchor="end">'+v+'</text>'; });
+    s += '<path class="series" d="M'+x(0)+','+y(100)+' L'+x(1)+','+y(102.5)+'"/>';
+    s += '<circle class="dot" cx="'+x(0)+'" cy="'+y(100)+'" r="4"/><circle cx="'+x(1)+'" cy="'+y(102.5)+'" r="6" style="fill:var(--yellow);stroke:var(--s1);stroke-width:2"/>';
+    s += '<text class="lbl" x="'+x(0)+'" y="'+(y(100)+20)+'" text-anchor="middle">100</text><text class="lbl" x="'+(x(1)-10)+'" y="'+(y(102.5)-10)+'" text-anchor="end">102.5</text>';
+    pts.forEach(function(p,i){ s += '<text class="ax" x="'+x(i)+'" y="'+(h-8)+'" text-anchor="middle">'+p.x+'</text>'; });
+    el.innerHTML = s;
+  })();
+
+  // ---------- body map ----------
+  var MUSCLE_LABEL = {chest:'Chest', shoulders:'Shoulders', biceps:'Biceps', triceps:'Triceps', forearms:'Forearms', abs:'Abs', lats:'Lats', traps:'Traps', lowerback:'Lower back', glutes:'Glutes', quads:'Quads', hamstrings:'Hamstrings', calves:'Calves'};
+  function bodyMap(el, totals){
+    var max = 0; Object.keys(totals).forEach(function(k){ max = Math.max(max, totals[k]); });
+    function fill(m){
+      var v = totals[m]||0;
+      if(!v) return 'style="fill:var(--s3)"';
+      return 'style="fill:var(--blue);fill-opacity:'+(0.25+0.75*v/max).toFixed(2)+'"';
+    }
+    function E(cx,cy,rx,ry,m){ return '<ellipse class="'+(m?'bm-m':'bm-n')+'" cx="'+cx+'" cy="'+cy+'" rx="'+rx+'" ry="'+ry+'" '+(m?fill(m):'')+'>'+(m?'<title>'+MUSCLE_LABEL[m]+' · '+(Math.round((totals[m]||0)*10)/10)+' sets</title>':'')+'</ellipse>'; }
+    function Rr(x,y,w,h,r,m){ return '<rect class="'+(m?'bm-m':'bm-n')+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+r+'" '+(m?fill(m):'')+'>'+(m?'<title>'+MUSCLE_LABEL[m]+'</title>':'')+'</rect>'; }
+    function P(pts,m){ return '<polygon class="bm-m" points="'+pts+'" '+fill(m)+'><title>'+MUSCLE_LABEL[m]+'</title></polygon>'; }
+    function front(c){
+      return E(c,24,11,12)+Rr(c-5,34,10,8,3)+
+        P((c-21)+',47 '+(c-6)+',39 '+c+',43 '+(c-8)+',48','traps')+P((c+21)+',47 '+(c+6)+',39 '+c+',43 '+(c+8)+',48','traps')+
+        E(c-24,54,10,9,'shoulders')+E(c+24,54,10,9,'shoulders')+Rr(c-16,45,15,18,5,'chest')+Rr(c+1,45,15,18,5,'chest')+
+        Rr(c-11,65,22,31,6,'abs')+E(c-30,74,7,13,'biceps')+E(c+30,74,7,13,'biceps')+E(c-33,100,6,14,'forearms')+E(c+33,100,6,14,'forearms')+
+        E(c-35,119,4,5)+E(c+35,119,4,5)+Rr(c-12,97,24,11,4)+E(c-8,133,9,24,'quads')+E(c+8,133,9,24,'quads')+
+        E(c-8,161,5,5)+E(c+8,161,5,5)+E(c-8,186,6,20)+E(c+8,186,6,20)+E(c-8,209,6,4)+E(c+8,209,6,4)+
+        '<text class="bm-cap" x="'+c+'" y="236" text-anchor="middle">Front</text>';
+    }
+    function back(c){
+      return E(c,24,11,12)+Rr(c-5,34,10,8,3)+P(c+',40 '+(c-19)+',51 '+c+',73 '+(c+19)+',51','traps')+
+        E(c-24,54,10,9,'shoulders')+E(c+24,54,10,9,'shoulders')+
+        P((c-18)+',59 '+(c-2)+',61 '+(c-2)+',92 '+(c-14)+',80','lats')+P((c+18)+',59 '+(c+2)+',61 '+(c+2)+',92 '+(c+14)+',80','lats')+
+        E(c-30,74,7,13,'triceps')+E(c+30,74,7,13,'triceps')+E(c-33,100,6,14,'forearms')+E(c+33,100,6,14,'forearms')+
+        E(c-35,119,4,5)+E(c+35,119,4,5)+Rr(c-11,90,22,13,4,'lowerback')+E(c-9,112,10,9,'glutes')+E(c+9,112,10,9,'glutes')+
+        E(c-8,141,9,22,'hamstrings')+E(c+8,141,9,22,'hamstrings')+E(c-8,166,5,5)+E(c+8,166,5,5)+
+        E(c-8,188,7,17,'calves')+E(c+8,188,7,17,'calves')+E(c-8,209,6,4)+E(c+8,209,6,4)+
+        '<text class="bm-cap" x="'+c+'" y="236" text-anchor="middle">Back</text>';
+    }
+    el.innerHTML = front(78)+back(222);
+  }
+  function rank(el, totals, n){
+    var keys = Object.keys(totals).filter(function(k){return totals[k]>0;}).sort(function(a,b){return totals[b]-totals[a];}).slice(0,n);
+    var max = totals[keys[0]];
+    el.innerHTML = keys.map(function(k){
+      return '<div class="mr"><span>'+MUSCLE_LABEL[k]+'</span><span class="bar"><i style="width:'+Math.round(totals[k]/max*100)+'%"></i></span><span class="v num">'+(Math.round(totals[k]*10)/10)+' sets</span></div>';
+    }).join('');
+  }
+  var WEEK_T = {quads:12, glutes:9.3, hamstrings:6.6, lowerback:1.8, chest:6, triceps:6.9, shoulders:5.4, lats:3, biceps:4.5, traps:1.2, forearms:2.1};
+  var DAY_T = {chest:6, triceps:6.9, shoulders:5.4, lats:3, biceps:4.5, traps:1.2, forearms:2.1};
+  bodyMap($('#bodyWeek'), WEEK_T); rank($('#rankWeek'), WEEK_T, 7);
+  bodyMap($('#bodyDay'), DAY_T); rank($('#rankDay'), DAY_T, 5);
+
+  // ---------- heatmap: real logs (13 & 20 Jul) + this week ----------
+  (function(){
+    var cols = '';
+    // week index 0 = 18 May ... 20 = 12 Oct; plan existed from 13 Jul (index 8)
+    var real = {8:[0,0,1,1,1,1,0.6], 9:[1,0.8,1,0.8,0.6,0,0], 20:[1,0.6]};
+    for(var w=0; w<21; w++){
+      var cells = '';
+      for(var d=0; d<7; d++){
+        if(w===20 && d>1){ cells += '<i class="f" style="border-style:solid;opacity:.35"></i>'; continue; }
+        if(w<8){ cells += '<i class="f"></i>'; continue; }
+        var v = real[w] ? real[w][d] : 0;
+        cells += v ? '<i style="background:var(--blue);opacity:'+(0.25+0.75*v).toFixed(2)+'"></i>' : '<i></i>';
+      }
+      cols += '<div class="col">'+cells+'</div>';
+    }
+    $('#heat').innerHTML = cols;
+  })();
+
+  // ---------- plan editor ----------
+  var PLAN_TUE = [
+    ['Strength','Incline chest press','3 × 12','', ['Chest','Triceps','Shoulders']],
+    ['Strength','Wide-grip lat pulldown','3 × 12','Pull to upper chest', ['Lats','Biceps','Traps','Forearms']],
+    ['Strength','Machine shoulder press','3 × 12','', ['Shoulders','Triceps']],
+    ['Strength','Pec deck','3 × 12','', ['Chest','Triceps','Shoulders']],
+    ['Strength','Machine biceps curl','3 × 15','', ['Biceps','Forearms']],
+    ['Strength','Machine triceps pushdown','3 × 15','', ['Triceps']]
+  ];
+  $('#planRows').innerHTML = PLAN_TUE.map(function(r,i){
+    return '<div class="prow"><span class="grip" aria-hidden="true">⋮⋮</span>' +
+      '<select class="field" id="pt'+i+'" aria-label="Type"><option>Strength</option><option>Cardio</option></select>' +
+      '<input class="field" id="pn'+i+'" value="'+esc(r[1])+'" aria-label="Exercise name">' +
+      '<input class="field small" id="pp'+i+'" value="'+r[2]+'" aria-label="Sets and reps">' +
+      '<input class="field" id="po'+i+'" value="'+esc(r[3])+'" placeholder="Notes" aria-label="Notes">' +
+      '<button type="button" class="del" aria-label="Remove exercise">✕</button>' +
+      '<span></span><span></span><span class="mtags">'+r[4].map(function(m){return '<span class="mtag auto">'+m+'</span>';}).join('')+'<button type="button" class="link-btn" style="font-size:12px;padding:0 4px">Edit muscles</button></span></div>';
+  }).join('');
+  $('#planDays').innerHTML = PLAN_DAYS.map(function(p){
+    return '<button type="button" class="daytab" aria-pressed="'+(p.d==='Tue')+'"><b>'+{Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday',Sat:'Saturday',Sun:'Sunday'}[p.d]+'</b><span>'+p.what+'</span></button>';
+  }).join('');
+  $('#copyDays').innerHTML = ['Mon','Wed','Thu','Fri','Sat','Sun'].map(function(d){ return '<button type="button" aria-pressed="false">'+d+'</button>'; }).join('');
+  $('#copyDays').addEventListener('click', function(ev){ var b = ev.target.closest('button'); if(b) b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed')!=='true')); });
+  $('#copyBtn').addEventListener('click', function(){ $('#copyBox').hidden = !$('#copyBox').hidden; });
+  $('#copyCancel').addEventListener('click', function(){ $('#copyBox').hidden = true; });
+
+  var DIET = [
+    ['Breakfast',[['Whey',25,'g'],['Rice flour',50,'g'],['Creatine',5,'g'],['Banana',1,'pc']]],
+    ['Lunch',[['Chicken breast',200,'g'],['Egg',1,'pc'],['Pasta / rice',150,'g']]],
+    ['Snack',[['Whey',25,'g'],['Rice flour',40,'g']]],
+    ['Dinner',[['Chicken breast',200,'g'],['Egg',1,'pc'],['Pasta / rice',150,'g'],['Chocolate',25,'g']]],
+    ['Supper',[['Plain Greek yoghurt',200,'g'],['Peanut butter',15,'g'],['Corn flakes 0%',30,'g']]]
+  ];
+  $('#dietCards').innerHTML = DIET.map(function(m,i){
+    return '<div class="mealcard"><div class="row"><input class="field" id="mn'+i+'" value="'+m[0]+'" style="font-weight:700" aria-label="Meal name"><button type="button" class="del" aria-label="Remove meal">✕</button></div>' +
+      m[1].map(function(f,j){
+        return '<div class="foodrow"><input class="field" id="f'+i+'_'+j+'" value="'+esc(f[0])+'" aria-label="Food"><input class="field small" id="a'+i+'_'+j+'" value="'+f[1]+'" aria-label="Amount">' +
+          '<span class="unit"><button type="button" aria-pressed="'+(f[2]==='g')+'">g</button><button type="button" aria-pressed="'+(f[2]==='pc')+'">pc</button></span>' +
+          '<button type="button" class="del" aria-label="Remove food">✕</button></div>';
+      }).join('') +
+      '<button type="button" class="link-btn" style="align-self:flex-start">Add food</button></div>';
+  }).join('');
+  $('#planSeg').addEventListener('click', function(ev){
+    var b = ev.target.closest('button'); if(!b) return;
+    $$('#planSeg button').forEach(function(x){ x.setAttribute('aria-pressed', String(x===b)); });
+    $('#planTraining').hidden = b.dataset.plan!=='training';
+    $('#planDiet').hidden = b.dataset.plan!=='diet';
+  });
+
+  phoneDays(); phoneSession(); ribbon(); deskSession(); phoneMeals();
+
+  // ---------- logos ----------
+  var LOGO_BAR = '<rect x="1" y="14.9" width="30" height="2.2" rx="1.1" fill="#EDEFF2"/><rect x="5" y="11.5" width="3.2" height="9" rx="1.1" fill="#3DCB80"/><rect x="9" y="9" width="3.2" height="14" rx="1.1" fill="#FFD34D"/><rect x="13" y="6.5" width="3.2" height="19" rx="1.1" fill="#5B8CFF"/><rect x="17" y="4" width="3.2" height="24" rx="1.1" fill="#FF6161"/><rect x="21" y="12.8" width="2" height="6.4" rx=".8" fill="#EDEFF2"/>';
+  var LOGOS = {
+    bar: '<svg viewBox="0 0 32 32" aria-hidden="true">'+LOGO_BAR+'</svg>',
+    b: '<svg viewBox="0 0 32 32" aria-hidden="true"><mask id="mb"><rect width="32" height="32" fill="#fff"/><circle cx="15.6" cy="9.3" r="1.7" fill="#000"/><circle cx="16.4" cy="22" r="1.9" fill="#000"/></mask><g fill="currentColor" mask="url(#mb)"><rect x="5.5" y="2.5" width="4" height="27" rx="1.3"/><circle cx="15.6" cy="9.3" r="6.1"/><circle cx="16.4" cy="22" r="7"/><rect x="9" y="8.1" width="5" height="2.4"/><rect x="9" y="20.8" width="5" height="2.4"/></g></svg>',
+    plate: '<svg viewBox="0 0 32 32" aria-hidden="true"><mask id="mp"><rect width="32" height="32" fill="#fff"/><circle cx="16" cy="16" r="3.2" fill="#000"/><circle cx="16" cy="16" r="10.6" fill="none" stroke="#000" stroke-width=".9"/><g fill="#000"><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(120 16 16)"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(240 16 16)"/></g></mask><circle cx="16" cy="16" r="14" fill="currentColor" mask="url(#mp)"/></svg>'
+  };
+  $$('[data-logo]').forEach(function(el){ el.innerHTML = LOGOS[el.dataset.logo]; });
+  $$('[data-logo-inline]').forEach(function(el){ el.innerHTML = LOGO_BAR; });
+  $$('.land .tick, .wcard .tick').forEach(function(el){ el.innerHTML = CHECK; });
+})();
+</script>
+</body></html>
