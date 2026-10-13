@@ -1,4 +1,4 @@
-/* BodyOps — charts drawn as inline SVG: the line chart (weight, progression), the body map and the consistency grid. */
+/* BodyOps — charts drawn as inline SVG: the line chart (weight, lifts), the body map and the week's stacked day bars. */
 'use strict';
 
 (() => {
@@ -55,7 +55,12 @@
     const lastIndex = points.length - 1;
     s += `<text class="lbl" x="${Math.min(x(lastIndex), R) - 8}" y="${y(points[lastIndex].value) - 12}" text-anchor="end">${esc(label(points[lastIndex].value))}</text>`;
     const xLabels = points.length === 1 ? [0] : [0, lastIndex];
-    if (points.length > 4) xLabels.splice(1, 0, Math.round(lastIndex / 2));
+    if (points.length > 4) {
+      // A middle date only when it has room between the first and the last.
+      const mid = points.findIndex((_, i) => x(i) >= (L + R) / 2);
+      if (mid > 0 && mid < lastIndex && x(mid) - x(0) > 60 && x(lastIndex) - x(mid) > 60) xLabels.splice(1, 0, mid);
+    }
+    if (points.length > 1 && x(lastIndex) - x(0) < 60) xLabels.splice(0, 1);
     xLabels.forEach((i, n) => {
       const anchor = points.length === 1 ? 'middle' : n === 0 ? 'start' : i === lastIndex ? 'end' : 'middle';
       s += `<text class="ax" x="${x(i)}" y="${height - 8}" text-anchor="${anchor}">${esc(BO.shortDate(points[i].date))}</text>`;
@@ -68,7 +73,7 @@
     const sets = {};
     totals.forEach(t => { sets[t.muscle] = t.sets; });
     const max = Math.max(0, ...totals.map(t => t.sets));
-    const fill = m => sets[m] ? `style="fill:var(--accent);fill-opacity:${(0.25 + 0.75 * sets[m] / max).toFixed(2)}"` : 'style="fill:var(--s3)"';
+    const fill = m => sets[m] ? `style="fill:var(--train);fill-opacity:${(0.25 + 0.75 * sets[m] / max).toFixed(2)}"` : 'style="fill:var(--card2)"';
     const tip = m => `<title>${BO.MUSCLES[m]} · ${sets[m] ? Math.round(sets[m] * 10) / 10 : 0} sets</title>`;
     const E = (cx, cy, rx, ry, m) => m
       ? `<ellipse class="bm-m" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" ${fill(m)}>${tip(m)}</ellipse>`
@@ -101,27 +106,33 @@
     const top = totals.filter(t => t.sets > 0).slice(0, count);
     if (!top.length) return '';
     const max = top[0].sets;
-    return `<div class="mrank">${top.map(t => `<div class="mr"><span>${BO.MUSCLES[t.muscle]}</span><span class="bar"><i style="width:${Math.round(t.sets / max * 100)}%"></i></span><span class="v num">${Math.round(t.sets * 10) / 10} sets</span></div>`).join('')}</div>`;
+    const short = { hamstrings: 'Hamstr.', lowerBack: 'Low back', shoulders: 'Shoulders' };
+    return `<div class="mrank">${top.map(t => `<div class="mr"><span>${short[t.muscle] || BO.MUSCLES[t.muscle]}</span><span class="t"><i style="width:${Math.round(t.sets / max * 100)}%"></i></span><span class="v num">${Math.round(t.sets * 10) / 10}</span></div>`).join('')}</div>`;
   };
 
-  /** One column per week, one cell per day (Monday on top); darker = more complete. days: [{ date, score }]. */
-  BO.heatmap = function heatmap(days, today) {
-    if (!days.length) return '';
-    const weeks = [];
-    days.forEach((day, i) => { if (i % 7 === 0) weeks.push([]); weeks[weeks.length - 1].push(day); });
-    const cols = weeks.map(week => {
-      const cells = [];
-      for (let i = 0; i < 7; i++) {
-        const day = week[i];
-        if (!day) { cells.push('<i class="f"></i>'); continue; }
-        const label = `${BO.fullDate(day.date)} · ${day.score == null ? 'nothing logged' : Math.round(day.score * 100) + '%'}`;
-        cells.push(day.score == null
-          ? `<i class="n" title="${esc(label)}"></i>`
-          : `<i style="background:var(--accent);opacity:${(0.2 + 0.8 * day.score).toFixed(2)}" title="${esc(label)}"></i>`);
-      }
-      return `<div class="col">${cells.join('')}</div>`;
-    }).join('');
-    return `<div class="heat" style="--weeks:${weeks.length}">${cols}</div>
-      <div class="heat-legend"><span>Less</span><i style="background:var(--s3)"></i><i style="background:var(--accent);opacity:.35"></i><i style="background:var(--accent);opacity:.6"></i><i style="background:var(--accent);opacity:.8"></i><i style="background:var(--accent)"></i><span>More</span><span style="margin-left:8px">dashed = nothing logged</span></div>`;
+  /** How much of a day's score came from training, meals and the weigh-in (0–100 each, summing to the score). */
+  BO.scoreParts = function scoreParts(day) {
+    let weight = 15;
+    if (day.setsPlanned > 0) weight += 50;
+    if (day.meals.length) weight += 35;
+    const train = day.setsPlanned > 0 && day.trainingState !== 'missed' ? 50 * day.setsDone / day.setsPlanned : 0;
+    const eat = day.meals.length ? 35 * day.meals.filter(m => m.eaten).length / day.meals.length : 0;
+    const weigh = day.weightKg != null ? 15 : 0;
+    return { train: 100 * train / weight, eat: 100 * eat / weight, weigh: 100 * weigh / weight };
+  };
+
+  /** One stacked bar per day: training, meals and weigh-in, as tall as the day score. */
+  BO.weekBars = function weekBars(week, { picked = null, height = 170, buttons = false } = {}) {
+    return `<div class="wbars" style="height:${height}px">${week.days.map((d, i) => {
+      const parts = BO.scoreParts(d);
+      const future = d.date > week.today;
+      const empty = future || d.score === 0;
+      const seg = (v, c) => v > 0.5 ? `<i style="height:${v.toFixed(1)}%;background:${c};--i:${i}"></i>` : '';
+      const tag = buttons ? 'button type="button"' : 'div';
+      const end = buttons ? 'button' : 'div';
+      return `<${tag} class="wb${d.date === week.today ? ' today' : ''}" data-day="${d.date}"${buttons ? ` aria-pressed="${d.date === picked}"` : ''} aria-label="${BO.DAYS[d.weekday - 1]}: score ${d.score}">
+        <span class="stack${empty ? ' empty' : ''}">${empty ? '' : seg(parts.weigh, 'var(--weigh)') + seg(parts.eat, 'var(--eat)') + seg(parts.train, 'var(--train)')}</span>
+        <small>${BO.DAYS_SHORT[d.weekday - 1][0]}</small></${end}>`;
+    }).join('')}</div>`;
   };
 })();

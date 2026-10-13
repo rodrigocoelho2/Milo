@@ -59,7 +59,8 @@ internal static class WeekBuilder
 
     /// <summary>
     /// How much of the planned training was done: each strength exercise counts its planned sets (one when the plan
-    /// names none) and each cardio exercise counts one. A day marked trained counts as all done.
+    /// names none) and each cardio exercise counts one. A day marked trained with nothing logged (ticked off without
+    /// logging sets) counts as all done; logging marks the day trained too, so then the logged sets count.
     /// </summary>
     /// <param name="day">The day.</param>
     /// <returns>Sets done and sets planned.</returns>
@@ -81,7 +82,7 @@ internal static class WeekBuilder
             done += Math.Min(target, logged);
         }
 
-        if (day.TrainingState == TrainingState.Done)
+        if (day.TrainingState == TrainingState.Done && done == 0)
         {
             done = planned;
         }

@@ -9,6 +9,7 @@ using BodyOps.WebApi.Features.Accounts.Models.Entities;
 using BodyOps.WebApi.Features.Accounts.Repositories;
 using BodyOps.WebApi.Features.Days.Models.Entities;
 using BodyOps.WebApi.Features.Days.Repositories;
+using BodyOps.WebApi.Features.Days.Services;
 using BodyOps.WebApi.Features.Plans.Models.Entities;
 using BodyOps.WebApi.Features.Plans.Repositories;
 using BodyOps.WebApi.Features.Settings.Models.Entities;
@@ -460,7 +461,7 @@ internal sealed class FakeDayRepository(FakePlanRepository plan) : IDayRepositor
         var weekday = WeekMath.Weekday(date);
         foreach (var meal in plan.Meals.Where(meal => meal.Weekday == weekday))
         {
-            Data.Meals.Add(new DayMealRow { DayID = row.DayID, DayMealID = ++_nextId, PlanMealID = meal.PlanMealID, Name = meal.Name, SortOrder = meal.SortOrder, MealTime = meal.MealTime });
+            Data.Meals.Add(new DayMealRow { DayID = row.DayID, DayMealID = ++_nextId, PlanMealID = meal.PlanMealID, Name = meal.Name, Foods = WeekBuilder.FoodsLine(plan.Foods.Where(food => food.PlanMealID == meal.PlanMealID)), SortOrder = meal.SortOrder, MealTime = meal.MealTime });
         }
 
         foreach (var exercise in plan.Exercises.Where(exercise => exercise.Weekday == weekday))

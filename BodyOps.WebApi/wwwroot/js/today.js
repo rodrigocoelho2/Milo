@@ -1,291 +1,285 @@
-/* BodyOps — Today: log the day's sets and tick its meals. Opens on today; ?date= opens another day. */
+/* BodyOps — Today: the day score, the streak, what's next and the day as a timeline you tick off.
+   Opens on today; ?date= opens another day of that week. */
 'use strict';
 
 (() => {
   const { esc, icons } = BO;
 
+  /** Minutes since midnight for "HH:mm". */
+  const minutes = time => { const [h, m] = time.split(':').map(Number); return h * 60 + m; };
+  const WORKOUT_AT = 18 * 60;   // where the workout sits in the timeline (the plan has no time for it)
+
+  /** What the session looks like: not started, in progress, done, skipped or a rest day. */
+  BO.sessionState = function sessionState(day) {
+    if (!day.exercises.length) return 'rest';
+    if (day.trainingState === 'missed') return 'missed';
+    const started = day.exercises.some(ex => ex.sets.some(s => s != null) || (ex.cardioMinutes || 0) > 0 || (ex.cardioKm || 0) > 0);
+    if (day.setsPlanned && day.setsDone >= day.setsPlanned) return 'done';
+    // Marked trained without logging, or a past day that was started: it's over.
+    if (day.trainingState === 'done' && (!started || day.date < BO.localToday())) return 'done';
+    return started ? 'live' : 'todo';
+  };
+
+  /** The exercise to do next: the first one with planned sets still open. */
+  BO.nextExercise = function nextExercise(day) {
+    return day.exercises.find(ex => ex.type === 'cardio'
+      ? !((ex.cardioMinutes || 0) > 0 || (ex.cardioKm || 0) > 0)
+      : ex.sets.filter(s => s != null).length < Math.max(1, ex.targets.length)) || null;
+  };
+
+  /** Rough length of a session: two and a half minutes per set, or the minutes a cardio plan names. */
+  BO.sessionMinutes = function sessionMinutes(day) {
+    return Math.round(day.exercises.reduce((n, ex) => {
+      if (ex.type === 'cardio') { const m = /(\d+)\s*min/i.exec(ex.detail || ''); return n + (m ? Number(m[1]) : 30); }
+      return n + Math.max(1, ex.targets.length) * 2.5;
+    }, 0) / 5) * 5;
+  };
+
+  /** The session's name: the plan's name for the day, or a fallback. */
+  BO.sessionName = day => day.name || (day.exercises.length === 1 ? day.exercises[0].name : 'Workout');
+
   BO.screens.today = async function today(root, query) {
-    let week = await BO.api('GET', '/api/days/week' + (query.date ? `?date=${encodeURIComponent(query.date)}` : ''));
+    const [first, streak, weights] = await Promise.all([
+      BO.api('GET', '/api/days/week' + (query.date ? `?date=${encodeURIComponent(query.date)}` : '')),
+      BO.api('GET', '/api/days/streak').catch(() => null),
+      BO.api('GET', '/api/weights').catch(() => ({ entries: [], goalKg: null })),
+    ]);
+    let week = first;
     let date = query.date && week.days.some(d => d.date === query.date) ? query.date : (week.days.some(d => d.date === week.today) ? week.today : week.from);
-    let editing = null;   // { pid, set } while a set is being typed
+    let shownScore = 0;
+    let firstPaint = true;
+    week.days.forEach(BO.scoreDay);
 
     const day = () => week.days.find(d => d.date === date);
+    const todayDay = () => week.days.find(d => d.date === week.today);
 
     async function refresh() {
       if (BO.busy()) return;
       week = await BO.api('GET', `/api/days/week?date=${date}`);
-      BO.rerender(render);
+      week.days.forEach(BO.scoreDay);
+      if (root.isConnected) render();
     }
     BO.onResume = () => { if (root.isConnected) refresh().catch(() => { }); };
 
-    /** Saves a change and redraws with the server's answer, unless more changes are already waiting. */
     async function save(method, path, body) {
       const updated = await BO.saving(BO.api(method, path, body));
       if (updated && updated.days && !BO.busy()) {
+        updated.days.forEach(BO.scoreDay);
         week = updated;
-        if (root.isConnected) BO.rerender(render);
+        if (root.isConnected) render();
       }
     }
 
-    function scheduleLog(ex) {
-      BO.debounce(`log:${date}:${ex.planExerciseId}`, 500, () => {
-        const body = ex.type === 'cardio'
-          ? { cardioMinutes: ex.cardioMinutes, cardioKm: ex.cardioKm }
-          : { loadKg: ex.loadKg, sets: ex.sets };
-        save('PUT', `/api/days/${date}/exercises/${ex.planExerciseId}`, body).catch(() => { });
+    function streakChip() {
+      const n = BO.streakNow(streak, todayDay());
+      document.querySelectorAll('[data-streak-label]').forEach(el => { el.textContent = n ? `${n}-day streak` : 'Start a streak today'; });
+      return `<span class="chip" title="Days in a row with a day score of ${BO.STREAK_AT} or more"><span class="flame">${icons.flame}</span>${n ? `${n}-day streak` : 'Start a streak'}</span>`;
+    }
+
+    function weighIn(d) {
+      const entry = weights.entries.find(e => e.date === d.date);
+      const before = weights.entries.filter(e => e.date < d.date).at(-1);
+      if (!entry) return { done: false, sub: before ? `Last ${BO.kg(before.weightKg)} kg · ${BO.shortDate(before.date)}` : 'Step on the scale' };
+      return { done: true, sub: `${BO.kg(entry.weightKg)} kg${before ? ` · ${BO.signed(entry.weightKg - before.weightKg)} vs ${BO.DAYS[BO.weekday(before.date) - 1]}` : ''}` };
+    }
+
+    /** Weigh-in, meals and the workout, in the order of the day. */
+    function items(d) {
+      const list = [];
+      const w = weighIn(d);
+      list.push({ kind: 'weigh', key: 6 * 60, time: 'AM', name: 'Weigh-in', sub: w.sub, done: w.done || d.weightKg != null });
+      let last = 7 * 60;
+      const timed = d.meals.some(m => m.time);
+      d.meals.forEach((m, i) => {
+        const key = m.time ? minutes(m.time) : (timed ? last + 1 : 7 * 60 + i * 120);
+        last = key;
+        list.push({ kind: 'eat', key, time: m.time || '', name: m.name, sub: m.foods || 'No foods listed', done: m.eaten, meal: m.planMealId });
       });
+      if (d.exercises.length) {
+        const state = BO.sessionState(d);
+        list.push({
+          kind: 'train', key: timed ? WORKOUT_AT : 99 * 60, time: state === 'live' ? 'Now' : '',
+          name: BO.sessionName(d), done: state === 'done', missed: state === 'missed', live: state === 'live',
+          sub: state === 'done' ? `${d.setsDone} of ${d.setsPlanned} sets · done` : state === 'live' ? `In progress · ${d.setsDone} of ${d.setsPlanned} sets` : state === 'missed' ? 'Skipped' : `${BO.plural(d.exercises.length, 'exercise')} · ${d.setsPlanned} sets · about ${BO.sessionMinutes(d)} min`,
+        });
+      }
+      list.sort((a, b) => a.key - b.key);
+      const next = list.findIndex(x => !x.done && !x.missed && !x.live);
+      if (next >= 0) list[next].next = true;
+      return list;
     }
 
-    function setCount(ex) {
-      return Math.max(ex.targets.length, ex.sets.length, ex.type === 'strength' ? 1 : 0);
+    function timeline(d) {
+      return `<div class="tl">${items(d).map(x => {
+        const cls = `ti ${x.kind}${x.done ? ' done' : ''}${x.live ? ' live' : ''}${x.next ? ' next' : ''}${x.missed ? ' missed' : ''}`;
+        const pill = x.live ? '<span class="pill train">Live</span>' : x.next ? `<span class="pill ${x.kind}">Next</span>` : '';
+        const inner = `<span class="time num">${esc(x.time)}</span>
+          <span class="rail"><span class="dot">${x.done ? icons.check : ''}</span><span class="ln"></span></span>
+          <span class="body"><b>${esc(x.name)} ${pill}</b><span>${esc(x.sub)}</span></span>`;
+        if (x.kind === 'eat') return `<button type="button" class="${cls}" role="checkbox" aria-checked="${x.done}" data-meal="${x.meal}">${inner}</button>`;
+        if (x.kind === 'weigh') return `<button type="button" class="${cls}" data-weigh>${inner}</button>`;
+        return `<a class="${cls}" href="/session?date=${d.date}" data-link>${inner}</a>`;
+      }).join('')}</div>`;
     }
 
-    function exerciseCard(ex) {
-      const pid = ex.planExerciseId;
-      const last = ex.last;
-      if (ex.type === 'cardio') {
-        return `<article class="ex" data-pid="${pid}">
-          <div class="ex-head"><div><div class="ex-name">${esc(ex.name)}</div><div class="ex-meta">${esc(ex.notes || 'Cardio: log time and distance')}</div></div><span class="plan-tag">${esc(ex.detail)}</span></div>
-          <div class="cardio-line">
-            <label><input id="min-${pid}" class="num" inputmode="decimal" value="${ex.cardioMinutes ?? ''}" placeholder="0" data-cardio="cardioMinutes" aria-label="Minutes"><span>min</span></label>
-            <label><input id="km-${pid}" class="num" inputmode="decimal" value="${ex.cardioKm ?? ''}" placeholder="0" data-cardio="cardioKm" aria-label="Kilometres"><span>km</span></label>
-          </div>
-        </article>`;
+    function hero(d) {
+      const state = BO.sessionState(d);
+      const name = BO.sessionName(d);
+      const segs = Math.min(d.setsPlanned, 24);
+      const on = d.setsPlanned ? Math.round(d.setsDone / d.setsPlanned * segs) : 0;
+      const prog = segs > 1 ? `<div class="prog" aria-label="${d.setsDone} of ${d.setsPlanned} sets">${Array.from({ length: segs }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</div>` : '';
+      const go = (label, href = `/session?date=${d.date}`) => `<a class="go" href="${href}" data-link>${label} ${icons.arrow}</a>`;
+      if (state === 'rest') {
+        return `<div class="hero rest"><div><div class="tag">${esc(d.name || 'Rest day')}</div><h3>Recover today</h3><div class="meta">Nothing planned to lift. Eat well, sleep, and weigh in.</div></div>
+          <button type="button" class="go" data-quick>Quick log ${icons.arrow}</button></div>`;
       }
-
-      const count = setCount(ex);
-      let cells = '';
-      for (let i = 0; i < count; i++) {
-        const value = ex.sets[i];
-        const target = ex.targets[i] || 0;
-        if (editing && editing.pid === pid && editing.set === i) {
-          cells += `<span class="set filled"><input id="set-${pid}-${i}" class="num" inputmode="numeric" value="${value ?? ''}" data-set-input="${i}" aria-label="Reps in set ${i + 1}"></span>`;
-        } else if (value != null) {
-          cells += `<button type="button" class="set filled" data-set="${i}" aria-label="Set ${i + 1}: ${value} reps. Tap to change."><b class="num">${value}</b><small>set ${i + 1}</small></button>`;
-        } else {
-          cells += `<button type="button" class="set" data-set="${i}" aria-label="Log set ${i + 1}${target ? `, ${target} reps planned` : ''}"><b class="num">${target || '–'}</b><small>set ${i + 1}</small></button>`;
-        }
+      if (state === 'done') {
+        const vol = d.exercises.reduce((n, ex) => n + (ex.volumeKg || 0), 0);
+        const prs = d.exercises.filter(ex => ex.isPr).length;
+        return `<div class="hero done"><div><div class="tag">${esc(name)} · done</div><h3>Session done</h3><div class="meta">${d.setsDone} sets${vol ? ` · ${BO.volume(vol)} lifted` : ''}${prs ? ` · ${BO.plural(prs, 'record')}` : ''}</div></div>${go('See the session')}</div>`;
       }
-      if (count < 20) cells += '<button type="button" class="set add" data-add-set aria-label="Add a set">+</button>';
-
-      const lastText = last
-        ? `Last: ${last.loadKg != null ? BO.load(last.loadKg) + ' kg' : 'no load'}${last.reps.length ? ' · ' + repsText(last.reps) : ''} · ${BO.shortDate(last.date)}`
-        : 'First time logged';
-      const foot = [];
-      if (ex.volumeKg) foot.push(`<span>Volume ${BO.volume(ex.volumeKg)}</span>`);
-      if (ex.loadKg != null && last && last.loadKg != null) {
-        const diff = ex.loadKg - last.loadKg;
-        foot.push(diff > 0 ? `<span class="up">+${BO.load(diff)} kg vs last time</span>` : diff < 0 ? `<span>${BO.load(diff)} kg vs last time</span>` : '<span>same load as last time</span>');
+      if (state === 'missed') {
+        return `<div class="hero" style="background:var(--mute)"><div><div class="tag">${esc(name)}</div><h3>Skipped</h3><div class="meta">Changed your mind? You can still log it.</div></div>${go('Log it anyway')}</div>`;
       }
-      const active = ex.sets.some(s => s != null) && ex.sets.slice(0, count).some(s => s == null);
-
-      return `<article class="ex${active ? ' active' : ''}" data-pid="${pid}">
-        <div class="ex-head"><div>
-          <div class="ex-name">${esc(ex.name)}${ex.isPr ? ' <span class="pr">PR</span>' : ''}</div>
-          <div class="ex-meta">${esc(lastText)}${ex.notes ? ' · ' + esc(ex.notes) : ''}</div>
-        </div><span class="plan-tag">${esc(ex.detail)}</span></div>
-        <div class="ex-log">
-          <div class="load">
-            <button type="button" data-step="-1" aria-label="Less load">−</button>
-            <input id="load-${pid}" class="num" inputmode="decimal" value="${BO.load(ex.loadKg)}" placeholder="${last && last.loadKg != null ? BO.load(last.loadKg) : 'kg'}" data-load aria-label="Load in kg">
-            <small>kg</small>
-            <button type="button" data-step="1" aria-label="More load">+</button>
-          </div>
-          <div class="sets">${cells}</div>
-        </div>
-        ${foot.length ? `<div class="ex-foot">${foot.join('')}</div>` : ''}
-      </article>`;
+      const next = BO.nextExercise(d);
+      if (state === 'live') {
+        return `<div class="hero"><div><div class="tag">In progress · ${esc(name)}</div><h3>Back to it</h3><div class="meta">${next ? `${esc(next.name)} is next · ` : ''}${d.setsPlanned - d.setsDone} sets left</div></div>${prog}${go('Resume session')}</div>`;
+      }
+      return `<div class="hero"><div><div class="tag">${date === week.today ? 'Up next' : BO.DAYS[d.weekday - 1]} · ${esc(name)}</div><h3>${date === week.today ? 'Time to train' : esc(name)}</h3><div class="meta">${BO.plural(d.exercises.length, 'exercise')} · ${d.setsPlanned} sets · about ${BO.sessionMinutes(d)} min</div></div>${prog}${go('Start session')}</div>`;
     }
 
-    function repsText(reps) {
-      return reps.length && reps.every(r => r === reps[0]) ? `${reps.length}×${reps[0]}` : reps.join(', ');
+    function scoreCard(d) {
+      const eaten = d.meals.filter(m => m.eaten).length;
+      const bar = (label, p, color, v) => `<div class="bar"><span>${label}</span><span class="t"><i style="width:${Math.round(p * 100)}%;background:${color}"></i></span><span class="v num">${v}</span></div>`;
+      return `<div class="card score">
+        <div><div class="big num" data-score>${shownScore}<small>/100</small></div><div class="sub" style="margin-top:8px">Day score</div></div>
+        <div class="bars">
+          ${d.setsPlanned ? bar('Training', d.setsDone / d.setsPlanned, 'var(--train)', `${d.setsDone}/${d.setsPlanned}`) : bar('Training', 0, 'var(--train)', 'rest')}
+          ${d.meals.length ? bar('Meals', eaten / d.meals.length, 'var(--eat)', `${eaten}/${d.meals.length}`) : bar('Meals', 0, 'var(--eat)', '–')}
+          ${bar('Weigh-in', d.weightKg != null ? 1 : 0, 'var(--weigh)', d.weightKg != null ? 'done' : '–')}
+        </div></div>`;
+    }
+
+    function pips() {
+      return `<div class="wk" role="group" aria-label="This week">${week.days.map(x => {
+        const isToday = x.date === week.today;
+        const future = x.date > week.today;
+        const good = !future && !isToday && BO.dayCounts(x) && x.score >= BO.STREAK_AT;
+        const part = !future && !isToday && !good && x.score > 0;
+        const label = isToday ? x.score : good ? icons.check : part ? x.score : '';
+        return `<button type="button" class="wd${isToday ? ' today' : ''}${good ? ' good' : ''}${part ? ' part' : ''}" data-date="${x.date}" aria-pressed="${x.date === date}" aria-label="${BO.DAYS[x.weekday - 1]}: score ${x.score}">
+          <span>${BO.DAYS_SHORT[x.weekday - 1][0]}</span><span class="pip num">${label}</span></button>`;
+      }).join('')}</div>`;
+    }
+
+    function sessionList(d) {
+      if (!d.exercises.length) return '<p class="sub" style="margin:0">Rest day. Nothing to lift.</p>';
+      const next = BO.nextExercise(d);
+      return `<div class="slist">${d.exercises.map(ex => {
+        let right;
+        if (ex.type === 'cardio') right = [ex.cardioMinutes ? `${BO.load(ex.cardioMinutes)} min` : '', ex.cardioKm ? `${BO.load(ex.cardioKm)} km` : ''].filter(Boolean).join(' · ') || (ex === next ? 'next' : esc(ex.detail));
+        else right = ex.sets.some(s => s != null) ? ex.sets.map(s => s == null ? '–' : s).join(' · ') : ex === next ? 'next' : esc(ex.detail);
+        const load = ex.type === 'cardio' ? esc(ex.detail)
+          : ex.isPr && ex.bestBeforeKg != null ? `${BO.load(ex.bestBeforeKg)} → ${BO.load(ex.loadKg)} kg`
+            : ex.loadKg != null ? `${BO.load(ex.loadKg)} kg` : ex.last && ex.last.loadKg != null ? `last ${BO.load(ex.last.loadKg)} kg` : 'no load yet';
+        return `<a class="srow" href="/session?date=${d.date}&ex=${ex.planExerciseId}" data-link><div><b>${esc(ex.name)}</b><div class="sub">${ex.isPr ? '<span class="pill gold">PR</span> ' : ''}${load}</div></div><span class="r num">${right}</span></a>`;
+      }).join('')}</div>`;
+    }
+
+    function weightCard() {
+      const entries = weights.entries.slice(-12);
+      const latest = weights.entries.at(-1);
+      if (!latest) return `<div class="card"><div class="card-head"><span class="pill weigh">Body weight</span></div><div class="empty"><b>No weigh-ins yet.</b><button type="button" class="btn" data-weigh>Log your weight</button></div></div>`;
+      return `<a class="card" href="/progress" data-link style="text-decoration:none;color:inherit;display:block">
+        <div class="card-head"><span class="pill weigh">Body weight</span>${weights.goalKg != null ? `<span class="sub">goal ${BO.kg(weights.goalKg)}</span>` : ''}</div>
+        <div class="wbig"><b class="num">${BO.kg(latest.weightKg)}</b><span>kg</span></div>
+        <div style="--c:var(--weigh);margin-top:10px">${BO.lineChart(entries.map(e => ({ date: e.date, value: e.weightKg })), { goal: weights.goalKg, goalLabel: '', height: 120, width: 300, label: v => BO.kg(v) })}</div></a>`;
     }
 
     function render() {
       const d = day();
       const isToday = date === week.today;
-      const eaten = d.meals.filter(m => m.eaten).length;
-      const strength = d.exercises.filter(e => e.type === 'strength');
-      const setsDone = strength.reduce((n, e) => n + e.sets.filter(s => s != null).length, 0);
-      const setsPlanned = strength.reduce((n, e) => n + Math.max(e.targets.length, e.sets.filter(s => s != null).length), 0);
-      const mealPct = d.meals.length ? Math.round(eaten / d.meals.length * 100) : 0;
-      const setPct = setsPlanned ? Math.min(100, Math.round(setsDone / setsPlanned * 100)) : 0;
-      const state = d.trainingState;
-
-      const strip = week.days.map(x => {
-        const meals = x.meals.length;
-        const done = x.meals.filter(m => m.eaten).length;
-        const marks = (meals ? `<i class="${done === meals ? 'm-full' : done ? 'm-part' : ''}"></i>` : '')
-          + (x.trainingState === 'done' ? '<i class="t-done"></i>' : x.trainingState === 'missed' ? '<i class="t-miss"></i>' : '');
-        return `<button type="button" class="day${x.date === week.today ? ' today' : ''}" data-date="${x.date}" aria-pressed="${x.date === date}">
-          <small>${BO.DAYS_SHORT[x.weekday - 1]}</small><b>${BO.dayNum(x.date)}</b><span class="marks">${marks}</span></button>`;
-      }).join('');
-
-      const training = d.exercises.length
-        ? d.exercises.map(exerciseCard).join('')
-        : `<div class="empty"><b>Nothing planned for ${BO.DAYS[d.weekday - 1]}.</b><span>Rest day, or add exercises to this day in your plan.</span><a class="btn" href="/plan?day=${d.weekday}" data-link>Open the plan</a></div>`;
-
-      const meals = d.meals.length
-        ? `<div class="meals">${d.meals.map(m => `<button type="button" class="meal" role="checkbox" aria-checked="${m.eaten}" data-meal="${m.planMealId}">
-            <span class="tick">${icons.check}</span><span style="min-width:0"><span class="meal-name">${esc(m.name)}</span><span class="meal-foods">${esc(m.foods || 'No foods listed')}</span></span></button>`).join('')}</div>`
-        : `<div class="empty"><b>No meals planned for ${BO.DAYS[d.weekday - 1]}.</b><a class="btn" href="/plan?day=${d.weekday}&tab=diet" data-link>Plan meals</a></div>`;
-
-      root.innerHTML = `
-        <div class="page-head">
-          <div>
-            <h1 class="title-xl">${isToday ? 'Today' : BO.DAYS[d.weekday - 1]}</h1>
-            <span class="sub">${isToday ? BO.DAYS[d.weekday - 1] + ', ' : ''}${BO.longDate(date)} · week of ${BO.weekRange(week.from)}${!isToday ? ` · <a href="/today" data-link>back to today</a>` : ''}</span>
-          </div>
-          <div class="row">${BO.syncHTML()}<a class="icon-btn phone-only" href="/settings" data-link aria-label="Settings">${icons.settings}</a></div>
-        </div>
-        <div class="days" role="group" aria-label="Day of the week">${strip}</div>
-        <div class="today-sum">
-          <div class="sum"><div class="ring" style="--p:${mealPct}"><span class="num">${eaten}/${d.meals.length}</span></div><div><b>Meals</b><span>${d.meals.length ? (eaten === d.meals.length ? 'All eaten' : `${d.meals.length - eaten} left`) : 'None planned'}</span></div></div>
-          <div class="sum"><div class="ring" style="--p:${setPct}"><span class="num">${setsDone}/${setsPlanned}</span></div><div><b>Sets</b><span>${state === 'done' ? 'Trained' : state === 'missed' ? 'Skipped' : setsDone ? 'Session started' : strength.length ? 'Not started' : 'No sets planned'}</span></div></div>
-        </div>
-        <div class="today-grid">
-          <section class="stack" aria-labelledby="h-training">
-            <div class="section-head">
-              <h2 class="title-l" id="h-training">Training</h2>
-              <div class="seg" role="group" aria-label="Session">
-                <button type="button" data-state="pending" aria-pressed="${state === 'pending'}">Not yet</button>
-                <button type="button" class="is-done" data-state="done" aria-pressed="${state === 'done'}">Trained</button>
-                <button type="button" class="is-miss" data-state="missed" aria-pressed="${state === 'missed'}">Skipped</button>
-              </div>
-            </div>
-            <div class="stack" style="gap:10px">${training}</div>
-          </section>
-          <section class="stack" aria-labelledby="h-meals">
-            <div class="section-head">
-              <h2 class="title-l" id="h-meals">Meals</h2>
-              ${d.meals.length ? `<button type="button" class="link-btn" id="markAll">${eaten === d.meals.length ? 'Clear all' : 'Mark all eaten'}</button>` : ''}
-            </div>
-            ${meals}
-          </section>
+      const r = i => firstPaint ? ` rise" style="--i:${i}` : '';
+      const head = `<div class="page-head${r(0)}">
+          <div><div class="hello">${isToday ? `${BO.greeting()}, ${esc(BO.me.username)}` : `<a href="/today" data-link>Back to today</a>`}</div>
+            <h1 class="h-xl">${BO.DAYS[d.weekday - 1]} ${BO.dayNum(d.date)}<span class="desk-only"> ${BO.MONTHS[BO.parseDate(d.date).getMonth()]}</span></h1></div>
+          <div class="acts">${streakChip()}<button type="button" class="btn ink desk-only" data-quick>${icons.plus} Quick log</button><a class="icon-btn phone-only" href="/settings" data-link aria-label="Settings">${icons.settings}</a></div>
         </div>`;
 
-      if (editing) {
-        const input = root.querySelector(`#set-${editing.pid}-${editing.set}`);
-        if (input) { input.focus(); input.select(); }
+      root.innerHTML = `${head}
+        <div class="today-grid">
+          <div class="col">
+            <div class="${firstPaint ? 'rise' : ''}" style="--i:1">${scoreCard(d)}</div>
+            <div class="${firstPaint ? 'rise' : ''}" style="--i:2">${pips()}</div>
+            <div class="phone-hero ${firstPaint ? 'rise' : ''}" style="--i:3">${hero(d)}</div>
+            <section class="${firstPaint ? 'rise' : ''}" style="--i:4" aria-labelledby="h-day">
+              <div class="spread" style="margin:6px 0 4px"><h2 class="h-l" id="h-day">${isToday ? 'Your day' : 'The day'}</h2><span class="sub">tap to tick</span></div>
+              ${timeline(d)}
+            </section>
+          </div>
+          <div class="col side-col">
+            <div class="desk-hero ${firstPaint ? 'rise' : ''}" style="--i:2">${hero(d)}</div>
+            <section class="card ${firstPaint ? 'rise' : ''}" style="--i:3" aria-labelledby="h-session">
+              <div class="card-head"><h2 class="h-l" id="h-session">${isToday ? "Today's session" : 'Session'}</h2><span class="sub">${d.exercises.length ? 'tap to log' : ''}</span></div>
+              ${sessionList(d)}
+            </section>
+          </div>
+          <div class="col side-col">
+            <div class="${firstPaint ? 'rise' : ''}" style="--i:4">${weightCard()}</div>
+            <section class="card ${firstPaint ? 'rise' : ''}" style="--i:5" aria-labelledby="h-week">
+              <div class="card-head"><h2 class="h-l" id="h-week">This week</h2><span class="sub">day scores</span></div>
+              ${BO.weekBars(week, { picked: date, height: 120 })}
+            </section>
+          </div>
+        </div>`;
+
+      const target = d.score;
+      const el = root.querySelector('[data-score]');
+      if (firstPaint) BO.countUp(el, target, { suffix: '<small>/100</small>', duration: 800 });
+      else if (shownScore !== target) BO.countUp(el, target, { from: shownScore, suffix: '<small>/100</small>', duration: 450 });
+      shownScore = target;
+      firstPaint = false;
+    }
+
+    /** Celebrates when today's score crosses the streak bar or reaches 100. */
+    function celebrate(before) {
+      const d = todayDay();
+      if (!d || date !== week.today) return;
+      if (before < 100 && d.score === 100) {
+        BO.confetti();
+        BO.buzz([20, 40, 20]);
+        BO.toast('Perfect day. Everything ticked off.');
+      } else if (before < BO.STREAK_AT && d.score >= BO.STREAK_AT && BO.dayCounts(d)) {
+        BO.buzz(20);
+        BO.toast(`Streak kept: ${BO.streakNow(streak, d)} ${BO.streakNow(streak, d) === 1 ? 'day' : 'days'} in a row`);
       }
-    }
-
-    function findExercise(el) {
-      const card = el.closest('[data-pid]');
-      return card ? day().exercises.find(e => String(e.planExerciseId) === card.dataset.pid) : null;
-    }
-
-    function commitEdit(input) {
-      if (!editing) return;
-      const ex = day().exercises.find(e => e.planExerciseId === editing.pid);
-      const value = BO.readNumber(input.value);
-      const reps = value == null ? null : Math.max(0, Math.min(999, Math.round(value)));
-      while (ex.sets.length <= editing.set) ex.sets.push(null);
-      ex.sets[editing.set] = reps;
-      editing = null;
-      scheduleLog(ex);
-      BO.rerender(render);
     }
 
     root.addEventListener('click', event => {
       const t = event.target;
-      const dayBtn = t.closest('[data-date]');
-      if (dayBtn) {
-        date = dayBtn.dataset.date;
-        editing = null;
+      const pip = t.closest('[data-date]');
+      if (pip) {
+        date = pip.dataset.date;
         BO.setQuery({ date: date === week.today ? null : date });
+        shownScore = day().score;
         render();
         return;
       }
-
-      const stateBtn = t.closest('[data-state]');
-      if (stateBtn) {
-        day().trainingState = stateBtn.dataset.state;
-        render();
-        save('PUT', `/api/days/${date}/training`, { state: stateBtn.dataset.state }).catch(() => refresh());
+      if (t.closest('[data-weigh]')) {
+        BO.quickLog({ tab: 'weigh', date, onDone: () => BO.reload() });
         return;
       }
-
       const mealBtn = t.closest('[data-meal]');
       if (mealBtn) {
-        const meal = day().meals.find(m => String(m.planMealId) === mealBtn.dataset.meal);
+        const d = day();
+        const before = d.score;
+        const meal = d.meals.find(m => String(m.planMealId) === mealBtn.dataset.meal);
         meal.eaten = !meal.eaten;
+        if (meal.eaten) BO.buzz(10);
+        BO.scoreDay(d);
         render();
+        celebrate(before);
         save('PUT', `/api/days/${date}/meals/${meal.planMealId}`, { eaten: meal.eaten }).catch(() => refresh());
-        return;
-      }
-
-      if (t.closest('#markAll')) {
-        const all = day().meals.every(m => m.eaten);
-        day().meals.forEach(m => { m.eaten = !all; });
-        render();
-        save('PUT', `/api/days/${date}/meals`, { eaten: !all }).catch(() => refresh());
-        return;
-      }
-
-      const ex = findExercise(t);
-      if (!ex) return;
-
-      const step = t.closest('[data-step]');
-      if (step) {
-        const base = ex.loadKg ?? (ex.last && ex.last.loadKg) ?? 0;
-        ex.loadKg = Math.max(0, Math.round((base + Number(step.dataset.step) * 2.5) * 100) / 100);
-        scheduleLog(ex);
-        BO.rerender(render);
-        return;
-      }
-
-      if (t.closest('[data-add-set]')) {
-        ex.sets.length = setCount(ex);
-        ex.sets.push(null);
-        for (let i = 0; i < ex.sets.length; i++) if (ex.sets[i] === undefined) ex.sets[i] = null;
-        editing = { pid: ex.planExerciseId, set: ex.sets.length - 1 };
-        render();
-        return;
-      }
-
-      const setBtn = t.closest('[data-set]');
-      if (setBtn) {
-        const i = Number(setBtn.dataset.set);
-        while (ex.sets.length < setCount(ex)) ex.sets.push(null);
-        if (ex.sets[i] == null) {
-          const previous = ex.sets.slice(0, i).reverse().find(s => s != null);
-          ex.sets[i] = ex.targets[i] || (ex.last && ex.last.reps[i]) || previous || 10;
-          if (ex.loadKg == null && ex.last && ex.last.loadKg != null) ex.loadKg = ex.last.loadKg;
-          scheduleLog(ex);
-          render();
-        } else {
-          editing = { pid: ex.planExerciseId, set: i };
-          render();
-        }
-      }
-    });
-
-    root.addEventListener('input', event => {
-      const t = event.target;
-      const ex = findExercise(t);
-      if (!ex) return;
-      if (t.matches('[data-load]')) {
-        const value = BO.readNumber(t.value);
-        ex.loadKg = value == null ? null : Math.max(0, value);
-        scheduleLog(ex);
-      } else if (t.matches('[data-cardio]')) {
-        const value = BO.readNumber(t.value);
-        ex[t.dataset.cardio] = value == null ? null : Math.max(0, value);
-        scheduleLog(ex);
-      }
-    });
-
-    root.addEventListener('focusout', event => {
-      if (event.target.matches('[data-set-input]')) commitEdit(event.target);
-    });
-    root.addEventListener('keydown', event => {
-      if (event.target.matches('[data-set-input]') && (event.key === 'Enter' || event.key === 'Tab')) {
-        event.preventDefault();
-        event.target.blur();
-      } else if (event.target.matches('[data-set-input]') && event.key === 'Escape') {
-        editing = null;
-        render();
       }
     });
 

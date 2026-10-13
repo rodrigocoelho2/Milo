@@ -133,4 +133,13 @@ public sealed class DayScoreTests
         Assert.Equal(1, streak.ThroughYesterday);
         Assert.Equal(4, streak.Best);
     }
+
+    [Fact]
+    public void SetProgress_LoggingMarksTheDayTrained_ButOnlyLoggedSetsCount()
+    {
+        var day = WeekBuilder.Day(TestSupport.Tuesday, Plan, Logged(TrainingState.Done, false, 1, null), []);
+
+        Assert.Equal(1, day.SetsDone);
+        Assert.Equal(4, day.SetsPlanned);
+    }
 }

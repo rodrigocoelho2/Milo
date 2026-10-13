@@ -13,7 +13,7 @@ internal sealed partial class TestDatabase : IDisposable
     public const string EnvironmentVariable = "BODYOPS_TEST_SQL";
 
     // Tables in foreign-key order; every stored procedure after them.
-    private static readonly string[] TableOrder = ["User", "UserSetting", "PlanMeal", "PlanFood", "PlanExercise", "Day", "DayMeal", "DayExercise", "DaySet", "WeightEntry"];
+    private static readonly string[] TableOrder = ["User", "UserSetting", "PlanMeal", "PlanFood", "PlanExercise", "PlanDay", "Day", "DayMeal", "DayExercise", "DaySet", "WeightEntry"];
 
     public TestDatabase()
     {

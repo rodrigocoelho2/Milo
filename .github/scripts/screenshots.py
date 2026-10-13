@@ -26,6 +26,8 @@ with sync_playwright() as p:
     watch(page, "desktop")
 
     page.goto(base + "/")
+    page.evaluate("document.querySelectorAll('.reveal').forEach(e => e.classList.add('in'))")
+    page.wait_for_timeout(1200)
     page.screenshot(path=str(out / "desktop-landing.png"), full_page=True)
 
     page.goto(base + "/signup")
@@ -41,12 +43,25 @@ with sync_playwright() as p:
     )
     print("import:", result)
 
+    # A day in progress on the sample's last logged week: a weigh-in, two meals and some sets.
+    page.evaluate(
+        """async () => {
+          const h = { 'X-BodyOps': '1', 'Content-Type': 'application/json' };
+          const put = (u, b) => fetch(u, { method: 'PUT', headers: h, body: JSON.stringify(b) });
+          await put('/api/plan/2/name', { name: 'Upper body' });
+          const week = await (await fetch('/api/days/week?date=2026-07-21')).json();
+          const day = week.days[1];
+          await put('/api/weights/2026-07-21', { weightKg: 98.8 });
+          for (const m of day.meals.slice(0, 2)) await put(`/api/days/2026-07-21/meals/${m.planMealId}`, { eaten: true });
+        }"""
+    )
+
     screens = [
-        ("today", "/today"),
-        ("week", "/week?date=2026-07-21&day=2026-07-21"),
+        ("today", "/today?date=2026-07-21"),
+        ("week", "/week?date=2026-07-21"),
+        ("progress", "/progress"),
         ("plan", "/plan?day=2"),
-        ("plan-diet", "/plan?day=2&tab=diet"),
-        ("weight", "/weight"),
+        ("plan-meals", "/plan?day=2&tab=meals"),
         ("settings", "/settings"),
     ]
     for name, path in screens:
@@ -63,12 +78,23 @@ with sync_playwright() as p:
         mobile.wait_for_timeout(700)
         mobile.screenshot(path=str(out / f"phone-{name}.png"), full_page=True)
 
+    # Session mode and the quick log sheet.
+    mobile.goto(base + "/session?date=2026-07-21")
+    mobile.wait_for_timeout(900)
+    mobile.screenshot(path=str(out / "phone-session.png"))
+    mobile.goto(base + "/today?date=2026-07-21")
+    mobile.wait_for_timeout(700)
+    mobile.click(".tabs .plus")
+    mobile.wait_for_timeout(900)
+    mobile.screenshot(path=str(out / "phone-quick-log.png"))
+
     signed_out = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True)
     anon = signed_out.new_page()
     watch(anon, "phone signed out")
-    for name, path in [("landing", "/"), ("signin", "/signin")]:
+    for name, path in [("landing", "/"), ("signin", "/signin"), ("signup", "/signup")]:
         anon.goto(base + path)
-        anon.wait_for_timeout(400)
+        anon.evaluate("document.querySelectorAll('.reveal').forEach(e => e.classList.add('in'))")
+        anon.wait_for_timeout(1200)
         anon.screenshot(path=str(out / f"phone-{name}.png"), full_page=True)
 
     browser.close()

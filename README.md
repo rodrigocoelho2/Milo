@@ -7,25 +7,29 @@ enough) and works as an app on the phone at the gym and in the browser at home.
 BodyOps replaces **CorpoOps**, the single-file app with a Node sync server. Its backups import as they are
 (see [Moving from CorpoOps](#moving-from-corpoops)).
 
-| Week (computer) | Today (phone) |
-| --- | --- |
-| ![Week](docs/images/desktop-week.png) | ![Today](docs/images/phone-today.png) |
+| Today (computer) | Today (phone) | Session mode (phone) |
+| --- | --- | --- |
+| ![Today](docs/images/desktop-today.png) | ![Today](docs/images/phone-today.png) | ![Session](docs/images/phone-session.png) |
 
 ## What it does
 
-- **Today** — the day's exercises with the load and one tile per set: tap a set when you finish it, tap again to
-  change the reps. Every exercise shows what you did last time, and a load heavier than any earlier session is
-  flagged as a personal record. Meals are a checklist. Cardio logs minutes and kilometres.
-- **Week** — the seven days at a glance (meals eaten, sessions done or skipped), the picked day's session and meals,
-  the sets each muscle got on the body map, the weight trend and a 21-week consistency grid. Reset week has Undo.
-- **Plan** — exercises (sets × reps, notes) and meals (foods in grams or pieces) for each weekday, with
-  copy-to-other-days and drag to reorder. The muscles of each exercise are detected from its name (English or
-  Portuguese) and can be picked by hand. Each exercise's progression is a chart next to the plan.
-  Changes save themselves; editing the plan updates this week and the weeks ahead, while past weeks keep the plan
-  they had.
-- **Weight** — weigh-ins, the trend against the goal and how far along you are.
-- **Settings** — password, theme (dark, light or the device's), backup export and import, and for the admin,
-  the other accounts (reset a forgotten password, delete an account).
+- **Today** — the day as a timeline: weigh-in, meals at their planned times and the workout, the next thing
+  highlighted. One tap ticks a meal. A **day score** out of 100 (training 50, meals 35, weigh-in 15) fills as you go,
+  and days scoring 60 or more in a row make a **streak**.
+- **Session mode** — the workout on the whole screen, one exercise at a time: big load buttons, last time's numbers
+  to beat, a tile per set, and a rest timer that starts by itself after each set (length in Settings). Lifting more
+  than ever before brings up the personal record, with how far you have come.
+- **Quick log** — the + button logs a weigh-in, ticks a meal or starts the workout from any screen.
+- **Week** — stacked day bars (training, meals, weigh-in), the totals, the records, the sets each muscle got on the
+  body map and a recap. Tap a day to tick its meals or mark the session. Reset week has Undo.
+- **Progress** — body weight against the goal with the pace ("90 kg is roughly 5 months away"), every lift's best
+  load and trend, and the list of records.
+- **Plan** — each weekday gets a name ("Upper body"), exercises (sets × reps, notes) and meals (a time, foods in
+  grams or pieces), with copy-to-other-days and drag to reorder. The muscles of each exercise are detected from its
+  name (English or Portuguese) and can be picked by hand. Changes save themselves; editing the plan updates this
+  week and the weeks ahead, while past weeks keep the plan they had.
+- **Settings** — password, rest between sets, theme (light, dark or the device's), backup export and import, and for
+  the admin, the other accounts (reset a forgotten password, delete an account).
 
 ## Run it on the NAS (Docker)
 
@@ -88,7 +92,7 @@ BodyOps.slnx
 │   │   └── <Feature>/         Controllers, Models (Entities, DTOs), Repositories, Services
 │   └── wwwroot/               index.html, css/app.css, js/ (one file per screen), fonts, icons, manifest, service worker
 ├── BodyOps.UnitTest/          xUnit: services and rules with in-memory fakes, plus SQL Server integration tests
-└── docs/                      README images and the HTML mock of the interface
+└── docs/                      README images and the HTML mocks of the interface
 ```
 
 Controllers only map HTTP to services; services hold the rules and answer with `ServiceApiResponse<T>`;
@@ -129,14 +133,14 @@ All under `/api`, JSON, cookie sign-in. Writes need the `X-BodyOps: 1` header.
 | `GET health` | first run, sign-up open |
 | `POST auth/register` · `auth/login` · `auth/logout` · `auth/password` · `auth/delete-account`, `GET auth/me` | account |
 | `GET admin/users`, `POST admin/users/{id}/reset-password`, `DELETE admin/users/{id}` | admin only |
-| `GET plan`, `PUT plan/{weekday}/meals`, `PUT plan/{weekday}/exercises`, `POST plan/{weekday}/copy` | weekday 1 = Monday |
-| `GET days/week?date=`, `GET days/consistency?weeks=` | weeks |
+| `GET plan`, `PUT plan/{weekday}/meals`, `PUT plan/{weekday}/exercises`, `PUT plan/{weekday}/name`, `POST plan/{weekday}/copy` | weekday 1 = Monday |
+| `GET days/week?date=`, `GET days/streak`, `GET days/consistency?weeks=` | weeks (with each day's score), the streak |
 | `PUT days/{date}/meals/{planMealId}`, `PUT days/{date}/meals`, `PUT days/{date}/training`, `PUT days/{date}/exercises/{planExerciseId}` | logging (answers with the week) |
 | `DELETE days/week/{date}`, `POST days/week/{date}/restore` | reset week and undo |
-| `GET exercises`, `GET exercises/history?name=` | progression |
-| `GET weights`, `PUT weights/{date}`, `DELETE weights/{date}`, `GET`/`PUT settings` | weight and goal |
+| `GET exercises`, `GET exercises/history?name=`, `GET exercises/records?limit=` | lifts, progression, records |
+| `GET weights`, `PUT weights/{date}`, `DELETE weights/{date}`, `GET`/`PUT settings` | weight, goal and rest between sets |
 | `GET backup`, `POST backup` | export, import (BodyOps or CorpoOps) |
 
 ## Licences
 
-Fonts: Big Shoulders Display and Hanken Grotesk, SIL Open Font License (`BodyOps.WebApi/wwwroot/fonts`).
+Font: Geist, SIL Open Font License (`BodyOps.WebApi/wwwroot/fonts`).

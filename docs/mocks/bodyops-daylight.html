@@ -1,0 +1,829 @@
+<title>BodyOps Daylight Mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400..800&family=Geist:wght@400..900&family=Manrope:wght@400..800&family=Inter+Tight:wght@400..900&display=swap">
+<style>
+/* Layout: a mock canvas of phone frames (the app is used on the phone every day) plus one desktop frame.
+   Direction "Daylight": cool paper-white ground, white cards, black ink, and one bold colour per job:
+   cobalt = training, tangerine = food, violet = body weight, gold = records. One normal-width family
+   for everything; the picker at the top swaps it so the typeface can be chosen. */
+:root{
+  --canvas:#DCE0E7; --bg:#EEF0F4; --card:#FFFFFF; --card2:#F6F7FA; --ink:#0D1015; --mute:#5D6573; --faint:#9AA1AD; --line:#E2E5EB;
+  --train:#3355FF; --train-2:#1F3BE0; --train-soft:#E5EAFF; --on-train:#FFFFFF;
+  --eat:#FF7A2F; --eat-soft:#FFEBDD;
+  --weigh:#8A5CF6; --weigh-soft:#EFE8FF;
+  --good:#10A765; --good-soft:#DDF5E9;
+  --gold:#FFC53D; --on-gold:#2B1D00;
+  --shadow:0 1px 0 rgba(13,16,21,.04), 0 12px 32px -18px rgba(13,16,21,.28);
+  --font:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --canvas:#07080F; --bg:#0E1020; --card:#171A2E; --card2:#1F2340; --ink:#F2F3F8; --mute:#A3A9BD; --faint:#6D7390; --line:#272B47;
+  --train:#6B84FF; --train-2:#4F69F5; --train-soft:#232A55; --on-train:#FFFFFF;
+  --eat:#FF9354; --eat-soft:#3A2622;
+  --weigh:#A98BFF; --weigh-soft:#2C2650;
+  --good:#3BD18A; --good-soft:#163628;
+  --gold:#FFC53D; --on-gold:#2B1D00;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 14px 34px -18px rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --canvas:#07080F; --bg:#0E1020; --card:#171A2E; --card2:#1F2340; --ink:#F2F3F8; --mute:#A3A9BD; --faint:#6D7390; --line:#272B47;
+    --train:#6B84FF; --train-2:#4F69F5; --train-soft:#232A55; --on-train:#FFFFFF;
+    --eat:#FF9354; --eat-soft:#3A2622;
+    --weigh:#A98BFF; --weigh-soft:#2C2650;
+    --good:#3BD18A; --good-soft:#163628;
+    --gold:#FFC53D; --on-gold:#2B1D00;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 14px 34px -18px rgba(0,0,0,.7);
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+body{background:var(--canvas); color:var(--ink); font:15px/1.45 var(--font); padding-inline:16px; padding-block:28px 64px; -webkit-font-smoothing:antialiased}
+button{font:inherit; color:inherit; cursor:pointer}
+button:focus-visible{outline:2px solid var(--train); outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- canvas ---------- */
+.canvas{max-width:1320px; margin:0 auto; display:flex; flex-direction:column; gap:44px}
+.intro{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:16px}
+.intro h1{font:900 46px/1 var(--font); margin:0; letter-spacing:-.02em}
+.intro p{margin:10px 0 0; color:var(--mute); max-width:64ch}
+:root[data-font="jakarta"]{--font:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+:root[data-font="manrope"]{--font:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif}
+:root[data-font="inter"]{--font:"Inter Tight",system-ui,-apple-system,"Segoe UI",sans-serif}
+.tools{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.tools .lbl{font-size:12px; font-weight:700; color:var(--mute)}
+.switch{display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:3px; background:var(--card)}
+.switch button{border:0; background:none; padding:7px 14px; border-radius:999px; font-weight:600; font-size:13px; color:var(--mute)}
+.switch button[aria-pressed="true"]{background:var(--ink); color:var(--card)}
+.cap{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px}
+.cap h2{font:800 24px/1.1 var(--font); margin:0; letter-spacing:-.01em}
+.cap p{margin:0; color:var(--mute); max-width:76ch}
+.phones{display:flex; flex-wrap:wrap; gap:26px; align-items:flex-start}
+.pcol{display:flex; flex-direction:column; gap:10px; max-width:100%}
+.pcol>span{font-size:13px; color:var(--mute)}
+.ideas{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px}
+.idea{background:var(--card); border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:6px; box-shadow:var(--shadow)}
+.idea b{font-size:15px}
+.idea span{color:var(--mute); font-size:13.5px}
+.idea i{width:28px; height:6px; border-radius:3px; display:block}
+
+/* ---------- phone ---------- */
+.phone{width:390px; max-width:100%; height:844px; border-radius:42px; overflow:hidden; background:var(--bg); display:flex; flex-direction:column; position:relative; box-shadow:0 30px 60px -28px rgba(13,16,21,.45); border:1px solid var(--line)}
+.status{display:flex; justify-content:space-between; padding:14px 28px 4px; font-size:13px; font-weight:700}
+.scroll{flex:1; min-height:0; overflow-y:auto; padding:10px 16px 110px; display:flex; flex-direction:column; gap:14px}
+.scroll::-webkit-scrollbar{display:none}
+.scroll>*{flex-shrink:0}
+
+/* tab bar with the quick-log button in the middle */
+.tabs{position:absolute; left:12px; right:12px; bottom:14px; height:66px; border-radius:24px; background:var(--card); box-shadow:0 10px 30px -10px rgba(13,16,21,.35); display:grid; grid-template-columns:1fr 1fr 74px 1fr 1fr; align-items:center; padding:0 6px}
+.tabs{z-index:5}
+.tabs::before{content:""; position:absolute; left:-12px; right:-12px; bottom:-14px; height:120px; background:linear-gradient(to bottom, transparent, var(--bg) 60%); z-index:-1; pointer-events:none}
+.tabs button{border:0; background:none; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10.5px; font-weight:600; color:var(--faint)}
+.tabs button svg{width:22px; height:22px}
+.tabs button[aria-current="page"]{color:var(--ink)}
+.tabs .plus{width:56px; height:56px; border-radius:20px; background:var(--ink); color:var(--card); justify-self:center; display:grid; place-items:center; margin-top:-26px; box-shadow:0 10px 24px -8px rgba(13,16,21,.5)}
+.tabs .plus svg{width:26px; height:26px}
+
+/* type */
+.hello{font-size:13px; color:var(--mute); font-weight:600}
+.h-xl{font:900 34px/1 var(--font); letter-spacing:-.025em; margin:2px 0 0}
+.h-l{font:800 19px/1.1 var(--font); letter-spacing:-.01em; margin:0}
+.sub{font-size:12.5px; color:var(--mute)}
+.row{display:flex; align-items:center; gap:10px}
+.spread{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.card{background:var(--card); border-radius:22px; padding:16px; box-shadow:var(--shadow)}
+
+/* streak chip */
+.streak{white-space:nowrap; flex-shrink:0; display:inline-flex; align-items:center; gap:6px; padding:7px 11px 7px 9px; border-radius:999px; background:var(--card); box-shadow:var(--shadow); font-weight:800; font-size:13px}
+.streak svg{width:16px; height:16px; color:var(--eat)}
+
+/* day score */
+.score{display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:center}
+.score-num{font:900 64px/.8 var(--font); letter-spacing:-.04em}
+.score-num small{font-size:20px; letter-spacing:0; color:var(--faint); font-weight:800}
+.bars{display:flex; flex-direction:column; gap:9px}
+.bar{display:grid; grid-template-columns:62px 1fr 44px; gap:8px; align-items:center; font-size:12px; font-weight:700}
+.bar .t{height:8px; border-radius:4px; background:var(--card2); overflow:hidden}
+.bar .t i{display:block; height:100%; border-radius:4px}
+.bar .v{text-align:right; color:var(--mute); font-weight:600}
+
+/* week dots under the streak */
+.wk{display:grid; grid-template-columns:repeat(7,1fr); gap:6px}
+.wd{display:flex; flex-direction:column; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--faint)}
+.wd .pip{width:30px; height:30px; border-radius:11px; background:var(--card2); display:grid; place-items:center; color:var(--faint)}
+.wd .pip svg{width:14px; height:14px}
+.wd.done .pip{background:var(--ink); color:var(--card)}
+.wd.today{color:var(--ink)}
+.wd.today .pip{background:none; border:2px solid var(--ink); color:var(--ink)}
+
+/* up next hero */
+.hero{border-radius:26px; padding:18px; color:var(--on-train); background:var(--train); position:relative; overflow:hidden; display:flex; flex-direction:column; gap:14px}
+.hero::after{content:""; position:absolute; right:-40px; top:-60px; width:220px; height:220px; border-radius:50%; border:28px solid rgba(255,255,255,.10)}
+.hero .tag{font-size:12px; font-weight:700; opacity:.8}
+.hero h3{font:900 28px/1 var(--font); margin:4px 0 0; letter-spacing:-.02em}
+.hero .meta{font-size:13px; opacity:.85}
+.hero .go{position:relative; z-index:1; align-self:flex-start; border:0; border-radius:16px; padding:12px 16px; background:#fff; color:var(--train-2); font-weight:800; font-size:14px; display:inline-flex; gap:8px; align-items:center}
+.hero .go svg{width:16px; height:16px}
+.hero .prog{display:flex; gap:4px; position:relative; z-index:1}
+.hero .prog i{flex:1; height:6px; border-radius:3px; background:rgba(255,255,255,.25)}
+.hero .prog i.on{background:#fff}
+
+/* timeline */
+.tl{display:flex; flex-direction:column}
+.ti{display:grid; grid-template-columns:46px 30px 1fr; gap:8px; align-items:stretch; border:0; background:none; text-align:left; padding:0}
+.ti .time{font-size:12px; font-weight:700; color:var(--faint); padding-top:15px; text-align:right}
+.ti .rail{display:flex; flex-direction:column; align-items:center}
+.ti .rail .dot{width:26px; height:26px; border-radius:50%; display:grid; place-items:center; margin-top:10px; flex:0 0 auto; border:2px solid var(--line); background:var(--bg); color:var(--card)}
+.ti .rail .dot svg{width:14px; height:14px}
+.ti .rail .ln{flex:1; width:2px; background:var(--line); margin:2px 0}
+.ti:last-child .rail .ln{visibility:hidden}
+.ti .body{background:var(--card); border-radius:18px; padding:12px 14px; margin:4px 0; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:2px}
+.ti .body b{font-weight:700; font-size:14.5px}
+.ti .body span{font-size:12.5px; color:var(--mute)}
+.ti.done .body{background:none; box-shadow:none; padding-top:12px}
+.ti.done .body b{color:var(--mute)}
+.ti.eat.done .dot{background:var(--eat); border-color:var(--eat)}
+.ti.weigh.done .dot{background:var(--weigh); border-color:var(--weigh)}
+.ti.train .dot{border-color:var(--train)}
+.ti.train.live .dot{background:var(--train); border-color:var(--train); box-shadow:0 0 0 6px var(--train-soft)}
+.ti.next .body{outline:2px solid var(--eat)}
+.pill{display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:3px 8px; border-radius:8px}
+.pill.eat{background:var(--eat-soft); color:var(--eat)}
+.pill.train{background:var(--train-soft); color:var(--train)}
+.pill.weigh{background:var(--weigh-soft); color:var(--weigh)}
+.pill.good{background:var(--good-soft); color:var(--good)}
+.pill.gold{background:var(--gold); color:var(--on-gold)}
+
+/* ---------- session (live workout) ---------- */
+.session{background:var(--train); color:#fff}
+.session .status{color:#fff}
+.session .scroll{padding:6px 18px 24px; gap:16px}
+.s-top{display:flex; align-items:center; justify-content:space-between}
+.s-top button{border:0; background:rgba(255,255,255,.15); color:#fff; border-radius:12px; height:38px; padding:0 12px; font-weight:700; font-size:13px; display:inline-flex; align-items:center; gap:6px}
+.s-top button svg{width:16px; height:16px}
+.s-prog{display:flex; gap:4px}
+.s-prog i{flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,.22)}
+.s-prog i.on{background:#fff}
+.s-prog i.cur{background:linear-gradient(90deg,#fff 66%,rgba(255,255,255,.22) 66%)}
+.s-name{font:900 30px/1 var(--font); letter-spacing:-.02em; margin:0}
+.s-last{font-size:13px; opacity:.85}
+.beat{display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.16); border-radius:10px; padding:5px 9px; font-size:12.5px; font-weight:700; width:max-content}
+.beat svg{width:14px; height:14px}
+.load-big{display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,.12); border-radius:22px; padding:10px}
+.load-big button{width:52px; height:52px; border-radius:16px; border:0; background:rgba(255,255,255,.18); color:#fff; font-size:24px; font-weight:700}
+.load-big .v{text-align:center}
+.load-big .v b{font:900 54px/.9 var(--font); letter-spacing:-.03em}
+.load-big .v span{display:block; font-size:12px; opacity:.75; font-weight:700; margin-top:4px}
+.s-sets{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.s-set{border-radius:18px; padding:12px 10px; display:flex; flex-direction:column; gap:4px; background:rgba(255,255,255,.1); border:2px solid transparent}
+.s-set small{font-size:11px; font-weight:700; opacity:.75}
+.s-set b{font:900 28px/1 var(--font)}
+.s-set.done{background:#fff; color:var(--train-2)}
+.s-set.done small{opacity:.6}
+.s-set.cur{border-color:#fff; border-style:dashed}
+.rest{display:grid; grid-template-columns:76px 1fr; gap:14px; align-items:center; background:rgba(0,0,0,.16); border-radius:20px; padding:12px}
+.rest svg{width:76px; height:76px}
+.rest b{font:900 24px/1 var(--font)}
+.rest .actions{display:flex; gap:6px; margin-top:8px}
+.rest .actions button{border:0; border-radius:10px; padding:6px 10px; background:rgba(255,255,255,.16); color:#fff; font-size:12px; font-weight:700}
+.logset{border:0; border-radius:22px; background:#fff; color:var(--train-2); padding:18px; font-weight:900; font-size:18px; display:flex; justify-content:space-between; align-items:center}
+.logset .reps{display:flex; align-items:center; gap:8px}
+.logset .reps span{width:34px; height:34px; border-radius:11px; background:var(--train-soft); display:grid; place-items:center; font-size:18px}
+.upnext{display:flex; flex-direction:column; gap:6px}
+.upnext .u{display:flex; justify-content:space-between; font-size:13.5px; padding:10px 12px; border-radius:14px; background:rgba(255,255,255,.08)}
+.upnext .u span{opacity:.75}
+
+/* PR sheet */
+.sheet-wrap{position:absolute; inset:0; background:rgba(8,10,30,.45); display:flex; align-items:flex-end}
+.sheet{background:var(--card); color:var(--ink); width:100%; border-radius:30px 30px 0 0; padding:22px 20px 28px; display:flex; flex-direction:column; gap:14px; position:relative; overflow:hidden}
+.sheet .grab{width:40px; height:5px; border-radius:3px; background:var(--line); align-self:center}
+.medal{width:84px; height:84px; border-radius:28px; background:var(--gold); color:var(--on-gold); display:grid; place-items:center; align-self:center; transform:rotate(-6deg); box-shadow:0 14px 28px -12px rgba(255,170,0,.8)}
+.medal svg{width:46px; height:46px}
+.sheet h3{font:900 26px/1.05 var(--font); text-align:center; margin:0; letter-spacing:-.02em}
+.sheet .big{font:900 58px/.9 var(--font); text-align:center; letter-spacing:-.04em}
+.sheet .big small{font-size:22px; color:var(--mute)}
+.sheet p{text-align:center; margin:0; color:var(--mute)}
+.compare{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.compare div{background:var(--card2); border-radius:14px; padding:10px; text-align:center}
+.compare b{display:block; font:800 18px/1.1 var(--font)}
+.compare span{font-size:11.5px; color:var(--mute)}
+.btn{border:0; border-radius:16px; padding:14px; font-weight:800; font-size:15px}
+.btn.ink{background:var(--ink); color:var(--card)}
+.btn.soft{background:var(--card2); color:var(--ink)}
+.confetti{position:absolute; inset:0; pointer-events:none}
+
+/* ---------- week ---------- */
+.weekhead{display:flex; justify-content:space-between; align-items:flex-end}
+.wkbars{display:grid; grid-template-columns:repeat(7,1fr); gap:8px; align-items:end; height:150px}
+.wb{display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; justify-content:flex-end}
+.wb .stack{width:100%; max-width:34px; display:flex; flex-direction:column-reverse; gap:3px; flex:1; justify-content:flex-start}
+.wb .stack i{display:block; border-radius:6px; width:100%}
+.wb small{font-size:11px; font-weight:700; color:var(--faint)}
+.wb.today small{color:var(--ink)}
+.wb .empty{flex:1; width:100%; max-width:34px; border-radius:8px; border:2px dashed var(--line)}
+.tiles{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.tile{background:var(--card); border-radius:20px; padding:14px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:6px}
+.tile b{font:900 30px/1 var(--font); letter-spacing:-.03em}
+.tile b small{font-size:15px; color:var(--faint)}
+.tile .lab{font-size:12px; font-weight:700; color:var(--mute); display:flex; align-items:center; gap:6px}
+.tile .lab i{width:8px; height:8px; border-radius:50%}
+.recap{border-radius:26px; padding:18px; background:var(--ink); color:var(--card); display:flex; flex-direction:column; gap:10px; position:relative; overflow:hidden}
+.recap h3{font:900 24px/1.05 var(--font); margin:0; letter-spacing:-.02em}
+.recap .chips{display:flex; gap:6px; flex-wrap:wrap}
+.recap .chips span{font-size:12px; font-weight:700; padding:5px 9px; border-radius:9px; background:rgba(255,255,255,.12)}
+.recap::after{content:""; position:absolute; right:-30px; bottom:-50px; width:160px; height:160px; border-radius:40px; transform:rotate(20deg); background:linear-gradient(135deg,var(--train),var(--weigh)); opacity:.9}
+.recap > *{position:relative; z-index:1}
+
+/* body map */
+.bm{display:grid; grid-template-columns:150px 1fr; gap:10px; align-items:center}
+.bm svg{width:100%; height:auto}
+.mr{display:grid; grid-template-columns:70px 1fr 40px; gap:8px; align-items:center; font-size:12px; font-weight:600}
+.mr .t{height:6px; border-radius:3px; background:var(--card2); overflow:hidden}
+.mr .t i{display:block; height:100%; background:var(--train); border-radius:3px}
+.mr .v{text-align:right; color:var(--mute)}
+
+/* progress */
+.wbig{display:flex; align-items:flex-end; gap:6px}
+.wbig b{font:900 72px/.85 var(--font); letter-spacing:-.045em}
+.wbig span{font:800 20px/1 var(--font); color:var(--faint); padding-bottom:6px}
+.seg{display:inline-flex; background:var(--card2); border-radius:12px; padding:3px}
+.seg button{border:0; background:none; border-radius:9px; padding:6px 10px; font-size:12px; font-weight:700; color:var(--mute)}
+.seg button[aria-pressed="true"]{background:var(--card); color:var(--ink); box-shadow:var(--shadow)}
+svg.chart{width:100%; height:auto; display:block}
+.ax{fill:var(--faint); font:600 10.5px var(--font)}
+.gl{stroke:var(--line)}
+.lifts{display:flex; flex-direction:column}
+.lift{display:grid; grid-template-columns:1fr 70px 64px; gap:10px; align-items:center; padding:11px 0; border-top:1px solid var(--line)}
+.lift:first-child{border-top:0}
+.lift b{font-size:14px; font-weight:700}
+.lift .sub{display:block}
+.lift .kg{font:900 20px/1 var(--font); text-align:right}
+.lift svg{width:70px; height:28px}
+
+/* plan */
+.chips{display:flex; gap:8px; overflow-x:auto; margin:0 -16px; padding:0 16px 2px}
+.chips::-webkit-scrollbar{display:none}
+.dchip{flex:0 0 auto; border:0; border-radius:16px; padding:9px 12px; background:var(--card); box-shadow:var(--shadow); text-align:left; min-width:84px}
+.dchip b{display:block; font:800 15px/1 var(--font)}
+.dchip span{font-size:11.5px; color:var(--mute)}
+.dchip[aria-pressed="true"]{background:var(--ink); color:var(--card)}
+.dchip[aria-pressed="true"] span{color:inherit; opacity:.7}
+.pex{display:grid; grid-template-columns:24px 1fr auto; gap:10px; align-items:center; padding:12px 0; border-top:1px solid var(--line)}
+.pex:first-child{border-top:0}
+.pex .n{width:24px; height:24px; border-radius:8px; background:var(--train-soft); color:var(--train); display:grid; place-items:center; font-size:12px; font-weight:800}
+.pex b{font-size:14.5px; font-weight:700; display:block}
+.pex .ms{display:flex; gap:4px; flex-wrap:wrap; margin-top:4px}
+.pex .ms span{font-size:11px; font-weight:600; color:var(--mute); background:var(--card2); border-radius:6px; padding:2px 6px}
+.pex .sr{font:900 17px/1 var(--font); color:var(--mute)}
+.addrow{border:2px dashed var(--line); border-radius:16px; background:none; padding:12px; font-weight:700; color:var(--mute); width:100%}
+
+/* quick log sheet */
+.ql{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.ql button{border:0; border-radius:18px; padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:6px; font-weight:700; font-size:12.5px}
+.ql button svg{width:24px; height:24px}
+.stepper{display:flex; align-items:center; justify-content:space-between; background:var(--weigh-soft); border-radius:24px; padding:12px}
+.stepper button{width:56px; height:56px; border-radius:18px; border:0; background:var(--card); font-size:26px; font-weight:700; color:var(--weigh); box-shadow:var(--shadow)}
+.stepper .v{text-align:center}
+.stepper .v b{font:900 60px/.9 var(--font); letter-spacing:-.04em; color:var(--ink)}
+.stepper .v span{display:block; font-size:12px; color:var(--mute); font-weight:700; margin-top:4px}
+
+/* ---------- desktop ---------- */
+.scroller{overflow-x:auto; padding-bottom:6px}
+.desk{width:100%; min-width:1100px; max-width:1320px; border-radius:24px; overflow:hidden; background:var(--bg); display:grid; grid-template-columns:240px 1fr; min-height:760px; border:1px solid var(--line); box-shadow:0 30px 60px -30px rgba(13,16,21,.4)}
+.side{padding:24px 16px; display:flex; flex-direction:column; gap:22px; border-right:1px solid var(--line)}
+.brand{display:flex; align-items:center; gap:10px; font:900 20px/1 var(--font); letter-spacing:-.02em}
+.mark{width:34px; height:34px; border-radius:11px; background:var(--ink); color:var(--card); display:grid; place-items:center}
+.mark svg{width:22px; height:22px}
+.nav{display:flex; flex-direction:column; gap:4px}
+.nav button{border:0; background:none; display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:14px; font-weight:700; color:var(--mute); text-align:left}
+.nav button svg{width:20px; height:20px}
+.nav button[aria-current="page"]{background:var(--card); color:var(--ink); box-shadow:var(--shadow)}
+.side .me{margin-top:auto; display:flex; align-items:center; gap:10px; padding:8px; border-radius:14px; background:var(--card)}
+.side .me .av{width:34px; height:34px; border-radius:11px; background:var(--weigh); color:#fff; display:grid; place-items:center; font-weight:800}
+.dmain{padding:26px 28px; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,.9fr); gap:18px; align-items:start}
+.dcol{display:flex; flex-direction:column; gap:14px; min-width:0}
+.dhead{grid-column:1/-1; display:flex; justify-content:space-between; align-items:flex-end}
+
+.note{font-size:13px; color:var(--mute); max-width:86ch}
+@media (prefers-reduced-motion: reduce){*{animation:none!important; transition:none!important}}
+@keyframes ring{from{stroke-dashoffset:0}}
+@media (max-width:440px){.score{gap:12px}.score-num{font-size:50px}.score-num small{font-size:16px}.bar{grid-template-columns:54px 1fr 32px; gap:6px}.h-xl{font-size:30px}}
+</style>
+
+<div class="canvas">
+  <header class="intro">
+    <div>
+      <h1>BodyOps · Daylight</h1>
+      <p>Second direction, built around coming back every day. Your plan, meals, July loads and weigh-ins are real; today's ticks, the streak, the 97.6 kg weigh-in and the PR are examples so the screens show a day in progress.</p>
+    </div>
+    <div class="tools">
+      <span class="lbl">Font</span>
+      <div class="switch" role="group" aria-label="Font">
+        <button type="button" data-f="jakarta" aria-pressed="false" style="font-family:'Plus Jakarta Sans'">Jakarta</button>
+        <button type="button" data-f="geist" aria-pressed="true" style="font-family:'Geist'">Geist</button>
+        <button type="button" data-f="manrope" aria-pressed="false" style="font-family:'Manrope'">Manrope</button>
+        <button type="button" data-f="inter" aria-pressed="false" style="font-family:'Inter Tight'">Inter Tight</button>
+      </div>
+      <div class="switch" role="group" aria-label="Theme">
+        <button type="button" data-t="light" aria-pressed="true">Light</button>
+        <button type="button" data-t="dark" aria-pressed="false">Dark</button>
+      </div>
+    </div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:14px" aria-labelledby="c0">
+    <div class="cap"><h2 id="c0">What makes you come back</h2></div>
+    <div class="ideas">
+      <div class="idea"><i style="background:var(--ink)"></i><b>Today is a timeline</b><span>Weigh-in, meals and the workout in the order you live them, with the next thing highlighted. One tap ticks it off.</span></div>
+      <div class="idea"><i style="background:var(--train)"></i><b>Session mode at the gym</b><span>One exercise at a time, big buttons, last time's numbers to beat and a rest timer that starts on its own.</span></div>
+      <div class="idea"><i style="background:var(--gold)"></i><b>Records feel like records</b><span>Beat your best load and you get the moment: the medal, the jump, and how far you've come since July.</span></div>
+      <div class="idea"><i style="background:var(--eat)"></i><b>Streaks and a day score</b><span>Each day scores out of 100 from training, meals and weigh-in. Keep days above 60 to keep the streak.</span></div>
+      <div class="idea"><i style="background:var(--weigh)"></i><b>Quick log from anywhere</b><span>The + button logs a weigh-in, a meal or starts the workout in two taps.</span></div>
+      <div class="idea"><i style="background:var(--good)"></i><b>A week you can read in a glance</b><span>Stacked bars per day, the weekly recap and the muscles you hit.</span></div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px" aria-labelledby="c1">
+    <div class="cap"><h2 id="c1">Phone</h2><p>Tap the timeline items, the sets and the theme switch to try them.</p></div>
+    <div class="phones">
+
+      <!-- TODAY -->
+      <div class="pcol">
+        <div class="phone">
+          <div class="status"><span class="num">18:42</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <div class="spread">
+              <div><div class="hello">Good evening, Rodas</div><h1 class="h-xl">Tuesday 13</h1></div>
+              <span class="streak"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.6 2.2c.4 3.1-1.3 4.6-2.9 6.3C8 10.3 6.5 12 6.5 14.8A5.5 5.5 0 0 0 12 20.5a5.5 5.5 0 0 0 5.5-5.6c0-2.6-1.4-4.1-2.3-5.1-.2 1.4-.9 2.3-1.8 2.7.6-3.4-.1-7.3-.8-10.3Z"/></svg><span class="num">6-day streak</span></span>
+            </div>
+
+            <div class="card score" id="dayScore">
+              <div><div class="score-num num js-score" id="scoreNum">64<small>/100</small></div><div class="sub" style="margin-top:8px">Day score</div></div>
+              <div class="bars">
+                <div class="bar"><span>Training</span><span class="t"><i id="bT" style="width:28%;background:var(--train)"></i></span><span class="v num" id="vT">5/18</span></div>
+                <div class="bar"><span>Meals</span><span class="t"><i id="bE" class="js-bE" style="width:60%;background:var(--eat)"></i></span><span class="v num js-vE" id="vE">3/5</span></div>
+                <div class="bar"><span>Weigh-in</span><span class="t"><i style="width:100%;background:var(--weigh)"></i></span><span class="v">done</span></div>
+              </div>
+            </div>
+
+            <div class="wk" aria-label="This week">
+              <div class="wd done"><span>M</span><span class="pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg></span></div>
+              <div class="wd today"><span>T</span><span class="pip js-pip" style="font-size:11px;font-weight:800">64</span></div>
+              <div class="wd"><span>W</span><span class="pip"></span></div>
+              <div class="wd"><span>T</span><span class="pip"></span></div>
+              <div class="wd"><span>F</span><span class="pip"></span></div>
+              <div class="wd"><span>S</span><span class="pip"></span></div>
+              <div class="wd"><span>S</span><span class="pip"></span></div>
+            </div>
+
+            <div class="hero">
+              <div><div class="tag">Up next · Upper body</div><h3>Back to it</h3><div class="meta">Lat pulldown is next · 13 sets left · about 35 min</div></div>
+              <div class="prog" aria-label="5 of 18 sets"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <button type="button" class="go">Resume session <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            </div>
+
+            <div class="spread"><h2 class="h-l">Your day</h2><span class="sub">tap to tick</span></div>
+            <div class="tl" id="timeline"></div>
+          </div>
+          <nav class="tabs" aria-label="Main" data-tabs="today"></nav>
+        </div>
+        <span>Today: a timeline of the day, the next thing highlighted</span>
+      </div>
+
+      <!-- SESSION -->
+      <div class="pcol">
+        <div class="phone session">
+          <div class="status"><span class="num">18:44</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <div class="s-top">
+              <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>End</button>
+              <span style="font-weight:800" class="num">24:10</span>
+              <button type="button">2 of 6 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+            </div>
+            <div class="s-prog"><i class="on"></i><i class="cur"></i><i></i><i></i><i></i><i></i></div>
+            <div>
+              <h2 class="s-name">Wide-grip lat pulldown</h2>
+              <div class="s-last" style="margin-top:6px">Last time · 21 Jul · 79 kg · 10, 10, 10</div>
+            </div>
+            <span class="beat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l6-6 4 4 6-6M14 8h6v6"/></svg>Beat it: 12 reps on every set</span>
+            <div class="load-big">
+              <button type="button" aria-label="Less">−</button>
+              <div class="v"><b class="num" id="sLoad">79</b><span>kg · steps of 2.5</span></div>
+              <button type="button" aria-label="More">+</button>
+            </div>
+            <div class="s-sets" id="sSets"></div>
+            <div class="rest">
+              <svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="32" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="8"/><circle cx="38" cy="38" r="32" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="64" transform="rotate(-90 38 38)"/><text x="38" y="43" text-anchor="middle" fill="#fff" style="font:800 15px var(--font)">1:02</text></svg>
+              <div><b>Rest</b><div class="s-last">Started after set 2 · 1:30 planned</div><div class="actions"><button type="button">+30 s</button><button type="button">Skip rest</button></div></div>
+            </div>
+            <button type="button" class="logset" id="logSet"><span id="logLabel">Log set 3</span><span class="reps"><span>−</span><b class="num">12</b><span>+</span></span></button>
+            <div class="upnext">
+              <div class="sub" style="color:#fff;opacity:.8;font-weight:700">Up next</div>
+              <div class="u"><b>Machine shoulder press</b><span>50 kg · 3×12</span></div>
+              <div class="u"><b>Pec deck</b><span>70 kg · 3×12</span></div>
+              <div class="u"><b>Machine biceps curl</b><span>45 kg · 3×15</span></div>
+            </div>
+          </div>
+        </div>
+        <span>Session mode: one exercise at a time, rest timer, last time to beat</span>
+      </div>
+
+      <!-- PR -->
+      <div class="pcol">
+        <div class="phone session">
+          <div class="status"><span class="num">18:31</span><span>●●● 5G</span></div>
+          <div class="scroll" style="opacity:.55">
+            <div class="s-top"><button type="button">End</button><span style="font-weight:800">17:52</span><button type="button">1 of 6</button></div>
+            <div class="s-prog"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+            <h2 class="s-name">Incline chest press</h2>
+            <div class="load-big"><button type="button">−</button><div class="v"><b>102.5</b><span>kg</span></div><button type="button">+</button></div>
+          </div>
+          <div class="sheet-wrap">
+            <div class="sheet">
+              <canvas class="confetti" id="confetti" width="390" height="520" aria-hidden="true"></canvas>
+              <span class="grab"></span>
+              <div class="medal"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2h10l-2.2 6.2A6 6 0 1 1 9.2 8.2zm5 9.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Zm0 1.6.9 1.8 2 .3-1.4 1.4.3 2-1.8-.9-1.8.9.3-2-1.4-1.4 2-.3z"/></svg></div>
+              <h3>New personal record</h3>
+              <div class="big num">102.5<small> kg</small></div>
+              <p>Incline chest press · 12 reps on the first set</p>
+              <div class="compare">
+                <div><b class="num">+2.5 kg</b><span>vs your best</span></div>
+                <div><b class="num">+7.5%</b><span>since 14 Jul</span></div>
+                <div><b class="num">3rd</b><span>record this month</span></div>
+              </div>
+              <button type="button" class="btn ink">Keep going</button>
+            </div>
+          </div>
+        </div>
+        <span>Beating your best load: the moment you earned</span>
+      </div>
+
+      <!-- WEEK -->
+      <div class="pcol">
+        <div class="phone">
+          <div class="status"><span class="num">21:05</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <div class="weekhead"><div><div class="hello">Week 42</div><h1 class="h-xl">12–18 Oct</h1></div><span class="streak"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.6 2.2c.4 3.1-1.3 4.6-2.9 6.3C8 10.3 6.5 12 6.5 14.8A5.5 5.5 0 0 0 12 20.5a5.5 5.5 0 0 0 5.5-5.6c0-2.6-1.4-4.1-2.3-5.1-.2 1.4-.9 2.3-1.8 2.7.6-3.4-.1-7.3-.8-10.3Z"/></svg>6</span></div>
+            <div class="card">
+              <div class="wkbars" id="wkbars"></div>
+              <div class="row" style="justify-content:center;gap:14px;margin-top:12px">
+                <span class="pill train">Training</span><span class="pill eat">Meals</span><span class="pill weigh">Weigh-in</span>
+              </div>
+            </div>
+            <div class="tiles">
+              <div class="tile"><span class="lab"><i style="background:var(--train)"></i>Sessions</span><b class="num">2<small>/5</small></b><span class="sub">Legs, Upper</span></div>
+              <div class="tile"><span class="lab"><i style="background:var(--eat)"></i>Meals</span><b class="num">8<small>/35</small></b><span class="sub">all of Monday</span></div>
+              <div class="tile"><span class="lab"><i style="background:var(--ink)"></i>Volume</span><b class="num">24.6<small> t</small></b><span class="sub">+11% vs last week</span></div>
+              <div class="tile"><span class="lab"><i style="background:var(--gold)"></i>Records</span><b class="num">1</b><span class="sub">Incline chest press</span></div>
+            </div>
+            <div class="card">
+              <div class="spread" style="margin-bottom:10px"><h2 class="h-l">Muscles hit</h2><span class="sub">sets this week</span></div>
+              <div class="bm"><svg viewBox="0 0 300 245" id="bodyWeek" aria-label="Muscle map"></svg><div id="rankWeek" style="display:flex;flex-direction:column;gap:7px"></div></div>
+            </div>
+            <div class="recap">
+              <span class="pill" style="background:rgba(255,255,255,.14);color:inherit;width:max-content">Sunday recap preview</span>
+              <h3>Strong start. Two sessions, one record.</h3>
+              <div class="chips"><span>Best day · Monday 100</span><span>Upper body +11%</span><span>−0.4 kg</span></div>
+            </div>
+          </div>
+          <nav class="tabs" aria-label="Main" data-tabs="week"></nav>
+        </div>
+        <span>Week: stacked day bars, totals, muscles, the recap</span>
+      </div>
+
+      <!-- PROGRESS -->
+      <div class="pcol">
+        <div class="phone">
+          <div class="status"><span class="num">07:41</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <div class="spread"><h1 class="h-xl">Progress</h1>
+              <div class="seg" role="group" aria-label="Range"><button type="button" aria-pressed="false">1M</button><button type="button" aria-pressed="true">3M</button><button type="button" aria-pressed="false">All</button></div></div>
+            <div class="card" style="display:flex;flex-direction:column;gap:12px">
+              <div class="spread"><span class="pill weigh">Body weight</span><span class="sub">goal 90.0 kg</span></div>
+              <div class="wbig"><b class="num">97.6</b><span>kg</span></div>
+              <div class="row" style="gap:6px;flex-wrap:wrap"><span class="pill good">−2.8 kg since July</span><span class="pill weigh">7.6 kg to go</span></div>
+              <svg class="chart" viewBox="0 0 340 150" id="wChart" aria-label="Weight from 100.4 to 97.6 kg"></svg>
+              <span class="sub">At about −0.2 kg a week, 90 kg is roughly 9 months away. At −0.5 kg a week it is 15 weeks.</span>
+            </div>
+            <div class="card">
+              <div class="spread" style="margin-bottom:4px"><h2 class="h-l">Lifts</h2><span class="sub">best load</span></div>
+              <div class="lifts" id="lifts"></div>
+            </div>
+          </div>
+          <nav class="tabs" aria-label="Main" data-tabs="progress"></nav>
+        </div>
+        <span>Progress: weight against the goal, every lift's best</span>
+      </div>
+
+      <!-- PLAN -->
+      <div class="pcol">
+        <div class="phone">
+          <div class="status"><span class="num">22:10</span><span>●●● 5G</span></div>
+          <div class="scroll">
+            <div><div class="hello">Repeats every week</div><h1 class="h-xl">Plan</h1></div>
+            <div class="chips" id="planChips"></div>
+            <div class="seg" role="group" aria-label="Section" style="align-self:flex-start"><button type="button" aria-pressed="true">Training</button><button type="button" aria-pressed="false">Meals</button></div>
+            <div class="card">
+              <div class="spread" style="margin-bottom:6px"><div><h2 class="h-l">Upper body</h2><span class="sub">Tuesday · 6 exercises · 18 sets · about 55 min</span></div></div>
+              <div id="planList"></div>
+              <button type="button" class="addrow" style="margin-top:10px">+ Add exercise</button>
+            </div>
+            <div class="card">
+              <div class="spread" style="margin-bottom:10px"><h2 class="h-l">Tuesday works</h2><span class="sub">planned sets</span></div>
+              <div class="bm"><svg viewBox="0 0 300 245" id="bodyDay" aria-label="Muscle map for Tuesday"></svg><div id="rankDay" style="display:flex;flex-direction:column;gap:7px"></div></div>
+            </div>
+          </div>
+          <nav class="tabs" aria-label="Main" data-tabs="plan"></nav>
+        </div>
+        <span>Plan: days get names, sessions show length</span>
+      </div>
+
+      <!-- QUICK LOG -->
+      <div class="pcol">
+        <div class="phone">
+          <div class="status"><span class="num">07:38</span><span>●●● 5G</span></div>
+          <div class="scroll" style="opacity:.4">
+            <div><div class="hello">Good morning, Rodas</div><h1 class="h-xl">Wednesday 14</h1></div>
+            <div class="card score"><div class="score-num">8<small>/100</small></div><div class="bars"><div class="bar"><span>Training</span><span class="t"></span><span class="v">0/1</span></div></div></div>
+          </div>
+          <div class="sheet-wrap">
+            <div class="sheet">
+              <span class="grab"></span>
+              <div class="spread"><h2 class="h-l" style="font-size:22px">Quick log</h2><span class="sub">Wed 14 Oct · 07:38</span></div>
+              <div class="ql">
+                <button type="button" style="background:var(--weigh);color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M8 10a4 4 0 0 1 8 0M12 10l1.6-1.8"/></svg>Weigh-in</button>
+                <button type="button" style="background:var(--eat-soft);color:var(--eat)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11h16a8 8 0 0 1-16 0ZM9 4c0 2 2 2 2 4M14 4c0 2 2 2 2 4"/></svg>Breakfast</button>
+                <button type="button" style="background:var(--train-soft);color:var(--train)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2.5 12h2M19.5 12h2M6.5 7.5v9M17.5 7.5v9M4.5 9.5v5M19.5 9.5v5M6.5 12h11"/></svg>Cycling</button>
+              </div>
+              <div class="stepper">
+                <button type="button" aria-label="Minus 0.1">−</button>
+                <div class="v"><b class="num" id="wVal">97.6</b><span>kg · yesterday 97.8</span></div>
+                <button type="button" aria-label="Plus 0.1">+</button>
+              </div>
+              <button type="button" class="btn ink">Save weigh-in</button>
+              <span class="sub" style="text-align:center">Saves to today. Hold − or + to move faster.</span>
+            </div>
+          </div>
+        </div>
+        <span>The + button: log a weigh-in or tick a meal in two taps</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- DESKTOP -->
+  <section style="display:flex;flex-direction:column;gap:14px" aria-labelledby="c2">
+    <div class="cap"><h2 id="c2">Computer</h2><p>The same pieces side by side: the day, the session, and progress.</p></div>
+    <div class="scroller">
+      <div class="desk">
+        <aside class="side">
+          <div class="brand"><span class="mark" id="mark"></span>BodyOps</div>
+          <nav class="nav" aria-label="Main" id="deskNav"></nav>
+          <div class="me"><span class="av">R</span><div><b style="font-size:14px">Rodas</b><div class="sub">6-day streak</div></div></div>
+        </aside>
+        <main class="dmain">
+          <div class="dhead">
+            <div><div class="hello">Good evening, Rodas</div><h1 class="h-xl" style="font-size:40px">Tuesday 13 October</h1></div>
+            <div class="row"><span class="streak"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.6 2.2c.4 3.1-1.3 4.6-2.9 6.3C8 10.3 6.5 12 6.5 14.8A5.5 5.5 0 0 0 12 20.5a5.5 5.5 0 0 0 5.5-5.6c0-2.6-1.4-4.1-2.3-5.1-.2 1.4-.9 2.3-1.8 2.7.6-3.4-.1-7.3-.8-10.3Z"/></svg>6-day streak</span><button type="button" class="btn ink" style="padding:11px 16px">+ Quick log</button></div>
+          </div>
+          <div class="dcol">
+            <div class="card score"><div><div class="score-num num js-score">64<small>/100</small></div><div class="sub" style="margin-top:8px">Day score</div></div>
+              <div class="bars">
+                <div class="bar"><span>Training</span><span class="t"><i style="width:28%;background:var(--train)"></i></span><span class="v num">5/18</span></div>
+                <div class="bar"><span>Meals</span><span class="t"><i class="js-bE" style="width:60%;background:var(--eat)"></i></span><span class="v num js-vE">3/5</span></div>
+                <div class="bar"><span>Weigh-in</span><span class="t"><i style="width:100%;background:var(--weigh)"></i></span><span class="v">done</span></div>
+              </div></div>
+            <div class="spread"><h2 class="h-l">Your day</h2><span class="sub">tap to tick</span></div>
+            <div class="tl" id="timelineDesk"></div>
+          </div>
+          <div class="dcol">
+            <div class="hero">
+              <div><div class="tag">In progress · Upper body</div><h3>Set 3 of lat pulldown</h3><div class="meta">79 kg · rest 1:02 left · 13 sets to go</div></div>
+              <div class="prog"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <button type="button" class="go">Open session mode</button>
+            </div>
+            <div class="card">
+              <div class="spread" style="margin-bottom:4px"><h2 class="h-l">Today's session</h2><span class="sub">last time → today</span></div>
+              <div class="lifts" id="sessionDesk"></div>
+            </div>
+          </div>
+          <div class="dcol">
+            <div class="card" style="display:flex;flex-direction:column;gap:10px">
+              <div class="spread"><span class="pill weigh">Body weight</span><span class="sub">goal 90</span></div>
+              <div class="wbig"><b class="num" style="font-size:56px">97.6</b><span>kg</span></div>
+              <svg class="chart" viewBox="0 0 340 150" id="wChartDesk"></svg>
+            </div>
+            <div class="card">
+              <div class="spread" style="margin-bottom:10px"><h2 class="h-l">This week</h2><span class="sub">day scores</span></div>
+              <div class="wkbars" id="wkbarsDesk" style="height:120px"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <p class="note">New features this design needs, beyond the current app: day names in the plan ("Upper body"), meal times for the timeline, a rest timer, the day score and streak, and records history. Everything else already exists in the API.</p>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg>';
+
+  // theme
+  $$('[data-f]').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.f === 'geist') delete document.documentElement.dataset.font; else document.documentElement.dataset.font = b.dataset.f;
+    $$('[data-f]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+  $$('[data-t]').forEach(b => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.t;
+    $$('[data-t]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+  try {
+    if (matchMedia('(prefers-color-scheme: dark)').matches) $$('[data-t]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.t === 'dark')));
+  } catch (e) { }
+
+  // tab bars
+  const ICONS = {
+    today: '<path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Z"/><path d="M12 7.5V12l3 2"/>',
+    week: '<rect x="3.5" y="5" width="17" height="15" rx="4"/><path d="M8 3v4M16 3v4M8 14v2M12 12v4M16 10v6"/>',
+    progress: '<path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/>',
+    plan: '<path d="M2.5 12h2M19.5 12h2M6.5 7.5v9M17.5 7.5v9M4.5 9.5v5M19.5 9.5v5M6.5 12h11"/>',
+  };
+  const svg = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  $$('[data-tabs]').forEach(nav => {
+    const cur = nav.dataset.tabs;
+    const b = (id, label) => `<button type="button"${cur === id ? ' aria-current="page"' : ''}>${svg(ICONS[id])}${label}</button>`;
+    nav.innerHTML = b('today', 'Today') + b('week', 'Week') + `<button type="button" class="plus" aria-label="Quick log">${svg('<path d="M12 5v14M5 12h14"/>')}</button>` + b('progress', 'Progress') + b('plan', 'Plan');
+  });
+  $('#deskNav').innerHTML = [['today', 'Today'], ['week', 'Week'], ['progress', 'Progress'], ['plan', 'Plan']].map(([id, l], i) =>
+    `<button type="button"${i === 0 ? ' aria-current="page"' : ''}>${svg(ICONS[id])}${l}</button>`).join('') +
+    `<button type="button">${svg('<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>')}Settings</button>`;
+  $('#mark').innerHTML = '<svg viewBox="0 0 32 32"><mask id="mk"><rect width="32" height="32" fill="#fff"/><circle cx="16" cy="16" r="3.2" fill="#000"/><circle cx="16" cy="16" r="10.6" fill="none" stroke="#000" stroke-width=".9"/><g fill="#000"><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(120 16 16)"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(240 16 16)"/></g></mask><circle cx="16" cy="16" r="14" fill="currentColor" mask="url(#mk)"/></svg>';
+
+  // ---------- timeline (real meal plan; ticks are examples) ----------
+  const DAY = [
+    { kind: 'weigh', time: '07:30', name: 'Weigh-in', sub: '97.6 kg · −0.2 vs Sunday', done: true },
+    { kind: 'eat', time: '08:00', name: 'Breakfast', sub: 'Whey 25 g · Rice flour 50 g · Creatine 5 g · Banana', done: true },
+    { kind: 'eat', time: '13:00', name: 'Lunch', sub: 'Chicken breast 200 g · Egg · Pasta / rice 150 g', done: true },
+    { kind: 'eat', time: '17:00', name: 'Snack', sub: 'Whey 25 g · Rice flour 40 g', done: true },
+    { kind: 'train', time: '18:20', name: 'Upper body', sub: 'In progress · 5 of 18 sets', live: true },
+    { kind: 'eat', time: '20:30', name: 'Dinner', sub: 'Chicken breast 200 g · Egg · Pasta / rice 150 g · Chocolate 25 g' },
+    { kind: 'eat', time: '23:00', name: 'Supper', sub: 'Greek yoghurt 200 g · Peanut butter 15 g · Corn flakes 30 g' },
+  ];
+  function timeline(el) {
+    const next = DAY.findIndex(d => !d.done && !d.live);
+    el.innerHTML = DAY.map((d, i) => `<button type="button" class="ti ${d.kind}${d.done ? ' done' : ''}${d.live ? ' live' : ''}${i === next ? ' next' : ''}" data-i="${i}" ${d.kind === 'train' ? '' : `role="checkbox" aria-checked="${!!d.done}"`}>
+        <span class="time num">${d.time}</span>
+        <span class="rail"><span class="dot">${d.done ? CHECK : ''}</span><span class="ln"></span></span>
+        <span class="body"><b>${d.name}${i === next ? ' <span class="pill eat" style="margin-left:4px">Next</span>' : ''}${d.live ? ' <span class="pill train" style="margin-left:4px">Live</span>' : ''}</b><span>${d.sub}</span></span>
+      </button>`).join('');
+  }
+  function score() {
+    const meals = DAY.filter(d => d.kind === 'eat');
+    const eaten = meals.filter(d => d.done).length;
+    const sets = 5 / 18;
+    const s = Math.round((sets * 0.4 + eaten / meals.length * 0.4 + 0.2) * 100);
+    document.querySelectorAll('.js-score').forEach(el => el.innerHTML = `${s}<small>/100</small>`);
+    document.querySelectorAll('.js-pip').forEach(el => el.textContent = s);
+    document.querySelectorAll('.js-bE').forEach(el => el.style.width = (eaten / meals.length * 100) + '%');
+    document.querySelectorAll('.js-vE').forEach(el => el.textContent = `${eaten}/${meals.length}`);
+  }
+  function renderDay() { timeline($('#timeline')); timeline($('#timelineDesk')); score(); }
+  document.addEventListener('click', e => {
+    const t = e.target.closest('.ti[data-i]');
+    if (!t) return;
+    const d = DAY[+t.dataset.i];
+    if (d.kind === 'train') return;
+    d.done = !d.done;
+    renderDay();
+  });
+  renderDay();
+
+  // ---------- session sets ----------
+  const SETS = [{ r: 12, done: true }, { r: 12, done: true }, { r: 12, done: false }];
+  function sets() {
+    const cur = SETS.findIndex(s => !s.done);
+    $('#sSets').innerHTML = SETS.map((s, i) => `<div class="s-set${s.done ? ' done' : ''}${i === cur ? ' cur' : ''}"><small>Set ${i + 1}${s.done ? ' · done' : i === cur ? ' · now' : ''}</small><b class="num">${s.r}</b><small>reps · 79 kg</small></div>`).join('');
+    $('#logLabel').textContent = cur === -1 ? 'Next exercise' : `Log set ${cur + 1}`;
+  }
+  $('#logSet').addEventListener('click', e => {
+    if (e.target.closest('.reps')) return;
+    const cur = SETS.findIndex(s => !s.done);
+    if (cur >= 0) SETS[cur].done = true; else SETS.forEach(s => { s.done = false; });
+    sets();
+  });
+  sets();
+
+  // ---------- confetti (one burst, drawn once; still if reduced motion) ----------
+  (() => {
+    const c = $('#confetti'), x = c.getContext('2d');
+    const cols = ['#3355FF', '#FF7A2F', '#8A5CF6', '#FFC53D', '#10A765'];
+    const bits = Array.from({ length: 70 }, (_, i) => ({ x: 195 + (Math.random() - .5) * 60, y: 150, vx: (Math.random() - .5) * 9, vy: -Math.random() * 9 - 3, r: Math.random() * 6, c: cols[i % 5], w: 5 + Math.random() * 5, h: 3 + Math.random() * 4 }));
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let n = 0;
+    function frame() {
+      x.clearRect(0, 0, c.width, c.height);
+      bits.forEach(b => { b.x += b.vx; b.y += b.vy; b.vy += .28; b.vx *= .99; b.r += .1; x.save(); x.translate(b.x, b.y); x.rotate(b.r); x.fillStyle = b.c; x.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); x.restore(); });
+      if (++n < 70) requestAnimationFrame(frame);
+    }
+    if (still) { for (let i = 0; i < 26; i++) bits.forEach(b => { b.x += b.vx; b.y += b.vy; b.vy += .28; }); n = 69; }
+    frame();
+  })();
+
+  // ---------- week bars (score parts per day) ----------
+  const WEEK = [
+    { d: 'M', t: 1, e: 1, w: 1 }, { d: 'T', t: .28, e: .6, w: 1, today: true },
+    { d: 'W' }, { d: 'T' }, { d: 'F' }, { d: 'S' }, { d: 'S' }];
+  function bars(el, h) {
+    el.innerHTML = WEEK.map(x => {
+      if (x.t == null) return `<div class="wb"><span class="empty"></span><small>${x.d}</small></div>`;
+      const seg = (v, col) => `<i style="height:${Math.max(6, v * h / 3)}px;background:${col}"></i>`;
+      return `<div class="wb${x.today ? ' today' : ''}"><span class="stack">${seg(x.w, 'var(--weigh)')}${seg(x.e, 'var(--eat)')}${seg(x.t, 'var(--train)')}</span><small>${x.d}</small></div>`;
+    }).join('');
+  }
+  bars($('#wkbars'), 112); bars($('#wkbarsDesk'), 84);
+
+  // ---------- body map ----------
+  function bodyMap(el, totals) {
+    const max = Math.max(...Object.values(totals));
+    const f = m => totals[m] ? `fill="var(--train)" fill-opacity="${(.25 + .75 * totals[m] / max).toFixed(2)}"` : 'fill="var(--card2)"';
+    const E = (cx, cy, rx, ry, m) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" ${m ? f(m) : 'fill="var(--card2)"'} stroke="var(--card)" stroke-width="1.5"/>`;
+    const R = (x, y, w, h, r, m) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" ${m ? f(m) : 'fill="var(--card2)"'} stroke="var(--card)" stroke-width="1.5"/>`;
+    const P = (p, m) => `<polygon points="${p}" ${f(m)} stroke="var(--card)" stroke-width="1.5"/>`;
+    const fr = c => E(c, 24, 11, 12) + R(c - 5, 34, 10, 8, 3) + P(`${c - 21},47 ${c - 6},39 ${c},43 ${c - 8},48`, 'traps') + P(`${c + 21},47 ${c + 6},39 ${c},43 ${c + 8},48`, 'traps') + E(c - 24, 54, 10, 9, 'shoulders') + E(c + 24, 54, 10, 9, 'shoulders') + R(c - 16, 45, 15, 18, 5, 'chest') + R(c + 1, 45, 15, 18, 5, 'chest') + R(c - 11, 65, 22, 31, 6, 'abs') + E(c - 30, 74, 7, 13, 'biceps') + E(c + 30, 74, 7, 13, 'biceps') + E(c - 33, 100, 6, 14, 'forearms') + E(c + 33, 100, 6, 14, 'forearms') + R(c - 12, 97, 24, 11, 4) + E(c - 8, 133, 9, 24, 'quads') + E(c + 8, 133, 9, 24, 'quads') + E(c - 8, 186, 6, 20) + E(c + 8, 186, 6, 20);
+    const bk = c => E(c, 24, 11, 12) + R(c - 5, 34, 10, 8, 3) + P(`${c},40 ${c - 19},51 ${c},73 ${c + 19},51`, 'traps') + E(c - 24, 54, 10, 9, 'shoulders') + E(c + 24, 54, 10, 9, 'shoulders') + P(`${c - 18},59 ${c - 2},61 ${c - 2},92 ${c - 14},80`, 'lats') + P(`${c + 18},59 ${c + 2},61 ${c + 2},92 ${c + 14},80`, 'lats') + E(c - 30, 74, 7, 13, 'triceps') + E(c + 30, 74, 7, 13, 'triceps') + E(c - 33, 100, 6, 14, 'forearms') + E(c + 33, 100, 6, 14, 'forearms') + R(c - 11, 90, 22, 13, 4, 'lowerBack') + E(c - 9, 112, 10, 9, 'glutes') + E(c + 9, 112, 10, 9, 'glutes') + E(c - 8, 141, 9, 22, 'hamstrings') + E(c + 8, 141, 9, 22, 'hamstrings') + E(c - 8, 188, 7, 17, 'calves') + E(c + 8, 188, 7, 17, 'calves');
+    el.innerHTML = fr(78) + bk(222);
+  }
+  const LABEL = { quads: 'Quads', glutes: 'Glutes', hamstrings: 'Hamstr.', chest: 'Chest', triceps: 'Triceps', shoulders: 'Shoulders', lats: 'Lats', biceps: 'Biceps', traps: 'Traps', forearms: 'Forearms', lowerBack: 'Low back' };
+  function rank(el, totals, n) {
+    const ks = Object.keys(totals).sort((a, b) => totals[b] - totals[a]).slice(0, n);
+    const max = totals[ks[0]];
+    el.innerHTML = ks.map(k => `<div class="mr"><span>${LABEL[k]}</span><span class="t"><i style="width:${Math.round(totals[k] / max * 100)}%"></i></span><span class="v num">${Math.round(totals[k] * 10) / 10}</span></div>`).join('');
+  }
+  const WT = { quads: 12, glutes: 9.3, hamstrings: 6.6, lowerBack: 1.8, chest: 2, triceps: 1.5, shoulders: 1.2, lats: 2, biceps: 1, traps: .8 };
+  const DT = { chest: 6, triceps: 6.9, shoulders: 5.4, lats: 3, biceps: 4.5, traps: 1.2, forearms: 2.1 };
+  bodyMap($('#bodyWeek'), WT); rank($('#rankWeek'), WT, 6);
+  bodyMap($('#bodyDay'), DT); rank($('#rankDay'), DT, 6);
+
+  // ---------- weight chart (real weigh-ins + example today) ----------
+  function weightChart(el) {
+    const pts = [['14 Jul', 100.4, 0], ['21 Jul', 98.8, 7], ['28 Jul', 98.0, 14], ['13 Oct', 97.6, 91]];
+    const W = 340, H = 150, L = 30, R = W - 10, T = 12, B = H - 22, lo = 89, hi = 102;
+    const x = d => L + d / 91 * (R - L), y = v => T + (hi - v) / (hi - lo) * (B - T);
+    let s = '';
+    [90, 95, 100].forEach(v => { s += `<line class="gl" x1="${L}" x2="${R}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`; });
+    s += `<line x1="${L}" x2="${R}" y1="${y(90)}" y2="${y(90)}" stroke="var(--weigh)" stroke-dasharray="4 5" stroke-width="1.5"/>`;
+    const d = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p[2])},${y(p[1])}`).join(' ');
+    s += `<path d="${d} L${x(91)},${B} L${x(0)},${B} Z" fill="var(--weigh-soft)"/>`;
+    s += `<path d="${d}" fill="none" stroke="var(--weigh)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    pts.forEach((p, i) => { s += `<circle cx="${x(p[2])}" cy="${y(p[1])}" r="${i === 3 ? 6 : 4}" fill="${i === 3 ? 'var(--weigh)' : 'var(--card)'}" stroke="var(--weigh)" stroke-width="2.5"/>`; });
+    s += `<text class="ax" x="${x(0)}" y="${H - 5}">14 Jul</text><text class="ax" x="${x(91)}" y="${H - 5}" text-anchor="end">13 Oct</text>`;
+    el.innerHTML = s;
+  }
+  weightChart($('#wChart')); weightChart($('#wChartDesk'));
+
+  // ---------- lifts (real July bests, example today) ----------
+  const spark = (vals, col) => {
+    const lo = Math.min(...vals), hi = Math.max(...vals), w = 70, h = 28;
+    const pts = vals.map((v, i) => `${(i / (vals.length - 1) * (w - 6) + 3).toFixed(1)},${(h - 4 - (v - lo) / ((hi - lo) || 1) * (h - 8)).toFixed(1)}`);
+    return `<svg viewBox="0 0 ${w} ${h}"><polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${pts[pts.length - 1].split(',')[0]}" cy="${pts[pts.length - 1].split(',')[1]}" r="3" fill="${col}"/></svg>`;
+  };
+  const LIFTS = [
+    ['Incline chest press', 'record today', [95, 100, 102.5], '102.5', true],
+    ['Machine flat bench press', 'best 23 Jul · 3×6', [130, 140], '140', false],
+    ['Wide-grip lat pulldown', 'best 21 Jul · 3×10', [75, 79], '79', false],
+    ['Pec deck', 'best 21 Jul · 3×10', [65, 70], '70', false],
+    ['Machine shoulder press', 'best 21 Jul · 3×12', [45, 50], '50', false],
+  ];
+  $('#lifts').innerHTML = LIFTS.map(l => `<div class="lift"><div><b>${l[0]}</b><span class="sub">${l[4] ? '<span class="pill gold" style="padding:1px 6px">PR</span> ' : ''}${l[1]}</span></div>${spark(l[2], l[4] ? 'var(--gold)' : 'var(--train)')}<span class="kg num">${l[3]}</span></div>`).join('');
+  const SESSION = [
+    ['Incline chest press', '100 → 102.5 kg', '12 · 11 · 10', true],
+    ['Wide-grip lat pulldown', '79 kg', '12 · 12 · –', false],
+    ['Machine shoulder press', '50 kg', 'next', false],
+    ['Pec deck', '70 kg', '', false],
+    ['Machine biceps curl', '45 kg', '', false],
+    ['Machine triceps pushdown', '22.5 kg', '', false],
+  ];
+  $('#sessionDesk').innerHTML = SESSION.map(s => `<div class="lift" style="grid-template-columns:1fr auto"><div><b>${s[0]}</b><span class="sub">${s[3] ? '<span class="pill gold" style="padding:1px 6px">PR</span> ' : ''}${s[1]}</span></div><span class="sub num" style="font-weight:700;color:var(--ink)">${s[2]}</span></div>`).join('');
+
+  // ---------- plan ----------
+  const PD = [['Mon', 'Legs'], ['Tue', 'Upper body'], ['Wed', 'Cycling'], ['Thu', 'Chest & arms'], ['Fri', 'Back & arms'], ['Sat', 'Cycling'], ['Sun', 'Rest']];
+  $('#planChips').innerHTML = PD.map((p, i) => `<button type="button" class="dchip" aria-pressed="${i === 1}"><b>${p[0]}</b><span>${p[1]}</span></button>`).join('');
+  const PL = [
+    ['Incline chest press', '3×12', ['Chest', 'Triceps', 'Shoulders']],
+    ['Wide-grip lat pulldown', '3×12', ['Lats', 'Biceps', 'Traps']],
+    ['Machine shoulder press', '3×12', ['Shoulders', 'Triceps']],
+    ['Pec deck', '3×12', ['Chest', 'Triceps']],
+    ['Machine biceps curl', '3×15', ['Biceps', 'Forearms']],
+    ['Machine triceps pushdown', '3×15', ['Triceps']],
+  ];
+  $('#planList').innerHTML = PL.map((p, i) => `<div class="pex"><span class="n">${i + 1}</span><div><b>${p[0]}</b><span class="ms">${p[2].map(m => `<span>${m}</span>`).join('')}</span></div><span class="sr">${p[1]}</span></div>`).join('');
+})();
+</script>
