@@ -1,0 +1,52 @@
+@HostAddress = http://localhost:5080
+
+### Health (no sign-in needed)
+GET {{HostAddress}}/api/health
+
+### Register Account (the first account becomes the admin)
+POST {{HostAddress}}/api/auth/register
+Content-Type: application/json
+X-BodyOps: 1
+
+{
+  "username": "rodas",
+  "password": "change-me-please",
+  "remember": true
+}
+
+### Login Account (the response sets the bodyops.auth cookie; the REST client keeps it for the next requests)
+POST {{HostAddress}}/api/auth/login
+Content-Type: application/json
+X-BodyOps: 1
+
+{
+  "username": "rodas",
+  "password": "change-me-please",
+  "remember": true
+}
+
+### Me Account
+GET {{HostAddress}}/api/auth/me
+
+### Password Account
+POST {{HostAddress}}/api/auth/password
+Content-Type: application/json
+X-BodyOps: 1
+
+{
+  "currentPassword": "change-me-please",
+  "newPassword": "change-me-again"
+}
+
+### Logout Account
+POST {{HostAddress}}/api/auth/logout
+X-BodyOps: 1
+
+### Delete Account (asks for the password)
+POST {{HostAddress}}/api/auth/delete-account
+Content-Type: application/json
+X-BodyOps: 1
+
+{
+  "password": "change-me-again"
+}

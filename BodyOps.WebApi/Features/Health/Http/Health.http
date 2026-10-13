@@ -1,0 +1,4 @@
+@HostAddress = http://localhost:5080
+
+### Get Health
+GET {{HostAddress}}/api/health

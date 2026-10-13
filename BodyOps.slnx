@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="BodyOps.Database/BodyOps.Database.sqlproj" Type="42ea0dbd-9cf1-443e-919e-be9c484e4577" />
+  <Project Path="BodyOps.Library/BodyOps.Library.csproj" />
+  <Project Path="BodyOps.UnitTest/BodyOps.UnitTest.csproj" />
+  <Project Path="BodyOps.WebApi/BodyOps.WebApi.csproj" />
+</Solution>

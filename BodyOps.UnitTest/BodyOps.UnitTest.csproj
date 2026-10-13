@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Unit tests (services and rules with in-memory fakes, no database) and integration tests (the whole API against a
+       throw-away SQL Server database built from BodyOps.Database's scripts; they run only when the
+       BODYOPS_TEST_SQL environment variable holds a SQL Server connection string). -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BodyOps.Library\BodyOps.Library.csproj" />
+    <ProjectReference Include="..\BodyOps.WebApi\BodyOps.WebApi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Backups\corpoops-sample.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,12 @@
-node_modules
-data
+**/bin/
+**/obj/
+data/
+BodyOps.WebApi/data/
+**/node_modules/
+**/TestResults/
+.git/
+.github/
+docs/
+BodyOps.UnitTest/
+*.md
 .env
-*.log
-npm-debug.log*
-.DS_Store

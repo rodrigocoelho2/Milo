@@ -1,0 +1,15 @@
+@HostAddress = http://localhost:5080
+@userId = 2
+
+### Sign in as the admin first (Account.http → Login Account)
+
+### List UserAdmin
+GET {{HostAddress}}/api/admin/users
+
+### ResetPassword UserAdmin (returns a temporary password)
+POST {{HostAddress}}/api/admin/users/{{userId}}/reset-password
+X-BodyOps: 1
+
+### Delete UserAdmin
+DELETE {{HostAddress}}/api/admin/users/{{userId}}
+X-BodyOps: 1

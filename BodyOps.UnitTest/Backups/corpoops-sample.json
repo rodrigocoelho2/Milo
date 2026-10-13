@@ -1,0 +1,47 @@
+{
+  "diet": {
+    "Seg": [],
+    "Ter": [
+      { "id": "m1", "name": "Pequeno-Almoço", "foods": [ { "id": "f1", "name": "Whey", "amount": 25, "unit": "g" }, { "id": "f2", "name": "Banana", "amount": 1, "unit": "un" } ] },
+      { "id": "m2", "name": "Almoço", "foods": [ { "id": "f3", "name": "Peito de Frango", "amount": 200, "unit": "g" } ] }
+    ],
+    "Qua": [], "Qui": [], "Sex": [], "Sáb": [], "Dom": []
+  },
+  "workout": {
+    "Seg": { "entries": [] },
+    "Ter": { "entries": [
+      { "id": "e1", "type": "forca", "name": "Chest Press Inclinada ", "detail": "3x12", "notes": "" },
+      { "id": "e2", "type": "forca", "name": "Bicep Curl Maquina", "detail": "3x15", "notes": "", "muscles": ["biceps", "antebracos", "naoexiste"] }
+    ] },
+    "Qua": { "entries": [ { "id": "e3", "type": "cardio", "name": "Bicicleta", "detail": "20 Km", "notes": "" } ] },
+    "Qui": { "entries": [] }, "Sex": { "entries": [] }, "Sáb": { "entries": [] }, "Dom": { "entries": [] }
+  },
+  "logs": {
+    "2026-07-20": {
+      "Ter": {
+        "mealsDone": { "m1": true, "m2": false, "old-meal": true },
+        "trainState": "done",
+        "exLog": {
+          "e1": { "kg": 100, "real": "3x10", "name": "Chest Press Inclinada", "type": "forca" },
+          "e2": { "kg": 45, "real": "2x10", "name": "Bicep Curl Maquina", "type": "forca" },
+          "gone": { "kg": 30, "real": "12, 10", "name": "Face Pull", "type": "forca" }
+        }
+      },
+      "Qua": { "mealsDone": {}, "trainState": "done", "exLog": { "e3": { "kg": null, "real": "32 min · 5,2 km", "name": "Bicicleta", "type": "cardio" } } },
+      "Qui": { "mealsDone": {}, "trainState": "pending", "exLog": {} }
+    }
+  },
+  "planSnapshots": {
+    "2026-07-20": {
+      "diet": { "Ter": [ { "id": "m1", "name": "Pequeno-Almoço", "foods": [ { "name": "Aveia", "amount": 50, "unit": "g" } ] } ] },
+      "workout": {
+        "Ter": { "entries": [ { "id": "e1", "type": "forca", "name": "Chest Press Inclinada", "detail": "3x12", "notes": "" }, { "id": "e2", "type": "forca", "name": "Bicep Curl Maquina", "detail": "3x15", "notes": "" } ] },
+        "Qua": { "entries": [ { "id": "e3", "type": "cardio", "name": "Bicicleta", "detail": "20 Km", "notes": "" } ] }
+      }
+    }
+  },
+  "weightLog": { "2026-07-14": 100.4, "2026-07-21": 98.8 },
+  "settings": { "weightTarget": 90 },
+  "_migratedV2": true,
+  "_migratedV3": true
+}

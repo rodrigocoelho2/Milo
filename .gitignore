@@ -1,5 +1,12 @@
+bin/
+obj/
+.vs/
+.idea/
+*.user
+BodyOps.WebApi/data/
+TestResults/
 node_modules/
-data/
-.env
-*.log
+__pycache__/
+*.pyc
 .DS_Store
+.env

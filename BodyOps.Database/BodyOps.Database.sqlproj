@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.Build.Sql/2.1.0">
+
+  <!-- SQL Server database of BodyOps: tables, one view and the stored procedures. Builds to BodyOps.Database.dacpac,
+       which the db-deploy container publishes on every deploy (creates the database or brings it up to date).
+       Every script is listed below (no wildcards), so Visual Studio shows them with either SSDT flavour;
+       adding a script through Solution Explorer adds its line here. -->
+  <PropertyGroup>
+    <Name>BodyOps.Database</Name>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql160DatabaseSchemaProvider</DSP>
+    <ModelCollation>1033, CI</ModelCollation>
+    <DefaultCollation>SQL_Latin1_General_CP1_CI_AS</DefaultCollation>
+    <TargetDatabaseSet>True</TargetDatabaseSet>
+    <EnableDefaultSqlItems>false</EnableDefaultSqlItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Tables\" />
+    <Folder Include="Views\" />
+    <Folder Include="StoredProcedures\" />
+    <Folder Include="StoredProcedures\Days\" />
+    <Folder Include="StoredProcedures\Plans\" />
+    <Folder Include="StoredProcedures\Settings\" />
+    <Folder Include="StoredProcedures\Users\" />
+    <Folder Include="StoredProcedures\Weights\" />
+    <Folder Include="Scripts\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Build Include="Tables\dbo.Day.sql" />
+    <Build Include="Tables\dbo.DayExercise.sql" />
+    <Build Include="Tables\dbo.DayMeal.sql" />
+    <Build Include="Tables\dbo.DaySet.sql" />
+    <Build Include="Tables\dbo.PlanExercise.sql" />
+    <Build Include="Tables\dbo.PlanFood.sql" />
+    <Build Include="Tables\dbo.PlanMeal.sql" />
+    <Build Include="Tables\dbo.User.sql" />
+    <Build Include="Tables\dbo.UserSetting.sql" />
+    <Build Include="Tables\dbo.WeightEntry.sql" />
+    <Build Include="Views\dbo.PlanMealSummary.sql" />
+    <Build Include="StoredProcedures\Days\dbo.DayDeleteRange.sql" />
+    <Build Include="StoredProcedures\Days\dbo.DayEnsure.sql" />
+    <Build Include="StoredProcedures\Days\dbo.DayExerciseLog.sql" />
+    <Build Include="StoredProcedures\Days\dbo.DayImport.sql" />
+    <Build Include="StoredProcedures\Days\dbo.DayListRange.sql" />
+    <Build Include="StoredProcedures\Days\dbo.DayMealSetAllEaten.sql" />
+    <Build Include="StoredProcedures\Days\dbo.DayMealSetEaten.sql" />
+    <Build Include="StoredProcedures\Days\dbo.DaySetTrainingState.sql" />
+    <Build Include="StoredProcedures\Days\dbo.DaySyncFromPlan.sql" />
+    <Build Include="StoredProcedures\Days\dbo.ExerciseLogList.sql" />
+    <Build Include="StoredProcedures\Plans\dbo.PlanCopyDay.sql" />
+    <Build Include="StoredProcedures\Plans\dbo.PlanExercisesSave.sql" />
+    <Build Include="StoredProcedures\Plans\dbo.PlanGet.sql" />
+    <Build Include="StoredProcedures\Plans\dbo.PlanMealsSave.sql" />
+    <Build Include="StoredProcedures\Settings\dbo.UserSettingGet.sql" />
+    <Build Include="StoredProcedures\Settings\dbo.UserSettingSave.sql" />
+    <Build Include="StoredProcedures\Users\dbo.UserCount.sql" />
+    <Build Include="StoredProcedures\Users\dbo.UserCreate.sql" />
+    <Build Include="StoredProcedures\Users\dbo.UserDataClear.sql" />
+    <Build Include="StoredProcedures\Users\dbo.UserDelete.sql" />
+    <Build Include="StoredProcedures\Users\dbo.UserGet.sql" />
+    <Build Include="StoredProcedures\Users\dbo.UserGetByName.sql" />
+    <Build Include="StoredProcedures\Users\dbo.UserList.sql" />
+    <Build Include="StoredProcedures\Users\dbo.UserSetPassword.sql" />
+    <Build Include="StoredProcedures\Users\dbo.UserTouchLogin.sql" />
+    <Build Include="StoredProcedures\Weights\dbo.WeightDelete.sql" />
+    <Build Include="StoredProcedures\Weights\dbo.WeightImport.sql" />
+    <Build Include="StoredProcedures\Weights\dbo.WeightList.sql" />
+    <Build Include="StoredProcedures\Weights\dbo.WeightSave.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PostDeploy Include="Scripts\Script.PostDeployment.sql" />
+    <None Include="Scripts\deploy.sh" />
+    <None Include="Dockerfile" />
+  </ItemGroup>
+
+</Project>

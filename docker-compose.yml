@@ -1,25 +1,84 @@
+# BodyOps on a NAS: SQL Server, the database deploy (runs once per "up" and exits) and the app.
+# Put SQL_SA_PASSWORD in a .env file next to this one (see .env.example), then:  docker compose up -d --build
 services:
-  corpoops:
-    build: .
-    # or, if you push it to a registry, replace build with:
-    # image: your-registry/corpoops:latest
-    container_name: corpoops
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: bodyops-sql
     restart: unless-stopped
     environment:
-      # REQUIRED: set a long random token. Generate one with:
-      #   openssl rand -hex 24
-      CORPOOPS_TOKEN: "${CORPOOPS_TOKEN}"
-      PORT: "8971"
-    volumes:
-      # SQLite lives here — this is your entire backup surface
-      - ./data:/data
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+      MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD:?Set SQL_SA_PASSWORD in .env}
+      # Keeps SQL Server from taking most of the NAS memory.
+      MSSQL_MEMORY_LIMIT_MB: ${SQL_MEMORY_LIMIT_MB:-1024}
+      TZ: Europe/Lisbon
     networks:
-      - nas-net
-    # No host port is published: NPM reaches it over nas-net by container name.
-    # If you want to test locally without NPM, uncomment:
-    # ports:
-    #   - "8971:8971"
+      - default
+    ports:
+      # For SSMS / Azure Data Studio / VS Code on the LAN (server: <nas-ip>,1434 · user: sa).
+      - "${SQL_PORT:-1434}:1433"
+    volumes:
+      - bodyops-sql:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # Publishes BodyOps.Database (tables, view and stored procedures) and exits: creates the database the first time,
+  # applies schema changes on later deploys.
+  db-deploy:
+    build:
+      context: .
+      dockerfile: BodyOps.Database/Dockerfile
+    image: bodyops-db-deploy:latest
+    container_name: bodyops-db-deploy
+    restart: "no"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - default
+    environment:
+      SQL_SERVER: sqlserver
+      SQL_DATABASE: BodyOps
+      SQL_USER: sa
+      SQL_PASSWORD: ${SQL_SA_PASSWORD}
+
+  bodyops:
+    build:
+      context: .
+      dockerfile: BodyOps.WebApi/Dockerfile
+    image: bodyops:latest
+    container_name: bodyops
+    restart: unless-stopped
+    depends_on:
+      db-deploy:
+        condition: service_completed_successfully
+    ports:
+      - "${BODYOPS_PORT:-8086}:8080"
+    networks:
+      - default   # to reach SQL Server
+      - nas-net   # the NAS's shared network: Nginx Proxy Manager reaches the app at http://bodyops:8080
+    environment:
+      ConnectionStrings__BodyOps: "Server=sqlserver,1433;Database=BodyOps;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True"
+      # Set to "false" once everyone who needs an account has one (the first account can always be created).
+      BodyOps__AllowRegistration: ${BODYOPS_ALLOW_REGISTRATION:-true}
+      # Set to "true" when Nginx Proxy Manager (or another reverse proxy) sits in front of the app.
+      BodyOps__BehindProxy: ${BODYOPS_BEHIND_PROXY:-false}
+      BodyOps__TimeZone: Europe/Lisbon
+      TZ: Europe/Lisbon
+    volumes:
+      # Login keys: "keep me signed in" survives restarts and updates.
+      - bodyops-data:/data
 
 networks:
+  default:      # private network of this stack (SQL Server is not on nas-net)
+  # Shared network on the NAS; create it once with:  docker network create nas-net
   nas-net:
     external: true
+
+volumes:
+  bodyops-data:
+  bodyops-sql:
