@@ -224,4 +224,10 @@ All under `/api`, JSON, cookie sign-in. Writes need the `X-BodyOps: 1` header.
 Font: Geist, SIL Open Font License (`BodyOps.WebApi/wwwroot/fonts`).
 
 <br>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/milo-ink-light.png">
+    <img src="docs/images/milo-ink-dark.png" alt="Milo of Croton carrying a calf, and later the same calf grown into a bull" width="260">
+  </picture>
+</p>
 <p align="center"><sub><i>Milo of Croton lifted a newborn calf onto his shoulders and carried it every day. The calf grew, and so did he.</i></sub></p>

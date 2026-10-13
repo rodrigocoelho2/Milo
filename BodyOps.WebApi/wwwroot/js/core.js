@@ -270,6 +270,18 @@ BO.logoSVG = function logoSVG() {
 /** Why the app is called Milo (shown, faintly, at the foot of the landing page and of Settings). */
 BO.MILO = 'Milo of Croton lifted a newborn calf onto his shoulders and carried it every day. The calf grew, and so did he; when it was a bull, he was still carrying it.';
 
+/** The easter egg behind that line: the drawing and the whole story. */
+BO.miloStory = function miloStory() {
+  BO.sheet((body, close) => {
+    body.innerHTML = `<div class="milo-drawing" role="img" aria-label="Milo of Croton carrying a calf, and later the same calf grown into a bull"></div>
+      <div class="milo-calf">1 calf <i>→</i> 1 bull</div>
+      <blockquote>Milo of Croton lifted a newborn calf onto his shoulders and carried it every day. The calf grew, and so did he. When it was a bull, he was still carrying it.</blockquote>
+      <span class="who">A little more every week. That's the whole idea.</span>
+      <button type="button" class="btn ink lg block" data-close-story>Keep going</button>`;
+    body.querySelector('[data-close-story]').addEventListener('click', close);
+  }, { label: 'Milo of Croton', cls: 'milo-sheet' });
+};
+
 BO.brandHTML = () => `<span class="brand"><span class="brand-mark">${BO.logoSVG()}</span>Milo</span>`;
 
 /* ---------- theme ---------- */

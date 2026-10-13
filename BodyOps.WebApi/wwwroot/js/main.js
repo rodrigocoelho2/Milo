@@ -132,6 +132,10 @@
       BO.quickLog();
       return;
     }
+    if (event.target.closest('[data-milo]')) {
+      BO.miloStory();
+      return;
+    }
     const link = event.target.closest('a[data-link]');
     if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return;
     event.preventDefault();

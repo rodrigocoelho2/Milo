@@ -105,7 +105,7 @@
         <div class="acts">${create('Create your account')}<a class="btn ghost-w" href="/signin" data-link>${canRegister ? 'I already have one' : 'Sign in'}</a></div>
       </section></div>
       <footer class="lp-foot"><span>Milo · self-hosted</span><span>Plan the week. Log every set. Watch the scale.</span></footer>
-      <p class="whisper">${BO.MILO}</p>
+      <p class="whisper" data-milo>${BO.MILO}</p>
     </div>`;
 
     // The hero phone: score counts up, bars fill.

@@ -77,7 +77,7 @@
             </section>` : ''}
           </div>
         </div>
-        <p class="whisper" style="padding-top:28px">${BO.MILO}</p>`;
+        <p class="whisper" data-milo style="padding-top:28px">${BO.MILO}</p>`;
       firstPaint = false;
     }
 

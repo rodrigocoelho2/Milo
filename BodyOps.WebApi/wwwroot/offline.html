@@ -3,22 +3,50 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#3355FF">
+<meta name="theme-color" content="#EEF0F4">
 <title>Milo is offline</title>
+<link rel="icon" type="image/svg+xml" href="/icons/milo-icon.svg">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<script>
+  // Same theme as the app (Settings › Appearance); by default follow the device.
+  try { document.documentElement.dataset.theme = localStorage.getItem('bodyops.theme') || 'system'; } catch (e) { }
+</script>
 <style>
-  html, body { height: 100%; margin: 0; }
-  body { background: #3355FF; color: #FFFFFF; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; display: grid; place-items: center; padding: 24px; box-sizing: border-box; text-align: center; }
-  h1 { font-size: 24px; margin: 16px 0 6px; }
-  p { color: rgba(255,255,255,.82); margin: 0 0 20px; max-width: 34ch; }
-  button { background: #FFFFFF; color: #1F3BE0; border: 0; border-radius: 14px; padding: 13px 22px; font: 700 15px system-ui, sans-serif; }
+  /* Shown by the service worker when the server can't be reached. Milo of Croton rests: the drawing in ink. */
+  :root{ --bg:#EEF0F4; --ink:#0D1015; --mute:#5D6573; --faint:#9AA1AD; --train:#3355FF; --drawing-ink:#151821; color-scheme:light }
+  :root[data-theme="dark"]{ --bg:#0E1020; --ink:#F2F3F8; --mute:#A3A9BD; --faint:#6D7390; --train:#6B84FF; --drawing-ink:#E4E7F2; color-scheme:dark }
+  @media (prefers-color-scheme: dark){
+    :root[data-theme="system"]{ --bg:#0E1020; --ink:#F2F3F8; --mute:#A3A9BD; --faint:#6D7390; --train:#6B84FF; --drawing-ink:#E4E7F2; color-scheme:dark }
+  }
+  *{ box-sizing:border-box }
+  html, body{ height:100%; margin:0 }
+  body{ background:var(--bg); color:var(--ink); font:16px/1.5 "Geist", system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing:antialiased;
+        display:grid; place-items:center; padding:max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom)) }
+  main{ display:flex; align-items:center; justify-content:center; gap:48px; text-align:left; max-width:960px }
+  .drawing{ width:min(380px, 42vw); aspect-ratio:900/836; flex:none; background-color:var(--drawing-ink);
+            -webkit-mask:url(/images/milo-of-croton.webp) center / contain no-repeat; mask:url(/images/milo-of-croton.webp) center / contain no-repeat }
+  .txt{ display:flex; flex-direction:column; align-items:flex-start; gap:16px }
+  h1{ margin:0; font-weight:900; font-size:40px; line-height:1; letter-spacing:-.035em }
+  p{ margin:0; color:var(--mute); max-width:32ch }
+  button{ border:0; border-radius:16px; padding:13px 22px; background:var(--train); color:#fff; font:750 15px "Geist", system-ui, sans-serif; cursor:pointer }
+  small{ font-size:12.5px; color:var(--faint) }
+  @media (max-width:700px){
+    main{ flex-direction:column; text-align:center; gap:18px }
+    .drawing{ width:min(300px, 80vw) }
+    .txt{ align-items:center }
+    h1{ font-size:30px }
+  }
 </style>
 </head>
 <body>
 <main>
-  <img src="/icons/milo-icon.svg" width="64" height="64" alt="">
-  <h1>Can’t reach Milo</h1>
-  <p>Your server isn’t answering. Check that you’re online (or on your home network) and try again.</p>
-  <button type="button" onclick="location.reload()">Try again</button>
+  <div class="drawing" role="img" aria-label="Milo of Croton carrying a calf, and later the same calf grown into a bull"></div>
+  <div class="txt">
+    <h1>Milo rests too.</h1>
+    <p>Can’t reach your server right now. Check that you’re online (or on your home network) and try again in a moment.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+    <small>Your plan and everything you logged are on the server.</small>
+  </div>
 </main>
 </body>
 </html>

@@ -6,6 +6,7 @@
 /* ---------- tokens ---------- */
 :root{
   --bg:#EEF0F4; --card:#FFFFFF; --card2:#F5F6F9; --ink:#0D1015; --mute:#5D6573; --faint:#9AA1AD; --line:#E2E5EB;
+  --drawing-ink:#151821;   /* the Milo of Croton drawing: dark ink here, light ink in dark mode */
   --train:#3355FF; --train-2:#1F3BE0; --train-deep:#1A2A9E; --train-soft:#E5EAFF; --on-train:#FFFFFF;
   --eat:#FF7A2F; --eat-soft:#FFEBDD;
   --weigh:#8A5CF6; --weigh-soft:#EFE8FF;
@@ -25,7 +26,7 @@
   color-scheme:light;
 }
 :root[data-theme="dark"]{
-  --bg:#0E1020; --card:#171A2E; --card2:#1F2340; --ink:#F2F3F8; --mute:#A3A9BD; --faint:#6D7390; --line:#272B47;
+  --bg:#0E1020; --card:#171A2E; --card2:#1F2340; --ink:#F2F3F8; --mute:#A3A9BD; --faint:#6D7390; --line:#272B47; --drawing-ink:#E4E7F2;
   --train:#6B84FF; --train-2:#4F69F5; --train-deep:#141F73; --train-soft:#232A55;
   --eat:#FF9354; --eat-soft:#3A2622;
   --weigh:#A98BFF; --weigh-soft:#2C2650;
@@ -39,7 +40,7 @@
 }
 @media (prefers-color-scheme: dark){
   :root[data-theme="system"]{
-    --bg:#0E1020; --card:#171A2E; --card2:#1F2340; --ink:#F2F3F8; --mute:#A3A9BD; --faint:#6D7390; --line:#272B47;
+    --bg:#0E1020; --card:#171A2E; --card2:#1F2340; --ink:#F2F3F8; --mute:#A3A9BD; --faint:#6D7390; --line:#272B47; --drawing-ink:#E4E7F2;
     --train:#6B84FF; --train-2:#4F69F5; --train-deep:#141F73; --train-soft:#232A55;
     --eat:#FF9354; --eat-soft:#3A2622;
     --weigh:#A98BFF; --weigh-soft:#2C2650;
@@ -177,6 +178,15 @@ select.field{appearance:none; background-image:linear-gradient(45deg,transparent
 /* The easter egg: why the app is called Milo, barely there until you look for it. */
 .whisper{margin:0 auto; padding:0 20px 34px; max-width:62ch; text-align:center; font-style:italic; font-weight:300; font-size:12.5px; line-height:1.5; color:var(--mute); opacity:.32; transition:opacity .4s var(--ease)}
 .whisper:hover{opacity:.75}
+.whisper:focus-visible{opacity:.75; outline:none}
+/* The story sheet behind the line: the drawing is a transparent ink mask filled with --drawing-ink. */
+.milo-sheet{align-items:center; text-align:center}
+.milo-drawing{width:100%; max-width:440px; aspect-ratio:900/836; background-color:var(--drawing-ink); -webkit-mask:url(/images/milo-of-croton.webp) center / contain no-repeat; mask:url(/images/milo-of-croton.webp) center / contain no-repeat; animation:ink-in 1.4s ease-out both .15s}
+@keyframes ink-in{from{opacity:0; transform:scale(.97)}}
+.milo-calf{display:flex; align-items:center; gap:10px; font:850 13px/1 var(--font); letter-spacing:.08em; text-transform:uppercase; color:var(--faint)}
+.milo-calf i{font-style:normal; color:var(--train)}
+.milo-sheet blockquote{margin:0; font-size:16px; line-height:1.55; max-width:36ch}
+.milo-sheet .who{font-size:12.5px; color:var(--mute); font-style:italic; font-weight:300}
 
 /* Blocks of an app screen sliding in as they scroll into view (BO.revealIn). */
 .rv{opacity:0; transform:translate3d(0, 26px, 0) scale(.985)}
