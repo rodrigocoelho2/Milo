@@ -176,10 +176,12 @@
       last = p;
       // On a phone the cards sit right under the buttons, so everything only drifts a little.
       const k = window.innerWidth < 760 ? 0.3 : 1;
-      copy.style.transform = `translate3d(0, ${(p * 0.18 * k).toFixed(1)}px, 0)`;
-      copy.style.opacity = String(Math.max(0, 1 - p / (h * 0.85)).toFixed(3));
-      if (phone) phone.style.translate = `0 ${(p * 0.08).toFixed(1)}px`;
-      floats.forEach((el, i) => { el.style.transform = `translate3d(0, ${(-p * speeds[i % speeds.length] * k).toFixed(1)}px, 0)`; });
+      // Whole pixels, and no transform at all at the top: text moved by a fraction of a pixel (or kept on its own
+      // GPU layer) loses its sharp rendering and looks slightly blurred, above all on Windows.
+      copy.style.transform = p ? `translateY(${Math.round(p * 0.18 * k)}px)` : '';
+      copy.style.opacity = p ? String(Math.max(0, 1 - p / (h * 0.85)).toFixed(3)) : '';
+      if (phone) phone.style.translate = p ? `0 ${Math.round(p * 0.08)}px` : '';
+      floats.forEach((el, i) => { el.style.transform = p ? `translateY(${Math.round(-p * speeds[i % speeds.length] * k)}px)` : ''; });
       rings.forEach((el, i) => { el.style.transform = `translate3d(0, ${(p * (i ? 0.12 : 0.32)).toFixed(1)}px, 0) scale(${(1 + p / h * 0.15).toFixed(3)})`; });
       return true;
     });
