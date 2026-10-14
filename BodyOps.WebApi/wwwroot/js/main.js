@@ -132,6 +132,10 @@
       BO.quickLog();
       return;
     }
+    if (event.target.closest('[data-theme-toggle]')) {
+      BO.toggleTheme();
+      return;
+    }
     if (event.target.closest('[data-milo]')) {
       BO.miloStory();
       return;

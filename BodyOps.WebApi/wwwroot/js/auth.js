@@ -37,7 +37,7 @@
         <span class="ring-deco" style="width:300px;height:300px;left:-120px;bottom:60px"></span>
         <nav class="lp-nav">${BO.brandHTML()}
           <div class="links"><a href="#how" data-jump="how">How it works</a><a href="#features" data-jump="features">Features</a><a href="#yours" data-jump="yours">Your data</a></div>
-          <div class="acts"><a class="btn ghost-w" href="/signin" data-link style="padding:10px 15px">Sign in</a>${canRegister ? '<a class="btn white" href="/signup" data-link style="padding:10px 15px">Create account</a>' : ''}</div>
+          <div class="acts">${BO.themeToggleHTML()}<a class="btn ghost-w" href="/signin" data-link style="padding:10px 15px">Sign in</a>${canRegister ? '<a class="btn white" href="/signup" data-link style="padding:10px 15px">Create account</a>' : ''}</div>
         </nav>
         <div class="lp-main">
           <div class="lp-copy">
@@ -200,7 +200,7 @@
       <aside class="au-side on-brand">
         <span class="ring-deco" style="width:460px;height:460px;right:-170px;top:-150px;border-width:40px"></span>
         <span class="ring-deco" style="width:260px;height:260px;left:-110px;bottom:-60px;border-width:40px"></span>
-        <a href="/" data-link style="text-decoration:none">${BO.brandHTML()}</a>
+        <div class="au-top"><a href="/" data-link style="text-decoration:none">${BO.brandHTML()}</a>${BO.themeToggleHTML()}</div>
         <div><h2>${signup ? 'Start your <span class="gold">first streak.</span>' : 'Welcome back. <span class="gold">Keep it going.</span>'}</h2></div>
         <p>${signup ? 'Build your plan once: exercises, meals, a weight goal. Then every day is a list you tick off.' : 'Your plan for today is waiting: the session, the meals and a weigh-in.'}</p>
         <div class="phone-chips">${signup

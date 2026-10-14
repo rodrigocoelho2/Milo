@@ -300,6 +300,17 @@ BO.paintThemeColor = function paintThemeColor(color) {
 };
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => BO.paintThemeColor());
 
+/** The light/dark switch on the landing and sign-in pages: sun while dark, moon while light (CSS picks the icon). */
+BO.themeToggleHTML = () => `<button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch light or dark mode" title="Light / dark">
+  <svg class="tt-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+  <svg class="tt-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.6A8.3 8.3 0 1 1 9.4 4a6.6 6.6 0 0 0 10.6 10.6Z"/></svg></button>`;
+/** Flips to the other mode from what is on screen now (also when following the device), and keeps the choice. */
+BO.toggleTheme = function toggleTheme() {
+  const flip = () => BO.setTheme(BO.isDark() ? 'light' : 'dark');
+  if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(flip);
+  else flip();
+};
+
 /* ---------- small drawings ---------- */
 
 /** A progress ring (0–1) with a label in the middle. */
