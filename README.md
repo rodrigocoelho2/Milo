@@ -103,8 +103,12 @@
 <details>
 <summary>Design mocks</summary>
 
-The approved HTML mocks of the interface are in [`docs/mocks`](docs/mocks): the app (`bodyops-daylight.html`) and
-the landing page with sign-in (`bodyops-welcome.html`). Open them in a browser.
+The HTML mocks of the interface are in [`docs/mocks`](docs/mocks); open them in a browser:
+
+- `bodyops-daylight.html`: the app, as approved (Daylight, with the Geist font)
+- `bodyops-welcome.html`: the landing page with sign-in
+- `milo-easter-egg.html`: the Milo of Croton line, its sheet, the offline page and the README footer
+- `bodyops-first-direction.html`: the first direction, before Daylight
 </details>
 
 ## Quick start (Docker on the NAS)
