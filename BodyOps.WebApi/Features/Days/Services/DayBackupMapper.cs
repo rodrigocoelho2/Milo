@@ -47,8 +47,12 @@ internal static class DayBackupMapper
                     LoadKg = exercise.LoadKg,
                     CardioMinutes = exercise.CardioMinutes,
                     CardioKm = exercise.CardioKm,
+                    CardioKind = exercise.CardioKind,
                     Sets = Enumerable.Range(1, length)
                         .Select(number => done.FirstOrDefault(set => set.SetNumber == number) is { } set ? (int?)set.Reps : null)
+                        .ToList(),
+                    SetLoads = Enumerable.Range(1, length)
+                        .Select(number => done.FirstOrDefault(set => set.SetNumber == number)?.LoadKg)
                         .ToList(),
                 };
             }).ToList(),

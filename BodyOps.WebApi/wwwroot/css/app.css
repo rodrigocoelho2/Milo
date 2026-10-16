@@ -278,6 +278,7 @@ select.field{appearance:none; background-image:linear-gradient(45deg,transparent
 .ti:last-child .ln{opacity:0}
 .ti .body{background:var(--card); border-radius:18px; padding:12px 14px; margin:4px 0; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:2px; min-width:0; transition:transform .2s var(--ease), box-shadow .2s, opacity .2s}
 .ti .body b{font-weight:750; font-size:15px; display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.ti .body b .opt{font-size:11px; font-weight:600; color:var(--mute); font-style:italic}
 .ti .body span{font-size:12.5px; color:var(--mute)}
 .ti:active .body{transform:scale(.985)}
 .ti.done .body{background:none; box-shadow:none; padding-left:4px}
@@ -359,6 +360,7 @@ button.log-set{padding:12px 12px 12px 20px}
 .upnext button span{opacity:.75; font-weight:500; white-space:nowrap}
 .upnext button.done{opacity:.55}
 .cardio-in{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.cardio-in.one{grid-template-columns:1fr}
 .cardio-in label{background:rgba(255,255,255,.1); border-radius:20px; padding:14px; display:flex; flex-direction:column; gap:2px; font-size:12px; font-weight:700}
 .cardio-in input{border:0; background:none; color:#fff; font:900 40px/1 var(--font); letter-spacing:-.04em; width:100%; outline:none; padding:0}
 .cardio-in input::placeholder{color:rgba(255,255,255,.35)}

@@ -191,17 +191,17 @@ BO.scoreDay = function scoreDay(day) {
     done += Math.min(target, ex.sets.filter(s => s != null).length);
   });
   if (day.trainingState === 'done' && done === 0) done = planned;
+  // Training 60, meals 40. The weigh-in is on the timeline but not in the score (people weigh in every week or two).
   let total = 0, weight = 0;
-  if (planned > 0) { weight += 50; total += day.trainingState === 'missed' ? 0 : 50 * done / planned; }
-  if (day.meals.length) { weight += 35; total += 35 * day.meals.filter(m => m.eaten).length / day.meals.length; }
-  weight += 15; total += day.weightKg != null ? 15 : 0;
+  if (planned > 0) { weight += 60; total += day.trainingState === 'missed' ? 0 : 60 * done / planned; }
+  if (day.meals.length) { weight += 40; total += 40 * day.meals.filter(m => m.eaten).length / day.meals.length; }
   day.setsDone = done;
   day.setsPlanned = planned;
-  day.score = Math.round(100 * total / weight);
+  day.score = weight ? Math.round(100 * total / weight) : 0;
   return day;
 };
-/** Whether a day takes part in the streak (something planned or a weigh-in). */
-BO.dayCounts = day => day.setsPlanned > 0 || day.meals.length > 0 || day.weightKg != null;
+/** Whether a day takes part in the streak (training or meals planned; a weigh-in alone doesn't count). */
+BO.dayCounts = day => day.setsPlanned > 0 || day.meals.length > 0;
 /** The streak shown now: the run up to yesterday, plus today once it reaches the bar. */
 BO.streakNow = (streak, today) => streak ? streak.throughYesterday + (today && BO.dayCounts(today) && today.score >= BO.STREAK_AT ? 1 : 0) : 0;
 
@@ -219,6 +219,17 @@ BO.saveSettings = async function saveSettings(changes) {
 };
 
 /* ---------- muscles ---------- */
+
+/** The sets of an exercise on one line: "12 · 10 · 8", or "60×12 · 65×10 · 70×8" when the loads differ. */
+BO.setsLine = (reps, loads) => {
+  const ls = (loads || []).filter((v, i) => v != null && reps[i] != null);
+  const varied = ls.length > 1 && ls.some(v => v !== ls[0]);
+  return reps.map((r, i) => r == null ? '–' : varied && loads[i] != null ? `${BO.load(loads[i])}×${r}` : r).join(' · ');
+};
+
+/** Kinds of cardio (CardioKind on the server). Treadmill, elliptical and stairs are logged by time only. */
+BO.CARDIO = { treadmill: 'Treadmill', bike: 'Bike', run: 'Run', walk: 'Walk', elliptical: 'Elliptical', rowing: 'Rowing', stairs: 'Stairs', swim: 'Swim', other: 'Other' };
+BO.cardioDistance = kind => !['treadmill', 'elliptical', 'stairs'].includes(kind);
 
 BO.MUSCLES = {
   chest: 'Chest', shoulders: 'Shoulders', biceps: 'Biceps', triceps: 'Triceps', forearms: 'Forearms', abs: 'Abs',

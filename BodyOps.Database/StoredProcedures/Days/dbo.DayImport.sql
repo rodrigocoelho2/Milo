@@ -4,7 +4,9 @@
     [{"date":"2026-07-21","trainingState":1,
       "meals":[{"planMealId":12,"name":"Breakfast","foods":"Whey 25 g","eaten":true,"time":"08:00"}],
       "exercises":[{"planExerciseId":40,"type":1,"name":"Pec deck","detail":"3x12","notes":"","muscles":null,
-                    "loadKg":70,"cardioMinutes":null,"cardioKm":null,"sets":[10,10,10]}]}, …]
+                    "loadKg":70,"cardioMinutes":null,"cardioKm":null,"cardioKind":null,
+                    "sets":[10,10,10],"setLoads":[60,65,70]}]}, …]
+    "setLoads" (optional, older backups have none): the load of each set; a missing or null item = "loadKg".
 */
 CREATE PROCEDURE [dbo].[DayImport]
     @UserID BIGINT,
@@ -28,7 +30,9 @@ BEGIN
         [LoadKg]         DECIMAL (6, 2) NULL,
         [CardioMinutes]  DECIMAL (6, 1) NULL,
         [CardioKm]       DECIMAL (6, 2) NULL,
+        [CardioKind]     TINYINT        NULL,
         [Sets]           NVARCHAR (MAX) NULL,
+        [SetLoads]       NVARCHAR (MAX) NULL,
         PRIMARY KEY ([DayDate], [Ord]));
     DECLARE @ExerciseMap TABLE ([DayDate] DATE NOT NULL, [Ord] INT NOT NULL, [DayExerciseID] BIGINT NOT NULL);
 
@@ -40,9 +44,10 @@ BEGIN
         [Meals]         NVARCHAR (MAX) '$.meals' AS JSON,
         [Exercises]     NVARCHAR (MAX) '$.exercises' AS JSON) d;
 
-    INSERT INTO @Exercises ([DayDate], [Ord], [PlanExerciseID], [ExerciseType], [Name], [Detail], [Notes], [Muscles], [LoadKg], [CardioMinutes], [CardioKm], [Sets])
+    INSERT INTO @Exercises ([DayDate], [Ord], [PlanExerciseID], [ExerciseType], [Name], [Detail], [Notes], [Muscles], [LoadKg], [CardioMinutes], [CardioKm], [CardioKind], [Sets], [SetLoads])
     SELECT d.[DayDate], CAST(j.[key] AS INT), e.[PlanExerciseID], e.[ExerciseType], e.[Name], ISNULL(e.[Detail], N''), ISNULL(e.[Notes], N''),
-           e.[Muscles], e.[LoadKg], e.[CardioMinutes], e.[CardioKm], e.[Sets]
+           e.[Muscles], e.[LoadKg], e.[CardioMinutes], e.[CardioKm],
+           CASE WHEN e.[CardioKind] BETWEEN 1 AND 9 THEN e.[CardioKind] END, e.[Sets], e.[SetLoads]
     FROM @Days d
     CROSS APPLY OPENJSON(ISNULL(d.[Exercises], N'[]')) j
     CROSS APPLY OPENJSON(j.[value]) WITH (
@@ -55,7 +60,9 @@ BEGIN
         [LoadKg]         DECIMAL (6, 2) '$.loadKg',
         [CardioMinutes]  DECIMAL (6, 1) '$.cardioMinutes',
         [CardioKm]       DECIMAL (6, 2) '$.cardioKm',
-        [Sets]           NVARCHAR (MAX) '$.sets' AS JSON) e;
+        [CardioKind]     TINYINT        '$.cardioKind',
+        [Sets]           NVARCHAR (MAX) '$.sets' AS JSON,
+        [SetLoads]       NVARCHAR (MAX) '$.setLoads' AS JSON) e;
 
     BEGIN TRANSACTION;
 
@@ -91,16 +98,18 @@ BEGIN
     ) AS source
     ON 1 = 0
     WHEN NOT MATCHED THEN
-        INSERT ([DayID], [PlanExerciseID], [ExerciseType], [Name], [NameKey], [Detail], [Notes], [Muscles], [SortOrder], [LoadKg], [CardioMinutes], [CardioKm])
+        INSERT ([DayID], [PlanExerciseID], [ExerciseType], [Name], [NameKey], [Detail], [Notes], [Muscles], [SortOrder], [LoadKg], [CardioMinutes], [CardioKm], [CardioKind])
         VALUES (source.[DayID], source.[PlanExerciseID], source.[ExerciseType], source.[Name], LOWER(source.[Name]), source.[Detail], source.[Notes],
-                source.[Muscles], source.[Ord], source.[LoadKg], source.[CardioMinutes], source.[CardioKm])
+                source.[Muscles], source.[Ord], source.[LoadKg], source.[CardioMinutes], source.[CardioKm], source.[CardioKind])
     OUTPUT source.[DayDate], source.[Ord], inserted.[DayExerciseID] INTO @ExerciseMap ([DayDate], [Ord], [DayExerciseID]);
 
-    INSERT INTO [dbo].[DaySet] ([DayExerciseID], [SetNumber], [Reps])
-    SELECT map.[DayExerciseID], CAST(j.[key] AS INT) + 1, CAST(j.[value] AS SMALLINT)
+    INSERT INTO [dbo].[DaySet] ([DayExerciseID], [SetNumber], [Reps], [LoadKg])
+    SELECT map.[DayExerciseID], CAST(j.[key] AS INT) + 1, CAST(j.[value] AS SMALLINT),
+           CASE WHEN l.[type] = 2 THEN CAST(l.[value] AS DECIMAL (6, 2)) END
     FROM @Exercises e
     INNER JOIN @ExerciseMap map ON map.[DayDate] = e.[DayDate] AND map.[Ord] = e.[Ord]
     CROSS APPLY OPENJSON(ISNULL(e.[Sets], N'[]')) j
+    OUTER APPLY (SELECT TOP (1) sl.[type], sl.[value] FROM OPENJSON(ISNULL(e.[SetLoads], N'[]')) sl WHERE sl.[key] = j.[key]) l
     WHERE j.[type] = 2;
 
     COMMIT TRANSACTION;

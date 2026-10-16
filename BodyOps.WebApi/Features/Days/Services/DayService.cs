@@ -17,7 +17,7 @@ namespace BodyOps.WebApi.Features.Days.Services;
 /// </summary>
 /// <param name="dayRepository">Day data access.</param>
 /// <param name="planRepository">Plan data access.</param>
-/// <param name="weightRepository">Weigh-ins (for the day score).</param>
+/// <param name="weightRepository">Weigh-ins (shown on each day).</param>
 /// <param name="clock">Today in the configured time zone.</param>
 /// <param name="globalizationHelper">Translations.</param>
 internal sealed class DayService(
@@ -146,14 +146,30 @@ internal sealed class DayService(
             return await _globalizationHelper.ValidationProblemAsync<WeekDTO>("sets", nameof(TranslationKeys.InvalidReps), MaxReps);
         }
 
+        var setLoads = (request.SetLoads ?? []).Take(sets.Count).ToList();
+        if (setLoads.Any(static load => load is < 0 or > MaxLoadKg))
+        {
+            return await _globalizationHelper.ValidationProblemAsync<WeekDTO>("setLoads", nameof(TranslationKeys.InvalidLoad), MaxLoadKg);
+        }
+
+        // Each set done keeps its own load (or the exercise's); the exercise's load is the heaviest set, which is what
+        // last time, records and progression compare.
+        var loadKg = request.LoadKg is { } load ? Math.Round(load, 2) : (decimal?)null;
+        var perSet = sets.Select((reps, i) => reps is null ? null : (i < setLoads.Count ? setLoads[i] : null) is { } own ? Math.Round(own, 2) : loadKg).ToList();
+        if (perSet.Any(static value => value is not null))
+        {
+            loadKg = perSet.Max();
+        }
+
         if (request.CardioMinutes is < 0 or > MaxCardio || request.CardioKm is < 0 or > MaxCardio)
         {
             return await _globalizationHelper.ValidationProblemAsync<WeekDTO>("cardio", nameof(TranslationKeys.InvalidCardio), MaxCardio);
         }
 
         var found = await _dayRepository.LogExerciseAsync(userId, date, planExerciseId,
-            request.LoadKg is { } load ? Math.Round(load, 2) : null,
+            loadKg,
             sets,
+            perSet,
             request.CardioMinutes is { } minutes ? Math.Round(minutes, 1) : null,
             request.CardioKm is { } km ? Math.Round(km, 2) : null);
 

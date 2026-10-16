@@ -45,7 +45,7 @@ internal sealed class DayRepository(ISqlConnectionFactory connectionFactory) : R
         ExecuteAsync("[dbo].[DaySetTrainingState]", new { UserID = userId, DayDate = Date(date), TrainingState = (byte)state });
 
     /// <inheritdoc />
-    public async Task<bool> LogExerciseAsync(long userId, DateOnly date, long planExerciseId, decimal? loadKg, IReadOnlyList<int?> sets, decimal? cardioMinutes, decimal? cardioKm)
+    public async Task<bool> LogExerciseAsync(long userId, DateOnly date, long planExerciseId, decimal? loadKg, IReadOnlyList<int?> sets, IReadOnlyList<decimal?> setLoads, decimal? cardioMinutes, decimal? cardioKm)
     {
         var parameters = new DynamicParameters(new
         {
@@ -56,6 +56,7 @@ internal sealed class DayRepository(ISqlConnectionFactory connectionFactory) : R
             CardioMinutes = cardioMinutes,
             CardioKm = cardioKm,
             SetsJson = JsonSerializer.Serialize(sets),
+            SetLoadsJson = JsonSerializer.Serialize(setLoads),
         });
         parameters.Add("Found", dbType: DbType.Boolean, direction: ParameterDirection.Output);
 

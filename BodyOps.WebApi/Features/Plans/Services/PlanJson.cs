@@ -34,8 +34,9 @@ internal static class PlanJson
     /// <param name="detail">The plan text.</param>
     /// <param name="notes">The notes.</param>
     /// <param name="muscles">The muscles picked by hand (stored form), or null.</param>
+    /// <param name="cardioKind">The kind of cardio picked by hand, or null (always null for strength).</param>
     /// <returns>The JSON object.</returns>
-    public static object Exercise(long? id, ExerciseType type, string name, string detail, string notes, string? muscles) => new
+    public static object Exercise(long? id, ExerciseType type, string name, string detail, string notes, string? muscles, CardioKind? cardioKind = null) => new
     {
         id,
         type = (int)type,
@@ -43,6 +44,7 @@ internal static class PlanJson
         detail,
         notes,
         muscles,
+        cardioKind = type == ExerciseType.Cardio && cardioKind is { } kind && Enum.IsDefined(kind) ? (int?)kind : null,
     };
 
     /// <summary>

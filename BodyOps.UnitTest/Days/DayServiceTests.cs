@@ -65,6 +65,36 @@ public sealed class DayServiceTests
         Assert.Equal(70 * 24, day.Exercises[0].VolumeKg);
     }
 
+    [Fact]
+    public async Task LoggingSets_WithTheirOwnLoads_KeepsEachLoad_AndTheHeaviestIsTheExercisesLoad()
+    {
+        var response = await Service().LogExerciseAsync(1, TestSupport.Tuesday, ExerciseId,
+            new ExerciseLogDTO { LoadKg = 60, Sets = [12, 10, 8], SetLoads = [60, 65, 70] });
+
+        var exercise = response.Result!.Days[1].Exercises[0];
+        Assert.Equal([60m, 65m, 70m], exercise.SetLoads);
+        Assert.Equal(70m, exercise.LoadKg);
+        Assert.Equal(60 * 12 + 65 * 10 + 70 * 8, exercise.VolumeKg);
+    }
+
+    [Fact]
+    public async Task LastSession_CarriesTheLoadOfEachSet()
+    {
+        await Service().LogExerciseAsync(1, TestSupport.Monday.AddDays(-6), ExerciseId, new ExerciseLogDTO { Sets = [12, 10], SetLoads = [60, 65] });
+
+        var week = (await Service().GetWeekAsync(1, TestSupport.Tuesday)).Result!;
+
+        var last = week.Days[1].Exercises[0].Last!;
+        Assert.Equal([12, 10], last.Reps);
+        Assert.Equal([60m, 65m], last.Loads);
+        Assert.Equal(65m, last.LoadKg);
+    }
+
+    [Fact]
+    public async Task LoggingANegativeSetLoad_IsAValidationProblem() =>
+        Assert.Equal(ServiceApiResponseStatus.ValidationProblems,
+            (await Service().LogExerciseAsync(1, TestSupport.Tuesday, ExerciseId, new ExerciseLogDTO { Sets = [10], SetLoads = [-5] })).Status);
+
     [Theory]
     [InlineData(-1, 10)]
     [InlineData(1001, 10)]

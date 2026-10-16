@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using BodyOps.Library.Enums;
 using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Plans.Services;
 
@@ -38,7 +39,10 @@ internal static class DayJson
             loadKg = exercise.LoadKg,
             cardioMinutes = exercise.CardioMinutes,
             cardioKm = exercise.CardioKm,
+            cardioKind = exercise.Type == ExerciseType.Cardio && exercise.CardioKind is { } kind && Enum.IsDefined(kind) ? (int?)kind : null,
             sets = exercise.Sets.Take(ExerciseDetailParser.MaxSets).ToList(),
+            setLoads = (exercise.SetLoads ?? []).Take(ExerciseDetailParser.MaxSets)
+                .Select(static load => load is >= 0 and <= DayService.MaxLoadKg ? load : null).ToList(),
         }).ToList(),
     }).ToList());
 

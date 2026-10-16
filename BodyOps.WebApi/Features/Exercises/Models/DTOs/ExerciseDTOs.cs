@@ -53,6 +53,9 @@ public sealed class ExerciseSessionDTO
     /// <summary>Gets or sets the reps of each set done.</summary>
     public List<int> Reps { get; set; } = [];
 
+    /// <summary>Gets or sets the load of each set done, same length as <see cref="Reps"/>.</summary>
+    public List<decimal?> Loads { get; set; } = [];
+
     /// <summary>Gets or sets reps × load (null without either).</summary>
     public decimal? VolumeKg { get; set; }
 }

@@ -88,6 +88,7 @@ internal sealed class BackupService(
                     Detail = exercise.Detail,
                     Notes = exercise.Notes,
                     Muscles = exercise.Muscles is null ? null : MuscleDetector.Parse(exercise.Muscles),
+                    CardioKind = exercise.CardioKind,
                 }).ToList(),
             }).ToList(),
             Days = DayBackupMapper.ToBackup(days),
@@ -196,7 +197,8 @@ internal sealed class BackupService(
                     item.Name,
                     Truncate(NameText.Clean(item.Exercise.Detail), PlanService.MaxDetail),
                     Truncate((item.Exercise.Notes ?? string.Empty).Trim(), PlanService.MaxNotes),
-                    MuscleDetector.Format(item.Exercise.Muscles))));
+                    MuscleDetector.Format(item.Exercise.Muscles),
+                    item.Exercise.CardioKind)));
                 var saved = (await _planRepository.SaveExercisesAsync(userId, day.Weekday, json, syncFrom)).OrderBy(static exercise => exercise.SortOrder).ToList();
                 for (var i = 0; i < exercises.Count && i < saved.Count; i++)
                 {

@@ -130,7 +130,7 @@ internal static class MuscleDetector
         muscles is null ? null : string.Join(',', muscles.Where(static muscle => Enum.IsDefined(muscle)).Distinct().Select(static muscle => ((int)muscle).ToString(CultureInfo.InvariantCulture)));
 
     // Lower case, no accents, punctuation as spaces, padded so " keyword " is a whole-word test.
-    private static string Normalize(string? value)
+    internal static string Normalize(string? value)
     {
         var decomposed = (value ?? string.Empty).Normalize(NormalizationForm.FormD);
         var builder = new StringBuilder(decomposed.Length + 2).Append(' ');

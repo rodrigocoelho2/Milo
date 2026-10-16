@@ -1,5 +1,6 @@
 /* BodyOps — Session mode: one exercise at a time on the whole screen, at the gym.
-   Big load buttons, last time's numbers to beat, set tiles, a rest timer that starts by itself and the record moment.
+   Big load buttons for the next set (each set keeps its own load, for progressive loading), last time's numbers to
+   beat, set tiles, a rest timer that starts by itself and the record moment.
    /session?date=yyyy-MM-dd&ex=<planExerciseId>. */
 'use strict';
 
@@ -27,6 +28,7 @@
     let idx = Math.max(0, day().exercises.findIndex(ex => String(ex.planExerciseId) === String(query.ex)));
     if (!query.ex) { const next = BO.nextExercise(day()); idx = next ? day().exercises.indexOf(next) : 0; }
     let reps = null;          // reps for the next set, chosen with − / +
+    let nextLoad = null;      // load for the next set, chosen with the big − / + (null = suggest one)
     let finished = false;
     let wakeLock = null;
 
@@ -46,6 +48,17 @@
     const complete = e => isCardio(e) ? (e.cardioMinutes || 0) > 0 || (e.cardioKm || 0) > 0 : doneSets(e) >= Math.max(1, e.targets.length);
     const nextOpen = e => { for (let i = 0; i < count(e); i++) if (e.sets[i] == null) return i; return -1; };
     const defaultReps = (e, i) => e.targets[i] || (e.last && e.last.reps[i]) || e.sets.slice(0, i).reverse().find(s => s != null) || 10;
+    const loadsOf = e => { if (!Array.isArray(e.setLoads)) e.setLoads = []; while (e.setLoads.length < e.sets.length) e.setLoads.push(null); return e.setLoads; };
+    /** The load to suggest for set i: that set last time, else the set before it today, else last time's, else today's. */
+    const suggestLoad = (e, i) => {
+      const lastSet = e.last && e.last.loads ? e.last.loads[i] : null;
+      if (lastSet != null) return lastSet;
+      const before = loadsOf(e).slice(0, i).reverse().find(v => v != null);
+      if (before != null) return before;
+      return e.last && e.last.loadKg != null ? e.last.loadKg : e.loadKg;
+    };
+    const topLoad = e => { const ls = loadsOf(e).filter((v, i) => v != null && e.sets[i] != null); return ls.length ? Math.max(...ls) : e.loadKg; };
+    const kgText = v => v != null ? ` · ${BO.load(v)} kg` : '';
 
     function close() {
       clearInterval(tick);
@@ -61,7 +74,7 @@
     function save(e) {
       if (!store.get(startKey)) store.set(startKey, Date.now());
       BO.debounce(`session:${date}:${e.planExerciseId}`, 400, async () => {
-        const body = isCardio(e) ? { cardioMinutes: e.cardioMinutes, cardioKm: e.cardioKm } : { loadKg: e.loadKg, sets: e.sets };
+        const body = isCardio(e) ? { cardioMinutes: e.cardioMinutes, cardioKm: e.cardioKm } : { loadKg: e.loadKg, sets: e.sets, setLoads: loadsOf(e) };
         try {
           const updated = await BO.saving(BO.api('PUT', `/api/days/${date}/exercises/${e.planExerciseId}`, body));
           if (updated && updated.days && !BO.busy()) {
@@ -110,12 +123,20 @@
       const target = Math.max(0, ...e.targets);
       if (!e.last) return `First time: find a load you can do ${target || 10} reps with`;
       const hitAll = e.last.reps.length && e.targets.length && e.targets.every((t, i) => (e.last.reps[i] || 0) >= t);
+      const varied = (e.last.loads || []).filter(v => v != null).some((v, _, all) => v !== all[0]);
+      if (hitAll && varied) return 'Beat it: add 2.5 kg to each set';
       if (hitAll && e.last.loadKg != null) return `Beat it: try ${BO.load(e.last.loadKg + 2.5)} kg`;
       return `Beat it: ${target || Math.max(...e.last.reps, 0) + 1} reps on every set`;
     }
 
     function lastLine(e) {
+      if (isCardio(e)) return `${BO.CARDIO[e.cardioKind] || 'Cardio'} · ${e.cardioDistance ? 'time and distance' : 'time only'}`;
       if (!e.last) return e.notes ? esc(e.notes) : 'No earlier session logged';
+      const loads = (e.last.loads || []).filter(v => v != null);
+      if (loads.length > 1 && loads.some(v => v !== loads[0])) {
+        // Progressive sets: each set's load × reps.
+        return `Last time · ${BO.shortDate(e.last.date)} · ${e.last.reps.map((r, i) => `${e.last.loads[i] != null ? BO.load(e.last.loads[i]) : '–'}×${r}`).join(' · ')}`;
+      }
       const reps = e.last.reps.length ? e.last.reps.join(', ') : '';
       return `Last time · ${BO.shortDate(e.last.date)}${e.last.loadKg != null ? ` · ${BO.load(e.last.loadKg)} kg` : ''}${reps ? ` · ${reps}` : ''}`;
     }
@@ -136,35 +157,42 @@
     function strengthBody(e) {
       const n = count(e);
       const open = nextOpen(e);
-      const loadValue = e.loadKg != null ? BO.load(e.loadKg) : '';
-      const lastLoad = e.last && e.last.loadKg != null ? BO.load(e.last.loadKg) : '';
+      const ls = loadsOf(e);
+      if (open >= 0 && nextLoad == null) nextLoad = suggestLoad(e, open);
+      const loadValue = nextLoad != null ? BO.load(nextLoad) : '';
       const tiles = Array.from({ length: n }, (_, i) => {
         const v = e.sets[i];
-        if (v != null) return `<button type="button" class="s-set done" data-set="${i}" aria-label="Set ${i + 1}: ${v} reps. Tap to change."><small>Set ${i + 1} · done</small><b class="num">${v}</b><small>reps${e.loadKg != null ? ` · ${BO.load(e.loadKg)} kg` : ''}</small></button>`;
-        return `<button type="button" class="s-set${i === open ? ' now' : ''}" data-set="${i}" aria-label="Log set ${i + 1}"><small>Set ${i + 1}${i === open ? ' · now' : ''}</small><b class="num">${e.targets[i] || defaultReps(e, i)}</b><small>reps${e.loadKg != null ? ` · ${BO.load(e.loadKg)} kg` : ''}</small></button>`;
+        if (v != null) return `<button type="button" class="s-set done" data-set="${i}" aria-label="Set ${i + 1}: ${v} reps${ls[i] != null ? ` with ${BO.load(ls[i])} kg` : ''}. Tap to change."><small>Set ${i + 1} · done</small><b class="num">${v}</b><small>reps${kgText(ls[i])}</small></button>`;
+        const kg = i === open ? nextLoad : suggestLoad(e, i);
+        return `<button type="button" class="s-set${i === open ? ' now' : ''}" data-set="${i}" aria-label="Log set ${i + 1}"><small>Set ${i + 1}${i === open ? ' · now' : ''}</small><b class="num">${e.targets[i] || defaultReps(e, i)}</b><small>reps${kgText(kg)}</small></button>`;
       }).join('') + (n < 20 ? '<button type="button" class="s-set add" data-add-set aria-label="Add a set">+</button>' : '');
       if (open >= 0 && reps == null) reps = defaultReps(e, open);
       const action = open >= 0
         ? `<div class="log-set"><div class="reps"><button type="button" data-reps="-1" aria-label="One rep less">−</button><span class="num" aria-live="polite">${reps}<small>reps</small></span><button type="button" data-reps="1" aria-label="One rep more">+</button></div><button type="button" class="log-btn" data-log>Log set ${open + 1}</button></div>`
         : `<button type="button" class="log-set" data-next><b>${day().exercises.some((x, j) => j !== idx && !complete(x)) ? 'Next exercise' : 'Finish session'}</b><span class="log-btn" style="display:inline-flex;gap:6px;align-items:center">${icons.arrow}</span></button>`;
-      return `
+      const loadPad = open >= 0 ? `
         <div class="load-big">
           <button type="button" data-step="-1" aria-label="2.5 kg less">−</button>
-          <label class="v"><input class="num" inputmode="decimal" value="${loadValue}" placeholder="${lastLoad || 'kg'}" data-load aria-label="Load in kg"><small>kg · steps of 2.5</small></label>
+          <label class="v"><input class="num" inputmode="decimal" value="${loadValue}" placeholder="kg" data-load aria-label="Load for set ${open + 1} in kg"><small>kg for set ${open + 1} · steps of 2.5</small></label>
           <button type="button" data-step="1" aria-label="2.5 kg more">+</button>
-        </div>
+        </div>` : '';
+      return `${loadPad}
         <div class="s-sets">${tiles}</div>
         ${restCard(e)}
         ${action}`;
     }
 
     function cardioBody(e) {
-      return `<div class="cardio-in">
+      // Time only for a treadmill, elliptical or stairs; time and distance for the rest (kept if one was typed before).
+      const km = e.cardioDistance || (e.cardioKm || 0) > 0;
+      return `<div class="cardio-in${km ? '' : ' one'}">
           <label>Minutes<input class="num" inputmode="decimal" value="${e.cardioMinutes ?? ''}" placeholder="0" data-cardio="cardioMinutes"></label>
-          <label>Kilometres<input class="num" inputmode="decimal" value="${e.cardioKm ?? ''}" placeholder="0" data-cardio="cardioKm"></label>
+          ${km ? `<label>Kilometres<input class="num" inputmode="decimal" value="${e.cardioKm ?? ''}" placeholder="0" data-cardio="cardioKm"></label>` : ''}
         </div>
-        <button type="button" class="log-set" data-next><b>${complete(e) ? (day().exercises.some((x, j) => j !== idx && !complete(x)) ? 'Next exercise' : 'Finish session') : 'Type the time or distance'}</b><span class="log-btn" style="display:inline-flex">${icons.arrow}</span></button>`;
+        <button type="button" class="log-set" data-next><b>${complete(e) ? (day().exercises.some((x, j) => j !== idx && !complete(x)) ? 'Next exercise' : 'Finish session') : cardioPrompt(e)}</b><span class="log-btn" style="display:inline-flex">${icons.arrow}</span></button>`;
     }
+
+    const cardioPrompt = e => e.cardioDistance || (e.cardioKm || 0) > 0 ? 'Type the time or distance' : 'Type the time';
 
     function summary() {
       const d = day();
@@ -214,11 +242,12 @@
       store.set(`bodyops.prs.${date}`, [...celebrated]);
       BO.confetti();
       BO.buzz([30, 50, 30, 50, 60]);
-      const gain = e.loadKg - e.bestBeforeKg;
+      const kg = loadsOf(e)[setIndex] ?? e.loadKg;
+      const gain = kg - e.bestBeforeKg;
       BO.sheet((body, closeSheet) => {
         body.innerHTML = `<div class="medal">${icons.medal}</div>
           <h3>New personal record</h3>
-          <div class="pr-big num">${BO.load(e.loadKg)}<small> kg</small></div>
+          <div class="pr-big num">${BO.load(kg)}<small> kg</small></div>
           <span class="sub" style="font-size:14px">${esc(e.name)} · ${e.sets[setIndex]} reps on set ${setIndex + 1}</span>
           <div class="compare">
             <div><b class="num">+${BO.load(gain)} kg</b><span>vs your best</span></div>
@@ -235,7 +264,7 @@
             const firstPoint = item && item.trend.length ? item.trend[0] : null;
             const sinceEl = body.querySelector('[data-since]');
             if (firstPoint && firstPoint.loadKg > 0 && sinceEl) {
-              sinceEl.textContent = `+${Math.round((e.loadKg - firstPoint.loadKg) / firstPoint.loadKg * 100)}%`;
+              sinceEl.textContent = `+${Math.round((kg - firstPoint.loadKg) / firstPoint.loadKg * 100)}%`;
               body.querySelector('[data-since-lbl]').textContent = `since ${BO.shortDate(firstPoint.date)}`;
             } else if (sinceEl) sinceEl.textContent = '–';
             const month = date.slice(0, 7);
@@ -251,16 +280,20 @@
 
     function logSet(e, i, value) {
       while (e.sets.length <= i) e.sets.push(null);
+      const ls = loadsOf(e);
+      const isOpen = i === nextOpen(e);   // the set the load pad is for
+      ls[i] = isOpen && nextLoad != null ? nextLoad : suggestLoad(e, i);
       e.sets[i] = Math.max(0, Math.min(999, Math.round(value)));
-      if (e.loadKg == null && e.last && e.last.loadKg != null) e.loadKg = e.last.loadKg;
+      e.loadKg = topLoad(e);
       BO.buzz(15);
       reps = null;
+      nextLoad = null;   // the next set suggests its own load (same set last time, or this one)
       save(e);
       BO.scoreDay(day());
       const more = nextOpen(e) >= 0;
       if (more) startRest(i + 1); else store.set('bodyops.rest', null);
       render();
-      if (e.bestBeforeKg != null && e.loadKg != null && e.loadKg > e.bestBeforeKg && !celebrated.has(e.planExerciseId)) recordMoment(e, i);
+      if (e.bestBeforeKg != null && ls[i] != null && ls[i] > e.bestBeforeKg && !celebrated.has(e.planExerciseId)) recordMoment(e, i);
     }
 
     function goNext() {
@@ -269,6 +302,7 @@
       const j = order.find(k => !complete(d.exercises[k]));
       store.set('bodyops.rest', null);
       reps = null;
+      nextLoad = null;
       if (j == null || j === idx) {
         finished = true;
         BO.flush();
@@ -282,27 +316,35 @@
       el.querySelector('.s-scroll') && el.querySelector('.s-scroll').scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    /** A set already logged: change its reps and its load, or remove it. */
     function editSet(e, i) {
       let value = e.sets[i];
+      let kg = loadsOf(e)[i];
       BO.sheet((body, closeSheet) => {
-        const paint = () => {
-          body.innerHTML = `<h3>Set ${i + 1}</h3><span class="sub">${esc(e.name)}${e.loadKg != null ? ` · ${BO.load(e.loadKg)} kg` : ''}</span>
-            <div class="stepper" style="background:var(--train-soft)"><button type="button" data-d="-1" style="color:var(--train)">−</button><div class="v"><input class="num" inputmode="numeric" value="${value}" data-v aria-label="Reps"><small>reps</small></div><button type="button" data-d="1" style="color:var(--train)">+</button></div>
+        body.innerHTML = `<h3>Set ${i + 1}</h3><span class="sub">${esc(e.name)}</span>
+            <div class="stepper" style="background:var(--train-soft)"><button type="button" data-d="-1" style="color:var(--train)" aria-label="One rep less">−</button><div class="v"><input class="num" inputmode="numeric" value="${value}" data-v aria-label="Reps"><small>reps</small></div><button type="button" data-d="1" style="color:var(--train)" aria-label="One rep more">+</button></div>
+            <div class="stepper" style="background:var(--train-soft)"><button type="button" data-kg="-1" style="color:var(--train)" aria-label="2.5 kg less">−</button><div class="v"><input class="num" inputmode="decimal" value="${kg != null ? BO.load(kg) : ''}" placeholder="kg" data-k aria-label="Load in kg"><small>kg</small></div><button type="button" data-kg="1" style="color:var(--train)" aria-label="2.5 kg more">+</button></div>
             <div class="row"><button type="button" class="btn danger" data-remove>Remove set</button><button type="button" class="btn primary" style="flex:1" data-ok>Save</button></div>`;
-        };
-        paint();
         body.addEventListener('click', ev => {
           const d = ev.target.closest('[data-d]');
           if (d) { value = Math.max(0, (BO.readNumber(body.querySelector('[data-v]').value) ?? value) + Number(d.dataset.d)); body.querySelector('[data-v]').value = value; return; }
+          const k = ev.target.closest('[data-kg]');
+          if (k) { kg = Math.max(0, Math.round(((BO.readNumber(body.querySelector('[data-k]').value) ?? kg ?? 0) + Number(k.dataset.kg) * 2.5) * 100) / 100); body.querySelector('[data-k]').value = BO.load(kg); return; }
           if (ev.target.closest('[data-remove]')) {
             e.sets[i] = null;
-            while (e.sets.length && e.sets[e.sets.length - 1] == null && e.sets.length > e.targets.length) e.sets.pop();
+            loadsOf(e)[i] = null;
+            while (e.sets.length && e.sets[e.sets.length - 1] == null && e.sets.length > e.targets.length) { e.sets.pop(); e.setLoads.length = e.sets.length; }
+            e.loadKg = topLoad(e);
             save(e); BO.scoreDay(day()); closeSheet(); render();
             return;
           }
           if (ev.target.closest('[data-ok]')) {
             const v = BO.readNumber(body.querySelector('[data-v]').value);
-            if (v != null) { e.sets[i] = Math.max(0, Math.min(999, Math.round(v))); save(e); BO.scoreDay(day()); }
+            const w = BO.readNumber(body.querySelector('[data-k]').value);
+            if (v != null) e.sets[i] = Math.max(0, Math.min(999, Math.round(v)));
+            loadsOf(e)[i] = w == null ? null : Math.max(0, w);
+            e.loadKg = topLoad(e);
+            save(e); BO.scoreDay(day());
             closeSheet(); render();
           }
         });
@@ -319,6 +361,7 @@
           if (!b) return;
           idx = Number(b.dataset.j);
           reps = null;
+          nextLoad = null;
           BO.setQuery({ ex: day().exercises[idx].planExerciseId });
           closeSheet();
           render();
@@ -333,10 +376,10 @@
       const e = ex();
       const step = t.closest('[data-step]');
       if (step) {
-        const base = e.loadKg ?? (e.last && e.last.loadKg) ?? 0;
-        e.loadKg = Math.max(0, Math.round((base + Number(step.dataset.step) * 2.5) * 100) / 100);
+        // The load of the next set only: sets already done keep theirs.
+        const base = nextLoad ?? suggestLoad(e, Math.max(0, nextOpen(e))) ?? 0;
+        nextLoad = Math.max(0, Math.round((base + Number(step.dataset.step) * 2.5) * 100) / 100);
         BO.buzz(6);
-        if (e.sets.some(s => s != null)) save(e);
         render();
         return;
       }
@@ -352,6 +395,7 @@
       if (t.closest('[data-add-set]')) {
         while (e.sets.length < count(e)) e.sets.push(null);
         e.sets.push(null);
+        loadsOf(e);
         reps = null;
         render();
         return;
@@ -367,6 +411,7 @@
       if (go) {
         idx = Number(go.dataset.goto);
         reps = null;
+        nextLoad = null;
         BO.setQuery({ ex: day().exercises[idx].planExerciseId });
         render();
         el.querySelector('.s-scroll').scrollTo({ top: 0, behavior: 'smooth' });
@@ -378,8 +423,7 @@
       const e = ex();
       if (t.matches('[data-load]')) {
         const v = BO.readNumber(t.value);
-        e.loadKg = v == null ? null : Math.max(0, v);
-        if (e.sets.some(s => s != null)) save(e);
+        nextLoad = v == null ? null : Math.max(0, v);
       } else if (t.matches('[data-cardio]')) {
         const v = BO.readNumber(t.value);
         const wasComplete = complete(e);
@@ -388,7 +432,7 @@
         BO.scoreDay(day());
         if (wasComplete !== complete(e)) {
           const btn = el.querySelector('[data-next] b');
-          if (btn) btn.textContent = complete(e) ? (day().exercises.some((x, j) => j !== idx && !complete(x)) ? 'Next exercise' : 'Finish session') : 'Type the time or distance';
+          if (btn) btn.textContent = complete(e) ? (day().exercises.some((x, j) => j !== idx && !complete(x)) ? 'Next exercise' : 'Finish session') : cardioPrompt(e);
         }
       }
     });

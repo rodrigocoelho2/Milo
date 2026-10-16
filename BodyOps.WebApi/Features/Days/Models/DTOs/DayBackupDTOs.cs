@@ -71,9 +71,15 @@ public sealed class DayExerciseBackupDTO
     /// <summary>Gets or sets the reps of each set (null = not done).</summary>
     public List<int?> Sets { get; set; } = [];
 
+    /// <summary>Gets or sets the load of each set, same length as <see cref="Sets"/> (null = the <see cref="LoadKg"/>).</summary>
+    public List<decimal?> SetLoads { get; set; } = [];
+
     /// <summary>Gets or sets the cardio minutes.</summary>
     public decimal? CardioMinutes { get; set; }
 
     /// <summary>Gets or sets the cardio kilometres.</summary>
     public decimal? CardioKm { get; set; }
+
+    /// <summary>Gets or sets the kind of cardio picked in the plan, or null to work it out from the name.</summary>
+    public CardioKind? CardioKind { get; set; }
 }

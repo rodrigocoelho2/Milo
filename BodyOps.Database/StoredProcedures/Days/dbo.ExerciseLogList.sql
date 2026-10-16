@@ -1,7 +1,7 @@
 /*
     ExerciseLogList
     Every strength exercise the account has logged with a load or sets, oldest first, with its sets as
-    "12,11,10". The WebApi works out last time, personal records and progression from these rows.
+    "12,11,10" and their loads as "60,65,70" (an empty item = the exercise's load). The WebApi works out last time, personal records and progression from these rows.
 */
 CREATE PROCEDURE [dbo].[ExerciseLogList]
     @UserID BIGINT
@@ -14,11 +14,13 @@ BEGIN
            de.[NameKey],
            de.[Name],
            de.[LoadKg],
-           sx.[Reps]
+           sx.[Reps],
+           sx.[Loads]
     FROM [dbo].[DayExercise] de
     INNER JOIN [dbo].[Day] d ON d.[DayID] = de.[DayID]
     OUTER APPLY (
-        SELECT STRING_AGG(CAST(s.[Reps] AS NVARCHAR (10)), N',') WITHIN GROUP (ORDER BY s.[SetNumber]) AS [Reps]
+        SELECT STRING_AGG(CAST(s.[Reps] AS NVARCHAR (10)), N',') WITHIN GROUP (ORDER BY s.[SetNumber]) AS [Reps],
+               STRING_AGG(ISNULL(CAST(s.[LoadKg] AS NVARCHAR (12)), N''), N',') WITHIN GROUP (ORDER BY s.[SetNumber]) AS [Loads]
         FROM [dbo].[DaySet] s
         WHERE s.[DayExerciseID] = de.[DayExerciseID]
     ) sx

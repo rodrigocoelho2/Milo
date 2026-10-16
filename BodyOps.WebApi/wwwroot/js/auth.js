@@ -18,10 +18,9 @@
   /* ---------------- landing ---------------- */
 
   const STEPS = [
-    { k: 'var(--weigh)', ic: 'scale', tm: '07:30', b: 'Weigh-in', s: '97.6 kg · −0.2 vs Sunday', pts: 15 },
     { k: 'var(--eat)', ic: 'bowl', tm: '08:00', b: 'Breakfast', s: 'Whey · Rice flour · Banana', pts: 10 },
     { k: 'var(--eat)', ic: 'bowl', tm: '13:00', b: 'Lunch', s: 'Chicken · Pasta / rice', pts: 10 },
-    { k: 'var(--train)', ic: 'plan', tm: '18:20', b: 'Upper body', s: '6 exercises · 18 sets', pts: 45 },
+    { k: 'var(--train)', ic: 'plan', tm: '18:20', b: 'Upper body', s: '6 exercises · 18 sets', pts: 60 },
     { k: 'var(--eat)', ic: 'bowl', tm: '20:30', b: 'Dinner', s: 'Chicken · Egg · Chocolate', pts: 10 },
     { k: 'var(--eat)', ic: 'moon', tm: '23:00', b: 'Supper', s: 'Greek yoghurt · Corn flakes', pts: 10 },
   ];
@@ -45,13 +44,13 @@
             <h1 class="lp-h1" style="--i:1"><span>Show up.</span><span>Log it.</span><span class="gold">Beat it.</span></h1>
             <p class="lp-lede" style="--i:2">Milo turns your plan into a day you can tick off: every set, every meal, every weigh-in. Then it shows you how to beat last week.</p>
             <div class="lp-cta" style="--i:3">${create('Create your account')}<a class="btn ghost-w" href="/signin" data-link>Sign in</a></div>
-            <div class="lp-proof" style="--i:4"><span class="dots"><i style="background:#8A5CF6">W</i><i style="background:#FF7A2F">M</i><i style="background:#0D1015">S</i></span>One weigh-in, five meals, eighteen sets: that's a 100 day.</div>
+            <div class="lp-proof" style="--i:4"><span class="dots"><i style="background:#FF7A2F">M</i><i style="background:#0D1015">S</i></span>Five meals, eighteen sets: that's a 100 day.</div>
           </div>
           <div class="lp-art" aria-hidden="true">
             <div class="lp-phone"><div class="lp-screen">
               <div><div class="hi">Good evening, Rodas</div><h4>Tuesday 13</h4></div>
               <div class="mini-score"><b class="num" data-count="64">0<small>/100</small></b>
-                <div class="mini-bars"><div>Training<span><i data-w="28%" style="background:#3355FF"></i></span></div><div>Meals<span><i data-w="80%" style="background:#FF7A2F"></i></span></div><div>Weigh-in<span><i data-w="100%" style="background:#8A5CF6"></i></span></div></div></div>
+                <div class="mini-bars"><div>Training<span><i data-w="40%" style="background:#3355FF"></i></span></div><div>Meals<span><i data-w="100%" style="background:#FF7A2F"></i></span></div></div></div>
               <div class="mini-hero"><small>Up next · Upper body</small><b>Back to it</b><div class="pg">${'<i class="on"></i>'.repeat(5)}${'<i></i>'.repeat(13)}</div></div>
               <div class="mini-tl">
                 <div><em>07:30</em><i style="background:#8A5CF6">${icons.check}</i><b>Weigh-in · 97.6 kg</b></div>
@@ -73,7 +72,7 @@
         <div class="reveal"><div class="kick">How it works</div><h2 class="lp-h2">A day with Milo.</h2><p class="lede">Your plan becomes today's list. Tick things off as you live them and watch the day score climb. Tap the cards.</p></div>
         <div class="day-demo reveal">
           <div class="day-top"><div class="sc num" data-score>0<small>/100</small></div>
-            <div class="meter"><div class="lbl"><span>Day score</span><span data-left>6 things to do</span></div><div class="t">${STEPS.map((s, i) => `<i data-seg="${i}" style="background:${s.k}"></i>`).join('')}</div></div></div>
+            <div class="meter"><div class="lbl"><span>Day score</span><span data-left>5 things to do</span></div><div class="t">${STEPS.map((s, i) => `<i data-seg="${i}" style="background:${s.k}"></i>`).join('')}</div></div></div>
           <div class="steps">${STEPS.map((s, i) => `<button type="button" class="step" style="--k:${s.k};--n:${i}" data-step="${i}" aria-pressed="false"><span class="tk">${icons.check}</span><span class="tm num">${s.tm}</span><span class="ic">${icons[s.ic]}</span><b>${s.b}</b><small>${s.s}</small></button>`).join('')}</div>
         </div>
       </section>
@@ -124,7 +123,7 @@
     }, 1000);
 
     // A day with Milo: tap to tick.
-    const on = new Set([0, 1, 2]);
+    const on = new Set([0, 1]);
     const scoreEl = root.querySelector('[data-score]');
     const left = root.querySelector('[data-left]');
     let shown = 0;
@@ -204,7 +203,7 @@
         <span class="ring-deco" style="width:260px;height:260px;left:-110px;bottom:-60px;border-width:40px"></span>
         <div class="au-top"><a href="/" data-link style="text-decoration:none">${BO.brandHTML()}</a>${BO.themeToggleHTML()}</div>
         <div><h2>${signup ? 'Start your <span class="gold">first streak.</span>' : 'Welcome back. <span class="gold">Keep it going.</span>'}</h2></div>
-        <p>${signup ? 'Build your plan once: exercises, meals, a weight goal. Then every day is a list you tick off.' : 'Your plan for today is waiting: the session, the meals and a weigh-in.'}</p>
+        <p>${signup ? 'Build your plan once: exercises, meals, a weight goal. Then every day is a list you tick off.' : 'Your plan for today is waiting: the session and the meals.'}</p>
         <div class="phone-chips">${signup
           ? `<span class="chip w"><span class="flame">${icons.flame}</span>Day 1</span><span class="chip">Plan · Log · Beat it</span>`
           : `<span class="chip w"><span class="flame">${icons.flame}</span>Keep the streak</span><span class="chip">Today's plan is ready</span>`}</div>

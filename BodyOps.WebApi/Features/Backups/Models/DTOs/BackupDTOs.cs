@@ -118,6 +118,9 @@ public sealed class BackupExerciseDTO
 
     /// <summary>Gets or sets the muscles picked by hand, or null to detect them.</summary>
     public List<Muscle>? Muscles { get; set; }
+
+    /// <summary>Gets or sets the kind of cardio picked by hand, or null to work it out from the name.</summary>
+    public CardioKind? CardioKind { get; set; }
 }
 
 /// <summary>

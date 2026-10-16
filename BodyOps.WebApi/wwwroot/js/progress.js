@@ -146,7 +146,7 @@
           body.innerHTML = `<div><span class="sub">${BO.plural(h.sessions.length, 'session')}</span><h3>${esc(h.name)}</h3></div>
             ${best != null ? `<div class="row"><span class="pill gold">Best ${BO.load(best)} kg</span>${sessions.length > 1 ? `<span class="pill train">${BO.signed(sessions.at(-1).loadKg - sessions[0].loadKg, 1)} kg since ${BO.shortDate(sessions[0].date)}</span>` : ''}</div>` : ''}
             ${sessions.length ? `<div style="--c:var(--train)">${BO.lineChart(sessions.map(s => ({ date: s.date, value: s.loadKg })), { highlight: sessions.length > 1 ? bestIndex : -1, height: 170, label: v => BO.load(v) })}</div>` : '<p class="sub">No loads logged yet.</p>'}
-            <div class="slist">${h.sessions.slice().reverse().slice(0, 12).map(s => `<div class="srow"><div><b>${BO.fullDate(s.date)}</b><div class="sub">${s.reps.length ? s.reps.join(' · ') + ' reps' : 'no sets'}${s.volumeKg ? ` · ${BO.volume(s.volumeKg)}` : ''}</div></div><span class="r num">${s.loadKg != null ? BO.load(s.loadKg) + ' kg' : '–'}</span></div>`).join('')}</div>`;
+            <div class="slist">${h.sessions.slice().reverse().slice(0, 12).map(s => `<div class="srow"><div><b>${BO.fullDate(s.date)}</b><div class="sub">${s.reps.length ? BO.setsLine(s.reps, s.loads) + ' reps' : 'no sets'}${s.volumeKg ? ` · ${BO.volume(s.volumeKg)}` : ''}</div></div><span class="r num">${s.loadKg != null ? BO.load(s.loadKg) + ' kg' : '–'}</span></div>`).join('')}</div>`;
         } catch (e) {
           body.innerHTML = `<div class="empty"><b>Couldn't load.</b><span>${esc(e.message)}</span></div>`;
         }

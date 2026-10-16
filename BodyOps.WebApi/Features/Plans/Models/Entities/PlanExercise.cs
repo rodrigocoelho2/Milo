@@ -28,6 +28,9 @@ public sealed class PlanExercise
     /// <summary>Gets or sets the muscles picked by hand (comma-separated numbers), or null to detect them from the name.</summary>
     public string? Muscles { get; set; }
 
+    /// <summary>Gets or sets the kind of cardio picked by hand, or null to work it out from the name (cardio only).</summary>
+    public CardioKind? CardioKind { get; set; }
+
     /// <summary>Gets or sets the position within the day.</summary>
     public int SortOrder { get; set; }
 }

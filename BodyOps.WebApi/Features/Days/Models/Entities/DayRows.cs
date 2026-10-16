@@ -90,6 +90,9 @@ public sealed class DayExerciseRow
 
     /// <summary>Gets or sets the cardio distance.</summary>
     public decimal? CardioKm { get; set; }
+
+    /// <summary>Gets or sets the kind of cardio picked in the plan, or null to work it out from the name.</summary>
+    public CardioKind? CardioKind { get; set; }
 }
 
 /// <summary>
@@ -105,6 +108,9 @@ public sealed class DaySetRow
 
     /// <summary>Gets or sets the reps done.</summary>
     public int Reps { get; set; }
+
+    /// <summary>Gets or sets the load of this set, or null for the exercise's load (sets logged before per-set loads).</summary>
+    public decimal? LoadKg { get; set; }
 }
 
 /// <summary>
@@ -134,9 +140,12 @@ public sealed class ExerciseLogRow
     /// <summary>Gets or sets the name as written that day.</summary>
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the load lifted.</summary>
+    /// <summary>Gets or sets the load lifted (the heaviest set).</summary>
     public decimal? LoadKg { get; set; }
 
     /// <summary>Gets or sets the reps of each set done, "12,11,10" (null when none were logged).</summary>
     public string? Reps { get; set; }
+
+    /// <summary>Gets or sets the load of each set done, "60,65,70" (an empty item = the exercise's load).</summary>
+    public string? Loads { get; set; }
 }

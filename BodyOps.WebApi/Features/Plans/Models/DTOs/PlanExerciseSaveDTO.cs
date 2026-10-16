@@ -24,4 +24,7 @@ public sealed class PlanExerciseSaveDTO
 
     /// <summary>Gets or sets the muscles picked by hand, or null to detect them from the name.</summary>
     public List<Muscle>? Muscles { get; set; }
+
+    /// <summary>Gets or sets the kind of cardio picked by hand, or null to work it out from the name (cardio only).</summary>
+    public CardioKind? CardioKind { get; set; }
 }

@@ -30,6 +30,12 @@ public sealed class PlanExerciseDTO
         MusclesAuto = entity.Muscles is null;
         Muscles = MuscleDetector.Detect(entity.Name, entity.ExerciseType, entity.Muscles).Keys.ToList();
         Targets = entity.ExerciseType == ExerciseType.Strength ? ExerciseDetailParser.Targets(entity.Detail) : [];
+        if (entity.ExerciseType == ExerciseType.Cardio)
+        {
+            CardioKind = CardioKinds.Resolve(entity.Name, entity.CardioKind);
+            CardioKindAuto = entity.CardioKind is null;
+            CardioDistance = CardioKinds.UsesDistance(CardioKind.Value);
+        }
     }
 
     /// <summary>Gets or sets the exercise identifier.</summary>
@@ -55,4 +61,13 @@ public sealed class PlanExerciseDTO
 
     /// <summary>Gets or sets the rep target of each planned set (0 = no target); empty when the plan names no sets.</summary>
     public List<int> Targets { get; set; } = [];
+
+    /// <summary>Gets or sets the kind of cardio (null for strength).</summary>
+    public CardioKind? CardioKind { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether <see cref="CardioKind"/> was worked out from the name (false = picked).</summary>
+    public bool CardioKindAuto { get; set; } = true;
+
+    /// <summary>Gets or sets a value indicating whether this cardio is logged with a distance as well as the time.</summary>
+    public bool CardioDistance { get; set; }
 }

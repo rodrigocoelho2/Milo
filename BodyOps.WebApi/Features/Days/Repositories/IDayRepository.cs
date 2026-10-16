@@ -60,10 +60,11 @@ internal interface IDayRepository
     /// <param name="planExerciseId">The planned exercise.</param>
     /// <param name="loadKg">The load.</param>
     /// <param name="sets">The reps of each set (null = not done).</param>
+    /// <param name="setLoads">The load of each set (null = none of its own).</param>
     /// <param name="cardioMinutes">Cardio minutes.</param>
     /// <param name="cardioKm">Cardio kilometres.</param>
     /// <returns>False when that day has no such exercise.</returns>
-    Task<bool> LogExerciseAsync(long userId, DateOnly date, long planExerciseId, decimal? loadKg, IReadOnlyList<int?> sets, decimal? cardioMinutes, decimal? cardioKm);
+    Task<bool> LogExerciseAsync(long userId, DateOnly date, long planExerciseId, decimal? loadKg, IReadOnlyList<int?> sets, IReadOnlyList<decimal?> setLoads, decimal? cardioMinutes, decimal? cardioKm);
 
     /// <summary>
     /// Forgets the logged days of a date range (dbo.DayDeleteRange).

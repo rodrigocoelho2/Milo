@@ -12,6 +12,7 @@
     let weekday = Math.min(7, Math.max(1, Number(query.day) || BO.weekday(BO.localToday())));
     let tab = query.tab === 'meals' || query.tab === 'diet' ? 'meals' : 'training';
     let openMuscles = null;     // key of the exercise whose muscle picker is open
+    let openKind = null;        // key of the cardio exercise whose kind picker is open
     let copyOpen = false;
     let copyTargets = new Set();
     let firstPaint = true;
@@ -24,7 +25,7 @@
         weekday: day.weekday,
         name: day.name || '',
         muscles: day.muscles,
-        exercises: day.exercises.map(e => ({ _k: key(), id: e.id, type: e.type, name: e.name, detail: e.detail, notes: e.notes, muscles: e.muscles, musclesAuto: e.musclesAuto, targets: e.targets })),
+        exercises: day.exercises.map(e => ({ _k: key(), id: e.id, type: e.type, name: e.name, detail: e.detail, notes: e.notes, muscles: e.muscles, musclesAuto: e.musclesAuto, targets: e.targets, cardioKind: e.cardioKind, cardioKindAuto: e.cardioKindAuto !== false })),
         meals: day.meals.map(m => ({ _k: key(), id: m.id, name: m.name, time: m.time || '', foods: m.foods.map(f => ({ _k: key(), name: f.name, amount: f.amount, unit: f.unit })) })),
       };
     }
@@ -39,6 +40,7 @@
         try {
           const result = await BO.saving(BO.api('PUT', `/api/plan/${n}/exercises`, sent.map(e => ({
             id: e.id, type: e.type, name: e.name, detail: e.detail, notes: e.notes, muscles: e.musclesAuto ? null : e.muscles,
+            cardioKind: e.type === 'cardio' && !e.cardioKindAuto ? e.cardioKind : null,
           }))));
           sent.forEach((e, i) => {
             const saved = result.exercises[i];
@@ -46,6 +48,7 @@
             e.id = saved.id;
             e.targets = saved.targets;
             if (e.musclesAuto) e.muscles = saved.muscles;
+            if (e.cardioKindAuto) e.cardioKind = saved.cardioKind;
           });
           day.muscles = result.muscles;
           if (!BO.busy() && root.isConnected) BO.rerender(render);
@@ -108,12 +111,19 @@
           <span class="sub">Pick the muscles this exercise works. ${e.musclesAuto ? 'Now detected from the name.' : 'Picked by hand.'}</span>
           <div class="chips">${Object.entries(BO.MUSCLES).map(([id, label]) => `<button type="button" data-muscle="${id}" aria-pressed="${e.muscles.includes(id)}">${label}</button>`).join('')}</div>
           <div class="spread">${e.musclesAuto ? '<span></span>' : '<button type="button" class="link-btn" data-muscles-auto>Detect from the name again</button>'}<button type="button" class="btn" data-muscles-close>Done</button></div>
+        </div>` : openKind === k && e.type === 'cardio' ? `<div class="mpicker">
+          <span class="sub">What kind of cardio? Treadmill, elliptical and stairs are logged by time only; the others by time and distance. ${e.cardioKindAuto ? 'Now worked out from the name.' : 'Picked by hand.'}</span>
+          <div class="chips">${Object.entries(BO.CARDIO).map(([id, label]) => `<button type="button" data-kind="${id}" aria-pressed="${e.cardioKind === id}">${label}</button>`).join('')}</div>
+          <div class="spread">${e.cardioKindAuto ? '<span></span>' : '<button type="button" class="link-btn" data-kind-auto>Work it out from the name again</button>'}<button type="button" class="btn" data-kind-close>Done</button></div>
         </div>` : '';
+      const kindTag = e.type === 'cardio'
+        ? `<button type="button" class="mtag${e.cardioKindAuto ? '' : ' on'}" data-kind-open title="Kind of cardio">${BO.CARDIO[e.cardioKind] || 'Kind'} · ${BO.cardioDistance(e.cardioKind || 'other') ? 'time + km' : 'time'}</button>`
+        : '';
       return `<div class="pex${e.type === 'cardio' ? ' cardio' : ''}" data-k="${k}">
         <span class="n" data-grip title="Drag to reorder" aria-label="Exercise ${index + 1}, drag to reorder">${index + 1}</span>
         <div class="main-in">
-          <input class="nm" id="name-${k}" data-f="name" value="${esc(e.name)}" placeholder="${e.type === 'cardio' ? 'Cardio, e.g. Cycling' : 'Exercise, e.g. Pec deck'}" aria-label="Exercise name" maxlength="100">
-          <div class="tags"><button type="button" class="mtag ${e.type === 'cardio' ? '' : 'on'}" data-type title="Switch between strength and cardio">${e.type === 'cardio' ? 'Cardio' : 'Strength'}</button>${e.type === 'strength' ? tags : ''}${e.type === 'strength' ? `<button type="button" class="link-btn" style="font-size:12px" data-muscles-open>${openMuscles === k ? 'Close' : 'Edit muscles'}</button>` : ''}</div>
+          <input class="nm" id="name-${k}" data-f="name" value="${esc(e.name)}" placeholder="${e.type === 'cardio' ? 'Cardio, e.g. Treadmill' : 'Exercise, e.g. Pec deck'}" aria-label="Exercise name" maxlength="100">
+          <div class="tags"><button type="button" class="mtag ${e.type === 'cardio' ? '' : 'on'}" data-type title="Switch between strength and cardio">${e.type === 'cardio' ? 'Cardio' : 'Strength'}</button>${kindTag}${e.type === 'strength' ? tags : ''}${e.type === 'strength' ? `<button type="button" class="link-btn" style="font-size:12px" data-muscles-open>${openMuscles === k ? 'Close' : 'Edit muscles'}</button>` : ''}</div>
           <input class="nt" id="notes-${k}" data-f="notes" value="${esc(e.notes)}" placeholder="Add a note" aria-label="Notes" maxlength="200">
         </div>
         <div class="side-in">
@@ -249,7 +259,7 @@
 
       // Exercises
       if (t.closest('#addExercise')) {
-        const e = { _k: key(), id: null, type: 'strength', name: '', detail: '', notes: '', muscles: [], musclesAuto: true, targets: [] };
+        const e = { _k: key(), id: null, type: 'strength', name: '', detail: '', notes: '', muscles: [], musclesAuto: true, targets: [], cardioKind: null, cardioKindAuto: true };
         day.exercises.push(e);
         render();
         root.querySelector(`#name-${e._k}`).focus();
@@ -266,7 +276,12 @@
           BO.toast(`${ex.name || 'Exercise'} removed`, { action: 'Undo', onAction: () => { dayOf(n).exercises.splice(index, 0, ex); saveExercises(n); render(); } });
           return;
         }
-        if (t.closest('[data-type]')) { ex.type = ex.type === 'cardio' ? 'strength' : 'cardio'; saveExercises(weekday); render(); return; }
+        if (t.closest('[data-type]')) { ex.type = ex.type === 'cardio' ? 'strength' : 'cardio'; if (ex.type === 'cardio' && !ex.cardioKind) ex.cardioKind = 'other'; saveExercises(weekday); render(); return; }
+        if (t.closest('[data-kind-open]')) { openKind = openKind === ex._k ? null : ex._k; render(); return; }
+        if (t.closest('[data-kind-close]')) { openKind = null; render(); return; }
+        if (t.closest('[data-kind-auto]')) { ex.cardioKindAuto = true; saveExercises(weekday); render(); return; }
+        const kind = t.closest('[data-kind]');
+        if (kind) { ex.cardioKind = kind.dataset.kind; ex.cardioKindAuto = false; saveExercises(weekday); render(); return; }
         if (t.closest('[data-muscles-open]')) { openMuscles = openMuscles === ex._k ? null : ex._k; render(); return; }
         if (t.closest('[data-muscles-close]')) { openMuscles = null; render(); return; }
         if (t.closest('[data-muscles-auto]')) { ex.musclesAuto = true; saveExercises(weekday); render(); return; }

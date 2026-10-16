@@ -15,6 +15,12 @@ namespace BodyOps.WebApi.Features.Days.Services;
 /// </summary>
 internal static class WeekBuilder
 {
+    /// <summary>How much training weighs in the day score (meals weigh the rest).</summary>
+    public const double TrainingWeight = 60;
+
+    /// <summary>How much the meals weigh in the day score.</summary>
+    public const double MealsWeight = 40;
+
     /// <summary>
     /// Builds a Monday-to-Sunday week.
     /// </summary>
@@ -23,7 +29,7 @@ internal static class WeekBuilder
     /// <param name="plan">The current plan.</param>
     /// <param name="logged">The logged days of that week.</param>
     /// <param name="history">Every logged strength exercise (for last session and records).</param>
-    /// <param name="weights">The weigh-ins (may include other dates), for the day score.</param>
+    /// <param name="weights">The weigh-ins (may include other dates), shown on each day.</param>
     /// <returns>The week.</returns>
     public static WeekDTO Week(DateOnly monday, DateOnly today, PlanData plan, DayRange logged, IReadOnlyList<ExerciseLogRow> history, IReadOnlyList<WeightEntry>? weights = null)
     {
@@ -91,9 +97,9 @@ internal static class WeekBuilder
     }
 
     /// <summary>
-    /// The day score, 0–100. Training weighs 50, meals 35 and the weigh-in 15; parts the day doesn't have (no
-    /// exercises on a rest day, no meals planned) are left out and the rest scaled up. A day marked as skipped
-    /// scores its training as zero.
+    /// The day score, 0–100. Training weighs 60 and meals 40; a part the day doesn't have (no exercises on a rest
+    /// day, no meals planned) is left out and the other scaled up. A day marked as skipped scores its training as
+    /// zero. The weigh-in is on the timeline but not in the score: people weigh in every week or two, not daily.
     /// </summary>
     /// <param name="day">The day, with <see cref="DayDTO.SetsDone"/> and <see cref="DayDTO.SetsPlanned"/> filled in.</param>
     /// <returns>The score.</returns>
@@ -102,27 +108,25 @@ internal static class WeekBuilder
         double total = 0, weight = 0;
         if (day.SetsPlanned > 0)
         {
-            weight += 50;
-            total += day.TrainingState == TrainingState.Missed ? 0 : 50.0 * day.SetsDone / day.SetsPlanned;
+            weight += TrainingWeight;
+            total += day.TrainingState == TrainingState.Missed ? 0 : TrainingWeight * day.SetsDone / day.SetsPlanned;
         }
 
         if (day.Meals.Count > 0)
         {
-            weight += 35;
-            total += 35.0 * day.Meals.Count(static meal => meal.Eaten) / day.Meals.Count;
+            weight += MealsWeight;
+            total += MealsWeight * day.Meals.Count(static meal => meal.Eaten) / day.Meals.Count;
         }
 
-        weight += 15;
-        total += day.WeightKg is null ? 0 : 15;
-        return (int)Math.Round(100 * total / weight, MidpointRounding.AwayFromZero);
+        return weight == 0 ? 0 : (int)Math.Round(100 * total / weight, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
-    /// Whether a day takes part in the streak: it has something planned or a weigh-in.
+    /// Whether a day takes part in the streak: it has training or meals planned (a weigh-in alone doesn't count).
     /// </summary>
     /// <param name="day">The day.</param>
     /// <returns>True when it counts or breaks the streak.</returns>
-    public static bool Counts(DayDTO day) => day.SetsPlanned > 0 || day.Meals.Count > 0 || day.WeightKg is not null;
+    public static bool Counts(DayDTO day) => day.SetsPlanned > 0 || day.Meals.Count > 0;
 
     private static DayDTO Items(DateOnly date, PlanData plan, DayRange logged, IReadOnlyList<ExerciseLogRow> history)
     {
@@ -143,7 +147,7 @@ internal static class WeekBuilder
                 .Where(exercise => exercise.DayID == row.DayID)
                 .OrderBy(static exercise => exercise.SortOrder)
                 .Select(exercise => Exercise(date, exercise.PlanExerciseID, exercise.ExerciseType, exercise.Name, exercise.Detail, exercise.Notes, exercise.Muscles,
-                    exercise.LoadKg, sets[exercise.DayExerciseID].ToList(), exercise.CardioMinutes, exercise.CardioKm, history))
+                    exercise.LoadKg, sets[exercise.DayExerciseID].ToList(), exercise.CardioMinutes, exercise.CardioKm, exercise.CardioKind, history))
                 .ToList();
             return dto;
         }
@@ -158,7 +162,7 @@ internal static class WeekBuilder
             .Where(exercise => exercise.Weekday == weekday)
             .OrderBy(static exercise => exercise.SortOrder)
             .Select(exercise => Exercise(date, exercise.PlanExerciseID, exercise.ExerciseType, exercise.Name, exercise.Detail, exercise.Notes, exercise.Muscles,
-                null, [], null, null, history))
+                null, [], null, null, exercise.CardioKind, history))
             .ToList();
         return dto;
     }
@@ -182,6 +186,18 @@ internal static class WeekBuilder
             ? []
             : reps.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Select(static value => int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var number) ? number : 0)
+                .ToList();
+
+    /// <summary>
+    /// Reads a stored loads list ("60,65,70"; an empty item = no load of its own).
+    /// </summary>
+    /// <param name="loads">The stored list, or null.</param>
+    /// <returns>The loads.</returns>
+    public static List<decimal?> ParseLoads(string? loads) =>
+        string.IsNullOrEmpty(loads)
+            ? []
+            : loads.Split(',')
+                .Select(static value => decimal.TryParse(value.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out var number) ? number : (decimal?)null)
                 .ToList();
 
     /// <summary>
@@ -226,13 +242,15 @@ internal static class WeekBuilder
         List<DaySetRow> setRows,
         decimal? cardioMinutes,
         decimal? cardioKm,
+        CardioKind? cardioKind,
         IReadOnlyList<ExerciseLogRow> history)
     {
         var targets = type == ExerciseType.Strength ? ExerciseDetailParser.Targets(detail) : [];
         var length = Math.Max(targets.Count, setRows.Count == 0 ? 0 : setRows.Max(static set => set.SetNumber));
-        var sets = Enumerable.Range(1, length)
-            .Select(number => setRows.FirstOrDefault(set => set.SetNumber == number) is { } set ? (int?)set.Reps : null)
-            .ToList();
+        var rows = Enumerable.Range(1, length).Select(number => setRows.FirstOrDefault(set => set.SetNumber == number)).ToList();
+        var sets = rows.Select(static set => set is null ? null : (int?)set.Reps).ToList();
+        // Sets logged before per-set loads carry the exercise's load.
+        var setLoads = rows.Select(set => set is null ? null : set.LoadKg ?? loadKg).ToList();
 
         var dto = new DayExerciseDTO
         {
@@ -246,14 +264,21 @@ internal static class WeekBuilder
             Targets = targets,
             LoadKg = loadKg,
             Sets = sets,
+            SetLoads = setLoads,
             CardioMinutes = cardioMinutes,
             CardioKm = cardioKm,
         };
 
-        var reps = sets.Sum(static set => set ?? 0);
-        if (loadKg is not null && reps > 0)
+        if (type == ExerciseType.Cardio)
         {
-            dto.VolumeKg = loadKg.Value * reps;
+            dto.CardioKind = CardioKinds.Resolve(name, cardioKind);
+            dto.CardioDistance = CardioKinds.UsesDistance(dto.CardioKind.Value);
+        }
+
+        var volume = rows.Sum(set => set is null ? 0 : set.Reps * (set.LoadKg ?? loadKg ?? 0));
+        if (volume > 0)
+        {
+            dto.VolumeKg = volume;
         }
 
         if (type == ExerciseType.Strength)
@@ -263,7 +288,15 @@ internal static class WeekBuilder
             if (earlier.Count > 0)
             {
                 var last = earlier.MaxBy(static row => row.DayDate)!;
-                dto.Last = new LastSessionDTO { Date = DateOnly.FromDateTime(last.DayDate), LoadKg = last.LoadKg, Reps = ParseReps(last.Reps) };
+                var lastReps = ParseReps(last.Reps);
+                var lastLoads = ParseLoads(last.Loads);
+                dto.Last = new LastSessionDTO
+                {
+                    Date = DateOnly.FromDateTime(last.DayDate),
+                    LoadKg = last.LoadKg,
+                    Reps = lastReps,
+                    Loads = lastReps.Select((_, i) => (i < lastLoads.Count ? lastLoads[i] : null) ?? last.LoadKg).ToList(),
+                };
                 dto.BestBeforeKg = earlier.Max(static row => row.LoadKg);
                 dto.IsPr = loadKg is not null && dto.BestBeforeKg is not null && loadKg > dto.BestBeforeKg;
             }

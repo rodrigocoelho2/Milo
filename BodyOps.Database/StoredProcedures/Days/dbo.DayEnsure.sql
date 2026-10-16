@@ -35,8 +35,8 @@ BEGIN
     WHERE pm.[UserID] = @UserID
       AND pm.[Weekday] = @Weekday;
 
-    INSERT INTO [dbo].[DayExercise] ([DayID], [PlanExerciseID], [ExerciseType], [Name], [NameKey], [Detail], [Notes], [Muscles], [SortOrder])
-    SELECT @DayID, pe.[PlanExerciseID], pe.[ExerciseType], pe.[Name], LOWER(pe.[Name]), pe.[Detail], pe.[Notes], pe.[Muscles], pe.[SortOrder]
+    INSERT INTO [dbo].[DayExercise] ([DayID], [PlanExerciseID], [ExerciseType], [Name], [NameKey], [Detail], [Notes], [Muscles], [CardioKind], [SortOrder])
+    SELECT @DayID, pe.[PlanExerciseID], pe.[ExerciseType], pe.[Name], LOWER(pe.[Name]), pe.[Detail], pe.[Notes], pe.[Muscles], pe.[CardioKind], pe.[SortOrder]
     FROM [dbo].[PlanExercise] pe
     WHERE pe.[UserID] = @UserID
       AND pe.[Weekday] = @Weekday;

@@ -274,6 +274,7 @@ internal sealed class FakePlanRepository : IPlanRepository
             exercise.Detail = item.GetProperty("detail").GetString()!;
             exercise.Notes = item.GetProperty("notes").GetString()!;
             exercise.Muscles = item.GetProperty("muscles").ValueKind == JsonValueKind.String ? item.GetProperty("muscles").GetString() : null;
+            exercise.CardioKind = item.TryGetProperty("cardioKind", out var kind) && kind.ValueKind == JsonValueKind.Number ? (CardioKind)kind.GetInt32() : null;
             exercise.SortOrder = order++;
             keep.Add(exercise);
         }
@@ -325,6 +326,7 @@ internal sealed class FakePlanRepository : IPlanRepository
                     Detail = exercise.Detail,
                     Notes = exercise.Notes,
                     Muscles = exercise.Muscles,
+                    CardioKind = exercise.CardioKind,
                     SortOrder = exercise.SortOrder,
                 }));
             }
@@ -368,6 +370,7 @@ internal sealed class FakeDayRepository(FakePlanRepository plan) : IDayRepositor
                     Name = exercise.Name,
                     LoadKg = exercise.LoadKg,
                     Reps = sets.Count == 0 ? null : string.Join(',', sets.Select(set => set.Reps)),
+                    Loads = sets.Count == 0 ? null : string.Join(',', sets.Select(set => set.LoadKg?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)),
                 };
             })
             .Where(row => row.LoadKg is not null || row.Reps is not null)
@@ -399,7 +402,7 @@ internal sealed class FakeDayRepository(FakePlanRepository plan) : IDayRepositor
         return Task.CompletedTask;
     }
 
-    public Task<bool> LogExerciseAsync(long userId, DateOnly date, long planExerciseId, decimal? loadKg, IReadOnlyList<int?> sets, decimal? cardioMinutes, decimal? cardioKm)
+    public Task<bool> LogExerciseAsync(long userId, DateOnly date, long planExerciseId, decimal? loadKg, IReadOnlyList<int?> sets, IReadOnlyList<decimal?> setLoads, decimal? cardioMinutes, decimal? cardioKm)
     {
         var day = Ensure(date);
         var exercise = Data.Exercises.FirstOrDefault(candidate => candidate.DayID == day.DayID && candidate.PlanExerciseID == planExerciseId);
@@ -416,7 +419,7 @@ internal sealed class FakeDayRepository(FakePlanRepository plan) : IDayRepositor
         {
             if (sets[i] is { } reps)
             {
-                Data.Sets.Add(new DaySetRow { DayExerciseID = exercise.DayExerciseID, SetNumber = i + 1, Reps = reps });
+                Data.Sets.Add(new DaySetRow { DayExerciseID = exercise.DayExerciseID, SetNumber = i + 1, Reps = reps, LoadKg = i < setLoads.Count ? setLoads[i] : null });
             }
         }
 
@@ -477,6 +480,7 @@ internal sealed class FakeDayRepository(FakePlanRepository plan) : IDayRepositor
                 Detail = exercise.Detail,
                 Notes = exercise.Notes,
                 Muscles = exercise.Muscles,
+                CardioKind = exercise.CardioKind,
                 SortOrder = exercise.SortOrder,
             });
         }

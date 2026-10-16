@@ -81,12 +81,16 @@ internal sealed class ExerciseService(
         var sessions = rows.Select(static row =>
         {
             var reps = WeekBuilder.ParseReps(row.Reps);
+            var stored = WeekBuilder.ParseLoads(row.Loads);
+            var loads = reps.Select((_, i) => (i < stored.Count ? stored[i] : null) ?? row.LoadKg).ToList();
+            var volume = reps.Select((count, i) => count * (loads[i] ?? 0)).Sum();
             return new ExerciseSessionDTO
             {
                 Date = DateOnly.FromDateTime(row.DayDate),
                 LoadKg = row.LoadKg,
                 Reps = reps,
-                VolumeKg = row.LoadKg is { } load && reps.Count > 0 ? load * reps.Sum() : null,
+                Loads = loads,
+                VolumeKg = volume > 0 ? volume : null,
             };
         }).ToList();
 

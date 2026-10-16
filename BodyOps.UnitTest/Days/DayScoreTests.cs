@@ -50,16 +50,17 @@ public sealed class DayScoreTests
     }
 
     [Fact]
-    public void Score_WeighsTrainingMealsAndWeighIn()
+    public void Score_WeighsTrainingAndMeals_NotTheWeighIn()
     {
-        // Strength 3 sets + cardio 1 = 4 planned; 2 sets + the ride done = 3. Meals 1 of 2. Weighed in.
+        // Strength 3 sets + cardio 1 = 4 planned; 2 sets + the ride done = 3. Meals 1 of 2. Weighed in (doesn't count).
         var weights = new List<WeightEntry> { new() { EntryDate = At(TestSupport.Tuesday), WeightKg = 97.6m } };
         var day = WeekBuilder.Day(TestSupport.Tuesday, Plan, Logged(TrainingState.Pending, true, 2, 32), [], weights);
 
         Assert.Equal(3, day.SetsDone);
         Assert.Equal(4, day.SetsPlanned);
         Assert.Equal(97.6m, day.WeightKg);
-        Assert.Equal((int)Math.Round(50 * 0.75 + 35 * 0.5 + 15), day.Score);
+        Assert.Equal((int)Math.Round(60 * 0.75 + 40 * 0.5), day.Score);
+        Assert.Equal(day.Score, WeekBuilder.Day(TestSupport.Tuesday, Plan, Logged(TrainingState.Pending, true, 2, 32), []).Score);
     }
 
     [Fact]
@@ -67,9 +68,7 @@ public sealed class DayScoreTests
     {
         var logged = Logged(TrainingState.Done, true, 0, null);
         logged.Meals[1].Eaten = true;
-        var weights = new List<WeightEntry> { new() { EntryDate = At(TestSupport.Tuesday), WeightKg = 97.6m } };
-
-        var day = WeekBuilder.Day(TestSupport.Tuesday, Plan, logged, [], weights);
+        var day = WeekBuilder.Day(TestSupport.Tuesday, Plan, logged, []);   // no weigh-in needed for 100
 
         Assert.Equal(day.SetsPlanned, day.SetsDone);
         Assert.Equal(100, day.Score);
@@ -80,7 +79,7 @@ public sealed class DayScoreTests
     {
         var day = WeekBuilder.Day(TestSupport.Tuesday, Plan, Logged(TrainingState.Missed, true, 3, null), []);
 
-        Assert.Equal((int)Math.Round(100 * (35 * 0.5) / 100), day.Score);
+        Assert.Equal((int)Math.Round(40 * 0.5), day.Score);
     }
 
     [Fact]
@@ -96,9 +95,20 @@ public sealed class DayScoreTests
         var day = WeekBuilder.Day(TestSupport.Tuesday, plan, logged, []);
 
         Assert.Equal(0, day.SetsPlanned);
-        Assert.Equal((int)Math.Round(100 * 35.0 / 50), day.Score);
+        Assert.Equal(100, day.Score);
         Assert.True(WeekBuilder.Counts(day));
         Assert.False(WeekBuilder.Counts(WeekBuilder.Day(TestSupport.Monday, plan, DayRange.Empty, [])));
+    }
+
+    [Fact]
+    public void Score_AWeighInAlone_DoesNotScoreOrCount()
+    {
+        var weights = new List<WeightEntry> { new() { EntryDate = At(TestSupport.Monday), WeightKg = 97.6m } };
+        var day = WeekBuilder.Day(TestSupport.Monday, new PlanData([], [], []), DayRange.Empty, [], weights);
+
+        Assert.Equal(97.6m, day.WeightKg);
+        Assert.Equal(0, day.Score);
+        Assert.False(WeekBuilder.Counts(day));
     }
 
     private static DayDTO Scored(int score, bool planned = true) =>

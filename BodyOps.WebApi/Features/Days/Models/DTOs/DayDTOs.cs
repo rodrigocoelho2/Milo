@@ -52,7 +52,7 @@ public sealed class DayDTO
     /// <summary>Gets or sets how many of the planned sets were done.</summary>
     public int SetsDone { get; set; }
 
-    /// <summary>Gets or sets the day score, 0–100: training, meals and the weigh-in (see <c>WeekBuilder.DayScore</c>).</summary>
+    /// <summary>Gets or sets the day score, 0–100: training and meals (see <c>WeekBuilder.DayScore</c>).</summary>
     public int Score { get; set; }
 
     /// <summary>Gets or sets the meals.</summary>
@@ -112,17 +112,26 @@ public sealed class DayExerciseDTO
     /// <summary>Gets or sets the rep target of each planned set (0 = none).</summary>
     public List<int> Targets { get; set; } = [];
 
-    /// <summary>Gets or sets the load lifted.</summary>
+    /// <summary>Gets or sets the load lifted: the heaviest set (what records compare).</summary>
     public decimal? LoadKg { get; set; }
 
     /// <summary>Gets or sets the reps of each set (null = not done); as long as the plan or the log, whichever is longer.</summary>
     public List<int?> Sets { get; set; } = [];
+
+    /// <summary>Gets or sets the load of each set, same length as <see cref="Sets"/> (null = not done or no load).</summary>
+    public List<decimal?> SetLoads { get; set; } = [];
 
     /// <summary>Gets or sets the cardio minutes.</summary>
     public decimal? CardioMinutes { get; set; }
 
     /// <summary>Gets or sets the cardio distance.</summary>
     public decimal? CardioKm { get; set; }
+
+    /// <summary>Gets or sets the kind of cardio (null for strength).</summary>
+    public CardioKind? CardioKind { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether this cardio is logged with a distance as well as the time.</summary>
+    public bool CardioDistance { get; set; }
 
     /// <summary>Gets or sets reps × load over the sets done (null without a load or sets).</summary>
     public decimal? VolumeKg { get; set; }
@@ -145,11 +154,14 @@ public sealed class LastSessionDTO
     /// <summary>Gets or sets the date.</summary>
     public DateOnly Date { get; set; }
 
-    /// <summary>Gets or sets the load.</summary>
+    /// <summary>Gets or sets the load (the heaviest set).</summary>
     public decimal? LoadKg { get; set; }
 
     /// <summary>Gets or sets the reps of each set done.</summary>
     public List<int> Reps { get; set; } = [];
+
+    /// <summary>Gets or sets the load of each set done, same length as <see cref="Reps"/>.</summary>
+    public List<decimal?> Loads { get; set; } = [];
 }
 
 /// <summary>
@@ -232,11 +244,14 @@ public sealed class TrainingStateDTO
 /// </summary>
 public sealed class ExerciseLogDTO
 {
-    /// <summary>Gets or sets the load (strength).</summary>
+    /// <summary>Gets or sets the load (strength) for sets without one of their own in <see cref="SetLoads"/>.</summary>
     public decimal? LoadKg { get; set; }
 
     /// <summary>Gets or sets the reps of each set; null = set not done.</summary>
     public List<int?>? Sets { get; set; }
+
+    /// <summary>Gets or sets the load of each set (progressive loading); null = the <see cref="LoadKg"/>.</summary>
+    public List<decimal?>? SetLoads { get; set; }
 
     /// <summary>Gets or sets the minutes (cardio).</summary>
     public decimal? CardioMinutes { get; set; }
@@ -246,8 +261,8 @@ public sealed class ExerciseLogDTO
 }
 
 /// <summary>
-/// The run of good days: days scoring at least <see cref="Threshold"/> in a row. Days with nothing planned and no
-/// weigh-in neither count nor break it.
+/// The run of good days: days scoring at least <see cref="Threshold"/> in a row. Days with nothing planned neither
+/// count nor break it.
 /// </summary>
 public sealed class StreakDTO
 {

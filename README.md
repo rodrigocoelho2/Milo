@@ -38,21 +38,25 @@
 
 - **Today is a timeline**: the weigh-in, each meal at its planned time and the workout, in the order you live them.
   The next thing is highlighted and one tap ticks it off.
-- **Day score and streak**: each day scores out of 100 (training 50, meals 35, weigh-in 15) and fills as you go.
+- **Day score and streak**: each day scores out of 100 (training 60, meals 40) and fills as you go. The weigh-in is
+  optional: it stays on the timeline but doesn't count, so weighing in every week or two costs nothing.
   Days of 60 or more in a row make the streak, shown on Today, the side bar and the week.
 - **Quick log**: the **+** button logs a weigh-in, ticks the next meal or starts the workout from any screen.
 
 **At the gym**
 
-- **Session mode**: the workout on the whole screen, one exercise at a time. Big load buttons in steps of 2.5 kg,
-  last time's load and reps to beat, a tile per set, and the rest timer starts by itself after each set
-  (+30 s or skip; its length is in Settings). It survives locking the phone and keeps the screen awake.
+- **Session mode**: the workout on the whole screen, one exercise at a time. Big load buttons in steps of 2.5 kg for
+  the next set (each set keeps its own load, for progressive loading: 60 × 10, 65 × 8, 70 × 6), last time's loads
+  and reps to beat, a tile per set, and the rest timer starts by itself after each set (+30 s or skip; its length is
+  in Settings). It survives locking the phone and keeps the screen awake.
+- **Cardio by type**: treadmill, elliptical and stairs are logged by time; bike, run, walk, rowing and swimming by
+  time and distance.
 - **Records**: lift more than ever before and the record sheet comes up with confetti: how much more than your best,
   how far you have come since you started, and which record of the month it is.
 
 **The week and the long run**
 
-- **Week**: a stacked bar per day (training, meals, weigh-in), sessions, meals, volume lifted against last week,
+- **Week**: a stacked bar per day (training and meals), sessions, meals, volume lifted against last week,
   records, the sets each muscle got on a body map and a recap. Tap a day to fix its meals or session.
   Reset week has Undo.
 - **Progress**: body weight against your goal, with the pace ("90 kg is roughly 9 months away"), every lift's best
@@ -62,7 +66,8 @@
 
 - Each weekday gets a **name** ("Upper body", "Legs"), **exercises** (sets × reps, notes) and **meals** (a time,
   foods in grams or pieces). Copy a day to others, drag to reorder; changes save themselves.
-- The **muscles** of each exercise are detected from its name (English or Portuguese) or picked by hand.
+- The **muscles** of each exercise are detected from its name (English or Portuguese) or picked by hand, and so is
+  the **kind of cardio** ("Passadeira" is a treadmill, "Bicicleta" a bike).
 - Editing the plan updates this week and the weeks ahead; past weeks keep the plan they had.
 
 **Built to self-host**

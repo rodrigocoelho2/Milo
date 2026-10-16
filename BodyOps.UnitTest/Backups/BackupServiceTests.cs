@@ -1,5 +1,8 @@
 using System.Text.Json;
+using BodyOps.Library.Enums;
 using BodyOps.Library.Services;
+using BodyOps.WebApi.Features.Days.Models.DTOs;
+using BodyOps.WebApi.Features.Days.Services;
 using BodyOps.WebApi.Features.Backups.Services;
 using BodyOps.WebApi.Features.Plans.Models.DTOs;
 using BodyOps.WebApi.Features.Plans.Services;
@@ -66,6 +69,30 @@ public sealed class BackupServiceTests
         Assert.Equal("Pec deck", _plan.Exercises.Single().Name);
         Assert.Equal("Whey", _plan.Foods.Single().Name);
         Assert.Equal(97.5m, _weights.Entries[new DateOnly(2026, 10, 1)]);
+    }
+
+    [Fact]
+    public async Task ExportThenImport_KeepsEachSetsLoad_AndTheKindOfCardio()
+    {
+        var plans = new PlanService(_plan, _clock, TestSupport.Globalization);
+        await plans.SaveExercisesAsync(1, 2,
+        [
+            new PlanExerciseSaveDTO { Name = "Leg press", Detail = "3x10" },
+            new PlanExerciseSaveDTO { Type = ExerciseType.Cardio, Name = "Cardio", Detail = "20 min", CardioKind = CardioKind.Treadmill },
+        ]);
+        var days = new DayService(_days, _plan, _weights, _clock, TestSupport.Globalization);
+        var press = _plan.Exercises.Single(exercise => exercise.Name == "Leg press").PlanExerciseID;
+        await days.LogExerciseAsync(1, TestSupport.Tuesday, press, new ExerciseLogDTO { Sets = [12, 10, 8], SetLoads = [100, 110, 120] });
+
+        var exported = await Service().ExportAsync(1);
+        var json = JsonSerializer.Serialize(exported.Result, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        await Service().ImportAsync(1, Json(json));
+
+        Assert.Equal(CardioKind.Treadmill, _plan.Exercises.Single(exercise => exercise.Name == "Cardio").CardioKind);
+        using var imported = JsonDocument.Parse(Assert.Single(_days.Imports));
+        var exercises = imported.RootElement[0].GetProperty("exercises");
+        Assert.Equal([100m, 110m, 120m], exercises[0].GetProperty("setLoads").EnumerateArray().Select(load => load.GetDecimal()));
+        Assert.Equal((int)CardioKind.Treadmill, exercises[1].GetProperty("cardioKind").GetInt32());
     }
 
     [Theory]

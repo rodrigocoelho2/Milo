@@ -65,13 +65,14 @@ BEGIN
         [Detail] = pe.[Detail],
         [Notes] = pe.[Notes],
         [Muscles] = pe.[Muscles],
+        [CardioKind] = pe.[CardioKind],
         [SortOrder] = pe.[SortOrder]
     FROM [dbo].[DayExercise] de
     INNER JOIN @Days d ON d.[DayID] = de.[DayID]
     INNER JOIN [dbo].[PlanExercise] pe ON pe.[PlanExerciseID] = de.[PlanExerciseID];
 
-    INSERT INTO [dbo].[DayExercise] ([DayID], [PlanExerciseID], [ExerciseType], [Name], [NameKey], [Detail], [Notes], [Muscles], [SortOrder])
-    SELECT d.[DayID], pe.[PlanExerciseID], pe.[ExerciseType], pe.[Name], LOWER(pe.[Name]), pe.[Detail], pe.[Notes], pe.[Muscles], pe.[SortOrder]
+    INSERT INTO [dbo].[DayExercise] ([DayID], [PlanExerciseID], [ExerciseType], [Name], [NameKey], [Detail], [Notes], [Muscles], [CardioKind], [SortOrder])
+    SELECT d.[DayID], pe.[PlanExerciseID], pe.[ExerciseType], pe.[Name], LOWER(pe.[Name]), pe.[Detail], pe.[Notes], pe.[Muscles], pe.[CardioKind], pe.[SortOrder]
     FROM @Days d
     INNER JOIN [dbo].[PlanExercise] pe ON pe.[UserID] = @UserID AND pe.[Weekday] = d.[Weekday]
     WHERE NOT EXISTS (SELECT 1 FROM [dbo].[DayExercise] de WHERE de.[DayID] = d.[DayID] AND de.[PlanExerciseID] = pe.[PlanExerciseID]);

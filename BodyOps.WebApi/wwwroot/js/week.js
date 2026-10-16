@@ -115,7 +115,7 @@
           <div class="col">
             <section class="card ${firstPaint ? 'rise' : ''}" style="--i:1" aria-label="Day scores">
               ${BO.weekBars(week, { buttons: true, height: 170 })}
-              <div class="legend"><span class="pill train">Training</span><span class="pill eat">Meals</span><span class="pill weigh">Weigh-in</span></div>
+              <div class="legend"><span class="pill train">Training</span><span class="pill eat">Meals</span></div>
             </section>
             ${tiles()}
             <section aria-labelledby="h-days"><div class="spread" style="margin:4px 0 8px"><h2 class="h-l" id="h-days">Day by day</h2><span class="sub">tap a day</span></div>${dayRows()}</section>
@@ -145,7 +145,7 @@
                 <button type="button" data-state="pending" aria-pressed="${state === 'pending'}">Not yet</button>
                 <button type="button" data-state="done" aria-pressed="${state === 'done'}">Trained</button>
                 <button type="button" data-state="missed" aria-pressed="${state === 'missed'}">Skipped</button></div>
-              <div class="slist">${d.exercises.map(ex => `<div class="srow"><div><b>${esc(ex.name)}</b>${ex.isPr ? ' <span class="pill gold">PR</span>' : ''}<div class="sub">${esc(ex.detail)}${ex.loadKg != null ? ` · ${BO.load(ex.loadKg)} kg` : ''}</div></div><span class="r num">${ex.type === 'cardio' ? [ex.cardioMinutes ? `${BO.load(ex.cardioMinutes)} min` : '', ex.cardioKm ? `${BO.load(ex.cardioKm)} km` : ''].filter(Boolean).join(' · ') || '–' : ex.sets.map(s => s == null ? '–' : s).join(' · ') || '–'}</span></div>`).join('')}</div>
+              <div class="slist">${d.exercises.map(ex => `<div class="srow"><div><b>${esc(ex.name)}</b>${ex.isPr ? ' <span class="pill gold">PR</span>' : ''}<div class="sub">${esc(ex.detail)}${ex.loadKg != null ? ` · ${BO.load(ex.loadKg)} kg` : ''}</div></div><span class="r num">${ex.type === 'cardio' ? [ex.cardioMinutes ? `${BO.load(ex.cardioMinutes)} min` : '', ex.cardioKm ? `${BO.load(ex.cardioKm)} km` : ''].filter(Boolean).join(' · ') || '–' : BO.setsLine(ex.sets, ex.setLoads) || '–'}</span></div>`).join('')}</div>
               <a class="btn primary block" href="/session?date=${d.date}" data-link data-close-sheet>${icons.plan} Log sets</a>` : ''}
             ${d.meals.length ? `<div class="qmeals">${d.meals.map(m => `<button type="button" class="qmeal" role="checkbox" aria-checked="${m.eaten}" data-meal="${m.planMealId}"><span class="tick">${icons.check}</span><span style="min-width:0"><b>${esc(m.name)}</b><span>${esc(m.foods || '')}</span></span>${m.time ? `<em>${m.time}</em>` : ''}</button>`).join('')}</div>` : ''}
             <a class="btn block" href="/today?date=${d.date}" data-link data-close-sheet>Open on Today</a>`;

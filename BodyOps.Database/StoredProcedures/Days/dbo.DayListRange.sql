@@ -46,7 +46,8 @@ BEGIN
            de.[SortOrder],
            de.[LoadKg],
            de.[CardioMinutes],
-           de.[CardioKm]
+           de.[CardioKm],
+           CAST(de.[CardioKind] AS INT) AS [CardioKind]
     FROM [dbo].[DayExercise] de
     INNER JOIN [dbo].[Day] d ON d.[DayID] = de.[DayID]
     WHERE d.[UserID] = @UserID
@@ -55,7 +56,8 @@ BEGIN
 
     SELECT s.[DayExerciseID],
            s.[SetNumber],
-           s.[Reps]
+           s.[Reps],
+           s.[LoadKg]
     FROM [dbo].[DaySet] s
     INNER JOIN [dbo].[DayExercise] de ON de.[DayExerciseID] = s.[DayExerciseID]
     INNER JOIN [dbo].[Day] d ON d.[DayID] = de.[DayID]

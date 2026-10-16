@@ -1,7 +1,8 @@
 /*
     DayExerciseLog
-    Saves what was done for one exercise on a day: the load, the reps of each set (@SetsJson, e.g. [12,11,null]:
-    null = set not done) or, for cardio, minutes and kilometres. Logging anything on a day that isn't marked yet
+    Saves what was done for one exercise on a day: the load (the heaviest set), the reps of each set (@SetsJson,
+    e.g. [12,11,null]: null = set not done) and the load of each set (@SetLoadsJson, e.g. [60,65,null]) or, for
+    cardio, minutes and kilometres. Logging anything on a day that isn't marked yet
     marks it as trained. @Found = 0 when that day has no such exercise.
 */
 CREATE PROCEDURE [dbo].[DayExerciseLog]
@@ -12,6 +13,7 @@ CREATE PROCEDURE [dbo].[DayExerciseLog]
     @CardioMinutes  DECIMAL (6, 1) = NULL,
     @CardioKm       DECIMAL (6, 2) = NULL,
     @SetsJson       NVARCHAR (400) = N'[]',
+    @SetLoadsJson   NVARCHAR (800) = N'[]',
     @Found          BIT OUTPUT
 AS
 BEGIN
@@ -43,9 +45,11 @@ BEGIN
 
         DELETE FROM [dbo].[DaySet] WHERE [DayExerciseID] = @DayExerciseID;
 
-        INSERT INTO [dbo].[DaySet] ([DayExerciseID], [SetNumber], [Reps])
-        SELECT @DayExerciseID, CAST(j.[key] AS INT) + 1, CAST(j.[value] AS SMALLINT)
+        INSERT INTO [dbo].[DaySet] ([DayExerciseID], [SetNumber], [Reps], [LoadKg])
+        SELECT @DayExerciseID, CAST(j.[key] AS INT) + 1, CAST(j.[value] AS SMALLINT),
+               CASE WHEN l.[type] = 2 THEN CAST(l.[value] AS DECIMAL (6, 2)) END
         FROM OPENJSON(ISNULL(@SetsJson, N'[]')) j
+        LEFT JOIN OPENJSON(ISNULL(@SetLoadsJson, N'[]')) l ON l.[key] = j.[key]
         WHERE j.[type] = 2;   -- numbers only; null = set not done
 
         UPDATE [dbo].[Day]

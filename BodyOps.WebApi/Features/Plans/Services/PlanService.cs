@@ -156,7 +156,7 @@ internal sealed class PlanService(
             }
 
             var type = Enum.IsDefined(exercise.Type) ? exercise.Type : ExerciseType.Strength;
-            items.Add(PlanJson.Exercise(exercise.Id, type, name, detail, notes, MuscleDetector.Format(exercise.Muscles)));
+            items.Add(PlanJson.Exercise(exercise.Id, type, name, detail, notes, MuscleDetector.Format(exercise.Muscles), exercise.CardioKind));
         }
 
         await _planRepository.SaveExercisesAsync(userId, weekday, PlanJson.Serialize(items), WeekMath.Monday(_clock.Today));

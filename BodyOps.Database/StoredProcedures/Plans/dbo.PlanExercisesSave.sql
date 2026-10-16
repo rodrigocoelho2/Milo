@@ -1,8 +1,9 @@
 /*
     PlanExercisesSave
     Replaces the exercises of one weekday with @Json, in order:
-        [{"id":40,"type":1,"name":"Pec deck","detail":"3x12","notes":"","muscles":null}, …]
+        [{"id":40,"type":1,"name":"Pec deck","detail":"3x12","notes":"","muscles":null,"cardioKind":null}, …]
     "muscles" is a comma-separated list of muscle numbers, or null to detect them from the name.
+    "cardioKind" (cardio only) is 1–9 (see dbo.PlanExercise), or null to work it out from the name.
     An exercise whose id belongs to this account and weekday is updated (logged days keep their loads and sets);
     any other id, or none, adds one. Exercises left out are deleted.
     Then this and later weeks' logged days of that weekday follow the plan (dbo.DaySyncFromPlan).
@@ -25,10 +26,12 @@ BEGIN
         [Name]           NVARCHAR (100) NOT NULL,
         [Detail]         NVARCHAR (60)  NOT NULL,
         [Notes]          NVARCHAR (200) NOT NULL,
-        [Muscles]        NVARCHAR (60)  NULL);
+        [Muscles]        NVARCHAR (60)  NULL,
+        [CardioKind]     TINYINT        NULL);
 
-    INSERT INTO @Items ([Ord], [PlanExerciseID], [ExerciseType], [Name], [Detail], [Notes], [Muscles])
-    SELECT CAST(j.[key] AS INT), e.[Id], e.[Type], e.[Name], ISNULL(e.[Detail], N''), ISNULL(e.[Notes], N''), e.[Muscles]
+    INSERT INTO @Items ([Ord], [PlanExerciseID], [ExerciseType], [Name], [Detail], [Notes], [Muscles], [CardioKind])
+    SELECT CAST(j.[key] AS INT), e.[Id], e.[Type], e.[Name], ISNULL(e.[Detail], N''), ISNULL(e.[Notes], N''), e.[Muscles],
+           CASE WHEN e.[Type] = 2 AND e.[CardioKind] BETWEEN 1 AND 9 THEN e.[CardioKind] END
     FROM OPENJSON(@Json) j
     CROSS APPLY OPENJSON(j.[value]) WITH (
         [Id]      BIGINT         '$.id',
@@ -36,7 +39,8 @@ BEGIN
         [Name]    NVARCHAR (100) '$.name',
         [Detail]  NVARCHAR (60)  '$.detail',
         [Notes]   NVARCHAR (200) '$.notes',
-        [Muscles] NVARCHAR (60)  '$.muscles') e;
+        [Muscles] NVARCHAR (60)  '$.muscles',
+        [CardioKind] TINYINT     '$.cardioKind') e;
 
     BEGIN TRANSACTION;
 
@@ -59,12 +63,13 @@ BEGIN
         [Detail] = i.[Detail],
         [Notes] = i.[Notes],
         [Muscles] = i.[Muscles],
+        [CardioKind] = i.[CardioKind],
         [SortOrder] = i.[Ord]
     FROM [dbo].[PlanExercise] pe
     INNER JOIN @Items i ON i.[PlanExerciseID] = pe.[PlanExerciseID];
 
-    INSERT INTO [dbo].[PlanExercise] ([UserID], [Weekday], [ExerciseType], [Name], [Detail], [Notes], [Muscles], [SortOrder])
-    SELECT @UserID, @Weekday, i.[ExerciseType], i.[Name], i.[Detail], i.[Notes], i.[Muscles], i.[Ord]
+    INSERT INTO [dbo].[PlanExercise] ([UserID], [Weekday], [ExerciseType], [Name], [Detail], [Notes], [Muscles], [CardioKind], [SortOrder])
+    SELECT @UserID, @Weekday, i.[ExerciseType], i.[Name], i.[Detail], i.[Notes], i.[Muscles], i.[CardioKind], i.[Ord]
     FROM @Items i
     WHERE i.[PlanExerciseID] IS NULL;
 
@@ -79,6 +84,7 @@ BEGIN
            pe.[Detail],
            pe.[Notes],
            pe.[Muscles],
+           CAST(pe.[CardioKind] AS INT) AS [CardioKind],
            pe.[SortOrder]
     FROM [dbo].[PlanExercise] pe
     WHERE pe.[UserID] = @UserID
