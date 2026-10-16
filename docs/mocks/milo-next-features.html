@@ -52,6 +52,13 @@ button{font:inherit; color:inherit; cursor:pointer}
 .ph iframe{display:block; width:390px; border:0}
 .pcol > span{font-size:13px; color:var(--mute); padding:0 12px}
 .pcol > span b{color:var(--ink)}
+.dks{display:flex; flex-direction:column; gap:34px}
+.dcol{display:flex; flex-direction:column; gap:10px; max-width:1240px}
+.dk{border-radius:16px; overflow:hidden; background:#000; box-shadow:0 0 0 1px var(--line), 0 40px 70px -34px rgba(13,16,21,.5); position:relative}
+.dk::before{content:""; display:block; height:30px; background:var(--card); border-bottom:1px solid var(--line); background-image:radial-gradient(circle at 18px 15px,#FF5F57 5px,transparent 5.5px),radial-gradient(circle at 36px 15px,#FEBC2E 5px,transparent 5.5px),radial-gradient(circle at 54px 15px,#28C840 5px,transparent 5.5px)}
+.dk iframe{display:block; width:1440px; border:0; transform-origin:0 0}
+.dcol > span{font-size:13px; color:var(--mute); padding:0 4px; max-width:90ch}
+.dcol > span b{color:var(--ink)}
 .q{background:var(--card); border-radius:18px; padding:16px 18px; box-shadow:inset 0 0 0 2px var(--gold)}
 .q b{display:block; margin-bottom:6px}
 .q ol{margin:0; padding-left:20px; color:var(--mute)}
@@ -924,7 +931,7 @@ canvas.confetti{position:fixed; inset:0; z-index:90; pointer-events:none; width:
 .mk-status .r{display:flex; gap:6px; align-items:center; font-size:12px; letter-spacing:.05em}
 .mk-status .bat{width:24px; height:12px; border-radius:4px; border:1.5px solid currentColor; opacity:.9; position:relative}
 .mk-status .bat::after{content:""; position:absolute; inset:1.5px; right:5px; background:currentColor; border-radius:2px}
-.main{padding-top:54px !important}
+html:not(.dk) .main{padding-top:54px !important}
 .session .s-top{padding-top:52px}
 *,*::before,*::after{animation-duration:.01ms !important; animation-delay:0s !important; transition:none !important}
 body{overflow-x:hidden}
@@ -1059,6 +1066,39 @@ body{overflow-x:hidden}
 .prog-box .seg button{white-space:nowrap}
 .watch-card .hd svg{width:14px; height:14px}
 .auto span{flex:1}
+
+/* Food search */
+.srch{display:flex; gap:8px}
+.srch .btn svg{width:17px; height:17px}
+.fres{display:flex; flex-direction:column}
+.fgrp{display:flex; justify-content:space-between; font-size:11.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--mute); padding:12px 2px 6px}
+.fgrp span{text-transform:none; letter-spacing:0; font-weight:600; color:var(--faint)}
+.fr{display:flex; align-items:center; justify-content:space-between; gap:12px; border:0; background:none; text-align:left; padding:10px 2px; border-top:1px solid var(--line); width:100%}
+.fgrp + .fr{border-top:0}
+.fr b{display:block; font-weight:700; font-size:14.5px}
+.fn{text-align:right; font-size:12px; color:var(--mute); white-space:nowrap; display:flex; flex-direction:column; align-items:flex-end; gap:2px}
+.fn b{display:inline; font:850 16px/1 var(--font); color:var(--ink)}
+.fn em{font-style:normal; font-weight:750; color:var(--eat); background:var(--eat-soft); border-radius:6px; padding:1px 6px}
+/* My foods table */
+.ftable{display:flex; flex-direction:column}
+.ftable > div{display:grid; grid-template-columns:1fr 54px 64px 54px; gap:8px; align-items:center; padding:10px 0; border-top:1px solid var(--line); font-size:13.5px}
+.ftable > div span{text-align:right; color:var(--mute); font-weight:600}
+.ftable > div span.p{color:var(--eat); font-weight:750}
+.ftable .fh{border-top:0; padding-top:0; font-size:11.5px; font-weight:750; color:var(--faint)}
+.ftable .fh span:first-child{text-align:left}
+.ftable b{font-weight:700}
+.src{font-style:normal; font-size:10.5px; font-weight:700; color:var(--mute); background:var(--card2); border-radius:5px; padding:1px 5px; margin-left:4px; vertical-align:middle}
+/* Barcode camera */
+.cam{position:fixed; inset:0; background:#0b0c10; color:#fff; display:flex; flex-direction:column}
+.cam-top{display:flex; justify-content:space-between; align-items:center; padding:52px 18px 10px; font-weight:750; position:relative; z-index:2}
+.cam-view{flex:1; position:relative; overflow:hidden; background:radial-gradient(70% 50% at 50% 40%, #3b3428, #121110 75%)}
+.cam-view .tub{position:absolute; left:50%; top:46%; transform:translate(-50%,-50%) rotate(-4deg); width:230px; height:270px; border-radius:30px 30px 22px 22px; background:linear-gradient(90deg,#1d1d22,#34343c 45%,#1d1d22); box-shadow:0 30px 60px rgba(0,0,0,.6); filter:blur(.6px)}
+.cam-view .lbl{position:absolute; left:18px; right:18px; top:40px; height:110px; border-radius:12px; background:linear-gradient(135deg,#e9e2cf,#cfc6ad); color:#2b261b; display:flex; flex-direction:column; align-items:center; justify-content:center}
+.cam-view .lbl b{font:900 34px/1 var(--font); letter-spacing:.06em}
+.cam-view .lbl span{font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.2em}
+.cam-view .bc{position:absolute; left:58px; right:58px; bottom:34px; height:60px; background:#fff; border-radius:4px; background-image:repeating-linear-gradient(90deg,#111 0 2px,transparent 2px 4px,#111 4px 5px,transparent 5px 8px,#111 8px 11px,transparent 11px 12px)}
+.cam-view .frame{position:absolute; left:50%; top:60%; width:250px; height:120px; transform:translate(-50%,-50%); border-radius:20px; box-shadow:0 0 0 2000px rgba(0,0,0,.45), inset 0 0 0 3px var(--good)}
+.cam-sheet{position:relative; border-radius:30px 30px 0 0; animation:none}
 </script>
 </head>
 <body>
@@ -1081,6 +1121,7 @@ body{overflow-x:hidden}
     <a href="#weigh"><i style="background:var(--weigh)"></i><div><b>4 · Weigh-in every N days</b><span>Countdown on Today, due-day highlight</span></div></a>
     <a href="#push"><i style="background:var(--ink)"></i><div><b>5 · Push reminders</b><span>Meals, workout, weigh-in day, streak at risk</span></div></a>
     <a href="#health"><i style="background:var(--bad)"></i><div><b>6 · Apple Watch and Apple Health</b><span>Workout time, calories, heart rate, weight</span></div></a>
+    <a href="#desktop"><i style="background:var(--mute)"></i><div><b>Desktop</b><span>Today, Plan with My foods, Progress, Settings</span></div></a>
   </nav>
 
   <!-- 1 -->
@@ -1113,8 +1154,16 @@ body{overflow-x:hidden}
       <div class="pcol"><div class="ph" data-s="s-today" data-h="1640"></div><span><b>Today (whole screen).</b> The Food today card, macros under each meal and a swapped lunch. The weigh-in isn't due, so it shows the countdown.</span></div>
       <div class="pcol"><div class="ph" data-s="s-meal"></div><span><b>Tap a meal.</b> "As planned" ticks it like today; "Something else" asks what, with your foods one tap away.</span></div>
       <div class="pcol"><div class="ph" data-s="s-food"></div><span><b>Plan › Meals.</b> Each meal totals itself; tap a food to enter its label once.</span></div>
+      <div class="pcol"><div class="ph" data-s="s-search"></div><span><b>Add a food.</b> Your foods, then Milo's built-in list of ~300 basics, then packaged products from Open Food Facts.</span></div>
+      <div class="pcol"><div class="ph" data-s="s-scan"></div><span><b>Scan the barcode.</b> Packaged food comes in with its label already filled in, per 100 g or per serving.</span></div>
     </div>
   </section>
+
+  <div class="how" style="margin-top:-30px">
+      <div><b>Built-in list (works offline)</b>About 300 basic foods (chicken, rice, oats, eggs, fish, fruit, olive oil…) with calories, protein, carbs and fat per 100 g, names in English and Portuguese. From USDA FoodData Central, which is public domain, so it ships inside Milo.</div>
+      <div><b>Packaged food: Open Food Facts</b>The open, crowd-sourced product database (strong in Portugal and Spain). Search by name or scan the barcode; your server asks Open Food Facts and the result is saved as one of your foods, so it's only fetched once.</div>
+      <div><b>Your own foods</b>Anything can be typed from the label or edited. A food you add belongs to you; changing it updates every meal that uses it.</div>
+    </div>
 
   <!-- 4 + 5 -->
   <section class="sec" id="weigh">
@@ -1139,6 +1188,17 @@ body{overflow-x:hidden}
       <div><b>What comes in</b>Workout duration, active calories, average and max heart rate, the heart-rate curve, distance for walks/runs, and body weight from a smart scale.</div>
       <div><b>What doesn't change</b>Sets, reps and loads are still logged in Milo: the Watch doesn't know them. Calories burned don't touch the day score.</div>
       <div><b>Cardio</b>An Indoor Walk on the Watch fills in the treadmill minutes on its own. If you already logged them, Milo keeps yours.</div>
+    </div>
+  </section>
+
+  <section class="sec" id="desktop">
+    <div><h2><i style="background:var(--mute)"></i>Desktop</h2>
+      <p class="lede">The same features on a computer (1440 px wide, shown smaller). Session mode stays the phone-style screen, centred, as today.</p></div>
+    <div class="dks">
+      <div class="dcol"><div class="dk" data-s="d-today" data-h="1000"></div><span><b>Today.</b> Timeline with macros; the session card shows the progression ("↑ 72.5 next time") and the Watch cardio; Food today sits above body weight and the week.</span></div>
+      <div class="dcol"><div class="dk" data-s="d-plan" data-h="960"></div><span><b>Plan › Meals.</b> Meal totals, totals per day in the day chips and a new <b>My foods</b> list on the right, showing where each food came from. "Add" opens the same search as on the phone, as a centred card.</span></div>
+      <div class="dcol"><div class="dk" data-s="d-progress" data-h="900"></div><span><b>Progress.</b> The picked lift opens big on the left: est. 1RM curve and all six rep records in one row.</span></div>
+      <div class="dcol"><div class="dk" data-s="d-settings" data-h="860"></div><span><b>Settings.</b> Reminder times are editable on a computer; each device turns reminders on for itself.</span></div>
     </div>
   </section>
 
@@ -1515,7 +1575,7 @@ body{overflow-x:hidden}
   </div>
   <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="daytot"><span class="sub">Thursday, all meals</span><b class="num">1,880 kcal</b></div><div class="mtot"><i class="p">150 g protein</i><i>190 g carbs</i><i>48 g fat</i></div></div>
   <div class="mealcard">
-    <div class="mh"><input class="time num" type="time" value="08:00"><input class="mname" value="Breakfast"><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="mh"><input class="time num" type="text" size="5" value="08:00"><input class="mname" value="Breakfast"><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="foodrow"><input class="field small" value="Oats"><input class="field small num" value="80"><span class="unit"><button aria-pressed="true">g</button><button>pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="foodrow"><input class="field small" value="Whey"><input class="field small num" value="30"><span class="unit"><button aria-pressed="true">g</button><button>pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="foodrow"><input class="field small" value="Banana"><input class="field small num" value="1"><span class="unit"><button>g</button><button aria-pressed="true">pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
@@ -1696,6 +1756,284 @@ body{overflow-x:hidden}
 </div>
 </template>
 
+<!-- ================= food data: search + scan (phone) ================= -->
+<template id="s-search">
+<div class="mk-status"><span class="num">10:16</span><span class="r">5G <span class="bat"></span></span></div>
+<main class="main">
+  <div class="page-head"><div><div class="hello">Your week</div><h1 class="h-xl">Plan</h1></div>
+    <div class="acts"><div class="seg"><button>Training</button><button aria-pressed="true">Meals</button></div></div></div>
+  <div class="mealcard">
+    <div class="mh"><input class="time num" type="text" size="5" value="13:00"><input class="mname" value="Lunch"><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  </div>
+</main>
+<nav class="tabs"><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Today</a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><rect x="3.5" y="4.5" width="17" height="16" rx="4"/><path d="M8 3v3M16 3v3M8 14v3M12 11v6M16 13v4"/></svg>Week</a><button type="button" class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M3.5 17 9 11.5l3.5 3.5L20.5 7"/><path d="M15 7h5.5v5.5"/></svg>Progress</a><a aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M2.5 12h2M19.5 12h2M6.5 7.5v9M17.5 7.5v9M4.5 9.5v5M19.5 9.5v5M6.5 12h11"/></svg>Plan</a></nav>
+<div class="sheet-back"><div class="sheet">
+  <div class="grab"></div>
+  <div><h3>Add to lunch</h3><span class="sub">Your foods first, then Milo's list, then packaged products.</span></div>
+  <div class="srch"><input class="field" value="chicken"><button class="btn ink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M8 9v6M11 9v6M14 9v6M17 9v6"/></svg>Scan</button></div>
+  <div class="fres">
+    <div class="fgrp">Your foods</div>
+    <button class="fr"><div><b>Chicken wrap</b><span class="sub">per piece</span></div><div class="fn"><span><b class="num">610</b> kcal</span><em class="num">42 g</em></div></button>
+    <div class="fgrp">Milo list <span>per 100 g</span></div>
+    <button class="fr"><div><b>Chicken breast, raw</b><span class="sub">Peito de frango cru</span></div><div class="fn"><span><b class="num">120</b> kcal</span><em class="num">22.5 g</em></div></button>
+    <button class="fr"><div><b>Chicken breast, grilled</b><span class="sub">Peito de frango grelhado</span></div><div class="fn"><span><b class="num">165</b> kcal</span><em class="num">31 g</em></div></button>
+    <button class="fr"><div><b>Chicken thigh, raw</b><span class="sub">Coxa de frango crua</span></div><div class="fn"><span><b class="num">177</b> kcal</span><em class="num">19.7 g</em></div></button>
+    <div class="fgrp">Packaged <span>Open Food Facts</span></div>
+    <button class="fr"><div><b>Sliced chicken breast</b><span class="sub">150 g pack · per 100 g</span></div><div class="fn"><span><b class="num">98</b> kcal</span><em class="num">21 g</em></div></button>
+  </div>
+  <p class="fine">Not there? <button class="link-btn" style="font-size:12.5px">Enter the label yourself</button></p>
+</div></div>
+</template>
+
+<template id="s-scan">
+<div class="cam">
+  <div class="mk-status w" style="position:absolute"><span class="num">08:12</span><span class="r">5G <span class="bat"></span></span></div>
+  <div class="cam-top"><button class="s-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg> Close</button><span>Scan a barcode</span><span style="width:84px"></span></div>
+  <div class="cam-view"><div class="tub"><div class="lbl"><b>WHEY</b><span>vanilla</span></div><div class="bc"></div></div><div class="frame"></div></div>
+  <div class="sheet cam-sheet">
+    <div class="grab"></div>
+    <div class="row" style="align-items:flex-start"><span class="hk-icon" style="background:var(--good-soft);color:var(--good)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="3"><path d="M5 12.5 10 17l9-10"/></svg></span><div><h3 style="font-size:21px">Whey protein, vanilla</h3><span class="sub">1 kg tub · found on Open Food Facts</span></div></div>
+    <div class="seg" style="align-self:flex-start"><button>Per 100 g</button><button aria-pressed="true">Per scoop · 30 g</button></div>
+    <div class="mac-in">
+      <label>Calories<span><input class="num" value="117"><em>kcal</em></span></label>
+      <label class="p">Protein<span><input class="num" value="23.4"><em>g</em></span></label>
+    </div>
+    <div class="row"><button class="btn ghost">Change</button><button class="btn primary" style="flex:1">Add to breakfast · 1 scoop</button></div>
+  </div>
+</div>
+</template>
+
+<!-- ================= desktop ================= -->
+
+<template id="d-today">
+<div class="shell">
+<aside class="side"><span class="brand"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><mask id="LG"><rect width="32" height="32" fill="#fff"/><circle cx="16" cy="16" r="3.2" fill="#000"/><circle cx="16" cy="16" r="10.6" fill="none" stroke="#000" stroke-width=".9"/><g fill="#000"><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(120 16 16)"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(240 16 16)"/></g></mask><circle cx="16" cy="16" r="14" fill="currentColor" mask="url(#LG)"/></svg></span>Milo</span><nav><a aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>Today</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><rect x="3.5" y="4.5" width="17" height="16" rx="4"/><path d="M8 3v3M16 3v3M8 14v3M12 11v6M16 13v4"/></svg><span>Week</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M3.5 17 9 11.5l3.5 3.5L20.5 7"/><path d="M15 7h5.5v5.5"/></svg><span>Progress</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M2.5 12h2M19.5 12h2M6.5 7.5v9M17.5 7.5v9M4.5 9.5v5M19.5 9.5v5M6.5 12h11"/></svg><span>Plan</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg><span>Settings</span></a></nav><a class="me"><span class="avatar">R</span><span><b style="font-size:14px">Rodas</b><span class="sub" style="display:block">12-day streak</span></span></a></aside>
+<main class="main">
+  <div class="page-head">
+    <div><div class="hello">Good evening, Rodas</div><h1 class="h-xl">Friday 16 October</h1></div>
+    <div class="acts"><span class="chip"><span class="flame"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.6 2.2c.4 3.1-1.3 4.6-2.9 6.3C8 10.3 6.5 12 6.5 14.8A5.5 5.5 0 0 0 12 20.5a5.5 5.5 0 0 0 5.5-5.6c0-2.6-1.4-4.1-2.3-5.1-.2 1.4-.9 2.3-1.8 2.7.6-3.4-.1-7.3-.8-10.3Z"/></svg></span>12-day streak</span><button class="btn ink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg> Quick log</button></div>
+  </div>
+  <div class="today-grid">
+    <div class="col">
+      <div class="card score">
+        <div><div class="big num">90<small>/100</small></div><div class="sub" style="margin-top:8px">Day score</div></div>
+        <div class="bars">
+          <div class="bar"><span>Training</span><span class="t"><i style="width:100%;background:var(--train)"></i></span><span class="v num">10/10</span></div>
+          <div class="bar"><span>Meals</span><span class="t"><i style="width:75%;background:var(--eat)"></i></span><span class="v num">3/4</span></div>
+          <div class="bar"><span>Weigh-in</span><span class="t"><i style="width:0;background:var(--weigh)"></i></span><span class="v num">in 4 d</span></div>
+        </div>
+      </div>
+      <div class="wk">
+        <div class="wd good"><span>M</span><span class="pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="3"><path d="M5 12.5 10 17l9-10"/></svg></span></div><div class="wd good"><span>T</span><span class="pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="3"><path d="M5 12.5 10 17l9-10"/></svg></span></div><div class="wd good"><span>W</span><span class="pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="3"><path d="M5 12.5 10 17l9-10"/></svg></span></div><div class="wd good"><span>T</span><span class="pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="3"><path d="M5 12.5 10 17l9-10"/></svg></span></div><div class="wd today"><span>F</span><span class="pip num">90</span></div><div class="wd"><span>S</span><span class="pip"></span></div><div class="wd"><span>S</span><span class="pip"></span></div>
+      </div>
+      <section>
+        <div class="spread" style="margin:6px 0 4px"><h2 class="h-l">Your day</h2><span class="sub">click to tick</span></div>
+        <div class="tl">
+          <button class="ti weigh later"><span class="time num">Tue</span><span class="rail"><span class="dot"></span><span class="ln"></span></span><span class="body"><b>Weigh-in <span class="pill mute">every 15 days</span></b><span>Next in 4 days · last 82.4 kg on 5 Oct</span></span></button>
+          <button class="ti eat done"><span class="time num">08:00</span><span class="rail"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="3"><path d="M5 12.5 10 17l9-10"/></svg></span><span class="ln"></span></span><span class="body"><b>Breakfast</b><span>Oats 80 g, Whey 30 g, Banana</span><span class="mac"><i>520 kcal</i><i class="p">36 g protein</i></span></span></button>
+          <button class="ti eat done"><span class="time num">13:00</span><span class="rail"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="3"><path d="M5 12.5 10 17l9-10"/></svg></span><span class="ln"></span></span><span class="body"><b>Lunch <span class="pill eat">Something else</span></b><span>Chicken wrap, instead of Chicken 150 g, Rice 100 g</span><span class="mac"><i>610 kcal</i><i class="p">42 g protein</i></span></span></button>
+          <button class="ti eat done"><span class="time num">16:30</span><span class="rail"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="3"><path d="M5 12.5 10 17l9-10"/></svg></span><span class="ln"></span></span><span class="body"><b>Snack</b><span>Greek yogurt 200 g</span><span class="mac"><i>190 kcal</i><i class="p">20 g protein</i></span></span></button>
+          <a class="ti train done"><span class="time num">18:00</span><span class="rail"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="3"><path d="M5 12.5 10 17l9-10"/></svg></span><span class="ln"></span></span><span class="body"><b>Upper body</b><span>10 of 10 sets · done · 58 min on Apple Watch</span></span></a>
+          <button class="ti eat next"><span class="time num">21:00</span><span class="rail"><span class="dot"></span><span class="ln"></span></span><span class="body"><b>Dinner <span class="pill eat">Next</span></b><span>Salmon 180 g, Rice 150 g</span><span class="mac"><i>570 kcal</i><i class="p">40 g protein</i></span></span></button>
+        </div>
+      </section>
+    </div>
+    <div class="col side-col">
+      <div class="hero done">
+        <div><div class="tag">Upper body · done</div><h3>Session done</h3><div class="meta">10 sets · 5.4 t lifted · 1 record</div></div>
+        <div class="wstats"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><rect x="6" y="6" width="12" height="12" rx="3.5"/><path d="M9 6V3h6v3M9 18v3h6v-3M12 10v2.5l1.5 1"/></svg>58 min</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M13 2.5 4.5 13.5H11l-1 8 8.5-11H12z"/></svg>412 kcal</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20Z"/></svg>128 avg · 164 max</span></div>
+        <a class="go">See the session <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <section class="card">
+        <div class="card-head"><h2 class="h-l">Today's session</h2><span class="sub">click to log</span></div>
+        <div class="slist">
+          <a class="srow"><div><b>Incline chest press</b><div class="sub"><span class="pill gold">PR</span> 70 kg · <span style="color:var(--good);font-weight:700">↑ 72.5 next time</span></div></div><span class="r num">12 · 12 · 12</span></a>
+          <a class="srow"><div><b>Lat pulldown</b><div class="sub">60 kg · 10–12 range</div></div><span class="r num">12 · 11 · 10</span></a>
+          <a class="srow"><div><b>Shoulder press</b><div class="sub">22 kg</div></div><span class="r num">10 · 10 · 9 · 8</span></a>
+          <a class="srow"><div><b>Treadmill</b><div class="sub">from Apple Watch · 186 kcal</div></div><span class="r num">22 min</span></a>
+        </div>
+      </section>
+    </div>
+    <div class="col side-col">
+      <section class="card fuel">
+        <div class="card-head" style="margin:0"><h2 class="h-l">Food today</h2><span class="sub">3 of 4 meals</span></div>
+        <div class="two">
+          <div><div class="k">Protein</div><div class="v num">98<small> / 150 g</small></div><div class="t"><i style="width:65%;background:var(--eat)"></i><i style="width:27%;background:var(--eat)"></i></div></div>
+          <div><div class="k">Calories</div><div class="v num">1,320<small> / 2,400</small></div><div class="t"><i style="width:55%;background:var(--ink)"></i><i style="width:24%;background:var(--ink)"></i></div></div>
+        </div>
+        <p class="note">Dinner brings <b>40 g</b> more: <b>138 g</b>, 12 g short of the target.</p>
+      </section>
+      <a class="card" style="display:block;color:inherit;text-decoration:none">
+        <div class="card-head"><span class="pill weigh">Body weight</span><span class="sub">goal 80 · next weigh-in Tue</span></div>
+        <div class="wbig"><b class="num">82.4</b><span>kg</span></div>
+        <svg class="chart" viewBox="0 0 300 110" style="--c:var(--weigh);margin-top:10px">
+          <line class="target-l" x1="0" y1="92" x2="300" y2="92"/>
+          <path class="area" d="M10,20 L60,30 L110,38 L160,46 L210,52 L260,60 L260,110 L10,110Z"/>
+          <path class="series" d="M10,20 L60,30 L110,38 L160,46 L210,52 L260,60"/>
+          <circle class="dot" cx="10" cy="20" r="3.5"/><circle class="dot" cx="60" cy="30" r="3.5"/><circle class="dot" cx="110" cy="38" r="3.5"/><circle class="dot" cx="160" cy="46" r="3.5"/><circle class="dot" cx="210" cy="52" r="3.5"/><circle class="dot-end" cx="260" cy="60" r="5"/>
+        </svg>
+      </a>
+      <section class="card">
+        <div class="card-head"><h2 class="h-l">This week</h2><span class="sub">day scores</span></div>
+        <div class="wbars" style="height:120px">
+          <div class="wb"><span class="stack"><i style="height:30%;background:var(--eat)"></i><i style="height:53%;background:var(--train)"></i></span><small>M</small></div>
+          <div class="wb"><span class="stack"><i style="height:35%;background:var(--eat)"></i><i style="height:53%;background:var(--train)"></i></span><small>T</small></div>
+          <div class="wb"><span class="stack"><i style="height:35%;background:var(--eat)"></i><i style="height:45%;background:var(--train)"></i></span><small>W</small></div>
+          <div class="wb"><span class="stack"><i style="height:26%;background:var(--eat)"></i><i style="height:53%;background:var(--train)"></i></span><small>T</small></div>
+          <div class="wb today"><span class="stack"><i style="height:26%;background:var(--eat)"></i><i style="height:53%;background:var(--train)"></i></span><small>F</small></div>
+          <div class="wb"><span class="stack empty"></span><small>S</small></div>
+          <div class="wb"><span class="stack empty"></span><small>S</small></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+</div>
+</template>
+
+<template id="d-plan">
+<div class="shell">
+<aside class="side"><span class="brand"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><mask id="LG"><rect width="32" height="32" fill="#fff"/><circle cx="16" cy="16" r="3.2" fill="#000"/><circle cx="16" cy="16" r="10.6" fill="none" stroke="#000" stroke-width=".9"/><g fill="#000"><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(120 16 16)"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(240 16 16)"/></g></mask><circle cx="16" cy="16" r="14" fill="currentColor" mask="url(#LG)"/></svg></span>Milo</span><nav><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>Today</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><rect x="3.5" y="4.5" width="17" height="16" rx="4"/><path d="M8 3v3M16 3v3M8 14v3M12 11v6M16 13v4"/></svg><span>Week</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M3.5 17 9 11.5l3.5 3.5L20.5 7"/><path d="M15 7h5.5v5.5"/></svg><span>Progress</span></a><a aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M2.5 12h2M19.5 12h2M6.5 7.5v9M17.5 7.5v9M4.5 9.5v5M19.5 9.5v5M6.5 12h11"/></svg><span>Plan</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg><span>Settings</span></a></nav><a class="me"><span class="avatar">R</span><span><b style="font-size:14px">Rodas</b><span class="sub" style="display:block">12-day streak</span></span></a></aside>
+<main class="main">
+  <div class="page-head"><div><div class="hello">Your week</div><h1 class="h-xl">Plan</h1></div>
+    <div class="acts"><div class="seg"><button>Training</button><button aria-pressed="true">Meals</button></div><button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg> Copy day</button></div></div>
+  <div class="dchips">
+    <button class="dchip"><b>Monday</b><span>4 meals · 1,880 kcal</span></button><button class="dchip"><b>Tuesday</b><span>4 meals · 1,880 kcal</span></button><button class="dchip"><b>Wednesday</b><span>4 meals · 1,910 kcal</span></button><button class="dchip today" aria-pressed="true"><b>Thursday</b><span>4 meals · 1,880 kcal</span></button><button class="dchip"><b>Friday</b><span>4 meals · 1,880 kcal</span></button><button class="dchip"><b>Saturday</b><span>3 meals · 2,150 kcal</span></button><button class="dchip"><b>Sunday</b><span>3 meals · 2,050 kcal</span></button>
+  </div>
+  <div class="plan-grid">
+    <div class="stack">
+      <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="daytot"><span class="sub">Thursday, all meals · protein target 150 g</span><b class="num">1,880 kcal</b></div><div class="mtot"><i class="p">150 g protein</i><i>190 g carbs</i><i>48 g fat</i></div></div>
+      <div class="meal-list">
+        <div class="mealcard"><div class="mh"><input class="time num" type="text" size="5" value="08:00"><input class="mname" value="Breakfast"><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="foodrow"><input class="field small" value="Oats"><input class="field small num" value="80"><span class="unit"><button aria-pressed="true">g</button><button>pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="foodrow"><input class="field small" value="Whey"><input class="field small num" value="30"><span class="unit"><button aria-pressed="true">g</button><button>pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="foodrow"><input class="field small" value="Banana"><input class="field small num" value="1"><span class="unit"><button>g</button><button aria-pressed="true">pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="mtot"><i>520 kcal</i><i class="p">36 g protein</i><i>76 g carbs</i><i>7 g fat</i></div></div>
+        <div class="mealcard"><div class="mh"><input class="time num" type="text" size="5" value="13:00"><input class="mname" value="Lunch"><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="foodrow"><input class="field small" value="Chicken breast"><input class="field small num" value="150"><span class="unit"><button aria-pressed="true">g</button><button>pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="foodrow"><input class="field small" value="Rice, raw"><input class="field small num" value="100"><span class="unit"><button aria-pressed="true">g</button><button>pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="mtot"><i>600 kcal</i><i class="p">54 g protein</i><i>78 g carbs</i><i>6 g fat</i></div></div>
+        <div class="mealcard"><div class="mh"><input class="time num" type="text" size="5" value="16:30"><input class="mname" value="Snack"><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="foodrow"><input class="field small" value="Greek yogurt"><input class="field small num" value="200"><span class="unit"><button aria-pressed="true">g</button><button>pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="mtot"><i>190 kcal</i><i class="p">20 g protein</i><i>8 g carbs</i><i>10 g fat</i></div></div>
+        <div class="mealcard"><div class="mh"><input class="time num" type="text" size="5" value="21:00"><input class="mname" value="Dinner"><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="foodrow"><input class="field small" value="Salmon"><input class="field small num" value="180"><span class="unit"><button aria-pressed="true">g</button><button>pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="foodrow"><input class="field small" value="Rice, cooked"><input class="field small num" value="150"><span class="unit"><button aria-pressed="true">g</button><button>pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="mtot"><i>570 kcal</i><i class="p">40 g protein</i><i>28 g carbs</i><i>25 g fat</i></div></div>
+      </div>
+    </div>
+    <section class="card">
+      <div class="card-head"><h2 class="h-l">My foods</h2><button class="btn primary" style="padding:9px 13px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg> Add</button></div>
+      <div class="ftable">
+        <div class="fh"><span>Food</span><span>kcal</span><span>protein</span><span>per</span></div>
+        <div><b>Banana</b><span class="num">105</span><span class="num p">1.3 g</span><span>piece</span></div>
+        <div><b>Chicken breast <i class="src">Milo list</i></b><span class="num">120</span><span class="num p">22.5 g</span><span>100 g</span></div>
+        <div><b>Chicken wrap</b><span class="num">610</span><span class="num p">42 g</span><span>piece</span></div>
+        <div><b>Greek yogurt <i class="src">scanned</i></b><span class="num">95</span><span class="num p">10 g</span><span>100 g</span></div>
+        <div><b>Oats</b><span class="num">372</span><span class="num p">13.5 g</span><span>100 g</span></div>
+        <div><b>Rice, cooked <i class="src">Milo list</i></b><span class="num">130</span><span class="num p">2.7 g</span><span>100 g</span></div>
+        <div><b>Rice, raw <i class="src">Milo list</i></b><span class="num">360</span><span class="num p">7 g</span><span>100 g</span></div>
+        <div><b>Salmon <i class="src">Milo list</i></b><span class="num">208</span><span class="num p">20 g</span><span>100 g</span></div>
+        <div><b>Whey, vanilla <i class="src">scanned</i></b><span class="num">117</span><span class="num p">23.4 g</span><span>scoop</span></div>
+      </div>
+      <p class="fine" style="margin-top:12px">A food you add is yours: edit its values and every meal that uses it updates.</p>
+    </section>
+  </div>
+</main>
+</div>
+</template>
+
+<template id="d-progress">
+<div class="shell">
+<aside class="side"><span class="brand"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><mask id="LG"><rect width="32" height="32" fill="#fff"/><circle cx="16" cy="16" r="3.2" fill="#000"/><circle cx="16" cy="16" r="10.6" fill="none" stroke="#000" stroke-width=".9"/><g fill="#000"><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(120 16 16)"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(240 16 16)"/></g></mask><circle cx="16" cy="16" r="14" fill="currentColor" mask="url(#LG)"/></svg></span>Milo</span><nav><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>Today</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><rect x="3.5" y="4.5" width="17" height="16" rx="4"/><path d="M8 3v3M16 3v3M8 14v3M12 11v6M16 13v4"/></svg><span>Week</span></a><a aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M3.5 17 9 11.5l3.5 3.5L20.5 7"/><path d="M15 7h5.5v5.5"/></svg><span>Progress</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M2.5 12h2M19.5 12h2M6.5 7.5v9M17.5 7.5v9M4.5 9.5v5M19.5 9.5v5M6.5 12h11"/></svg><span>Plan</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg><span>Settings</span></a></nav><a class="me"><span class="avatar">R</span><span><b style="font-size:14px">Rodas</b><span class="sub" style="display:block">12-day streak</span></span></a></aside>
+<main class="main">
+  <div class="page-head"><div><div class="hello">Weight, lifts and records</div><h1 class="h-xl">Progress</h1></div>
+    <div class="acts"><div class="seg"><button>1M</button><button aria-pressed="true">3M</button><button>1Y</button><button>All</button></div></div></div>
+  <div class="prog-grid">
+    <div class="stack">
+      <section class="card">
+        <div class="card-head"><h2 class="h-l">Incline chest press</h2><div class="seg"><button aria-pressed="true">Est. 1RM</button><button>Best load</button></div></div>
+        <div class="row" style="align-items:flex-end;justify-content:space-between"><div class="wbig"><b class="num">98</b><span>kg</span></div><div class="row"><span class="pill good">+11 kg since July</span><span class="pill gold">12-rep record</span></div></div>
+        <svg class="chart" viewBox="0 0 560 190" style="--c:var(--train);margin-top:14px">
+          <line class="grid-l" x1="0" y1="20" x2="560" y2="20"/><line class="grid-l" x1="0" y1="85" x2="560" y2="85"/><line class="grid-l" x1="0" y1="150" x2="560" y2="150"/>
+          <text class="ax" x="0" y="15">100</text><text class="ax" x="0" y="80">93</text><text class="ax" x="0" y="145">86</text>
+          <path class="area" d="M40,160 L90,152 L140,142 L190,136 L240,126 L290,116 L340,104 L390,90 L440,72 L490,62 L530,44 L530,170 L40,170Z"/>
+          <path class="series" d="M40,160 L90,152 L140,142 L190,136 L240,126 L290,116 L340,104 L390,90 L440,72 L490,62 L530,44"/>
+          <circle class="dot" cx="140" cy="142" r="3.5"/><circle class="dot" cx="240" cy="126" r="3.5"/><circle class="dot" cx="340" cy="104" r="3.5"/><circle class="dot" cx="440" cy="72" r="3.5"/><circle class="dot-pr" cx="530" cy="44" r="6"/>
+          <text class="ax" x="34" y="186">Jul</text><text class="ax" x="190" y="186">Aug</text><text class="ax" x="350" y="186">Sep</text><text class="ax" x="500" y="186">Oct</text>
+        </svg>
+        <div class="spread" style="margin:14px 0 10px"><h4 class="h-m">Rep records</h4><span class="sub">heaviest for that many reps</span></div>
+        <div class="rr" style="grid-template-columns:repeat(6,1fr)">
+          <div><small>3 reps</small><b class="num">85<small> kg</small></b><span>28 Aug</span></div>
+          <div><small>5 reps</small><b class="num">80<small> kg</small></b><span>18 Sep</span></div>
+          <div><small>8 reps</small><b class="num">75<small> kg</small></b><span>2 Oct</span></div>
+          <div><small>10 reps</small><b class="num">70<small> kg</small></b><span>9 Oct</span></div>
+          <div class="new"><small>12 · new</small><b class="num">70<small> kg</small></b><span>16 Oct</span></div>
+          <div class="none"><small>15 reps</small><b>–</b><span>not yet</span></div>
+        </div>
+      </section>
+    </div>
+    <div class="stack">
+      <section class="card">
+        <div class="card-head"><h2 class="h-l">Lifts</h2><span class="sub">est. 1RM, kg</span></div>
+        <div class="lifts">
+          <button class="lift" style="background:var(--card2);margin:0 -10px;padding:12px 10px;border-radius:14px;width:calc(100% + 20px)"><div><b>Incline chest press</b><span class="sub"><span class="pill gold">PR</span> 12-rep record this week</span></div><svg viewBox="0 0 84 30"><polyline points="2,26 14,24 26,22 38,19 50,17 62,12 74,9 82,5" fill="none" stroke="var(--train)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="82" cy="5" r="3" fill="var(--gold)"/></svg><span class="val num">98</span></button>
+          <button class="lift"><div><b>Lat pulldown</b><span class="sub">65 kg × 10 · Wed</span></div><svg viewBox="0 0 84 30"><polyline points="2,22 14,21 26,22 38,18 50,17 62,15 74,13 82,12" fill="none" stroke="var(--train)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="val num">87</span></button>
+          <button class="lift"><div><b>Leg press</b><span class="sub">160 kg × 10 · Mon</span></div><svg viewBox="0 0 84 30"><polyline points="2,25 14,22 26,20 38,20 50,16 62,14 74,14 82,10" fill="none" stroke="var(--train)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="val num">213</span></button>
+          <button class="lift"><div><b>Shoulder press</b><span class="sub">22 kg × 10 · last Thu</span></div><svg viewBox="0 0 84 30"><polyline points="2,18 14,18 26,16 38,17 50,15 62,15 74,14 82,13" fill="none" stroke="var(--train)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="val num">29</span></button>
+          <button class="lift"><div><b>Seated row</b><span class="sub">55 kg × 12 · Wed</span></div><svg viewBox="0 0 84 30"><polyline points="2,24 14,23 26,20 38,19 50,19 62,17 74,15 82,14" fill="none" stroke="var(--train)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="val num">77</span></button>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-head"><h2 class="h-l">Records</h2><span class="sub">newest first</span></div>
+        <div class="rec"><span class="m"><svg viewBox="0 0 24 24" fill="none" stroke="#2B1D00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l-2 6h-4z"/><circle cx="12" cy="15" r="6"/><path d="m12 12.2.9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z" fill="#2B1D00" stroke-width="1"/></svg></span><div><b>Incline chest press · 12 reps</b><span class="sub">Friday 16 October</span></div><span class="r num">67.5 → 70 kg</span></div>
+        <div class="rec"><span class="m"><svg viewBox="0 0 24 24" fill="none" stroke="#2B1D00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l-2 6h-4z"/><circle cx="12" cy="15" r="6"/><path d="m12 12.2.9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z" fill="#2B1D00" stroke-width="1"/></svg></span><div><b>Lat pulldown · est. 1RM</b><span class="sub">Wednesday 14 October</span></div><span class="r num">84 → 87 kg</span></div>
+        <div class="rec"><span class="m"><svg viewBox="0 0 24 24" fill="none" stroke="#2B1D00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l-2 6h-4z"/><circle cx="12" cy="15" r="6"/><path d="m12 12.2.9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z" fill="#2B1D00" stroke-width="1"/></svg></span><div><b>Leg press · 5 reps</b><span class="sub">Monday 12 October</span></div><span class="r num">180 → 185 kg</span></div>
+      </section>
+    </div>
+  </div>
+</main>
+</div>
+</template>
+
+<template id="d-settings">
+<div class="shell">
+<aside class="side"><span class="brand"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><mask id="LG"><rect width="32" height="32" fill="#fff"/><circle cx="16" cy="16" r="3.2" fill="#000"/><circle cx="16" cy="16" r="10.6" fill="none" stroke="#000" stroke-width=".9"/><g fill="#000"><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(120 16 16)"/><rect x="13.4" y="5.2" width="5.2" height="3" rx="1.5" transform="rotate(240 16 16)"/></g></mask><circle cx="16" cy="16" r="14" fill="currentColor" mask="url(#LG)"/></svg></span>Milo</span><nav><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>Today</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><rect x="3.5" y="4.5" width="17" height="16" rx="4"/><path d="M8 3v3M16 3v3M8 14v3M12 11v6M16 13v4"/></svg><span>Week</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M3.5 17 9 11.5l3.5 3.5L20.5 7"/><path d="M15 7h5.5v5.5"/></svg><span>Progress</span></a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M2.5 12h2M19.5 12h2M6.5 7.5v9M17.5 7.5v9M4.5 9.5v5M19.5 9.5v5M6.5 12h11"/></svg><span>Plan</span></a><a aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg><span>Settings</span></a></nav><a class="me"><span class="avatar">R</span><span><b style="font-size:14px">Rodas</b><span class="sub" style="display:block">12-day streak</span></span></a></aside>
+<main class="main">
+  <div class="page-head"><div><div class="hello">Rodas</div><h1 class="h-xl">Settings</h1></div><span class="sync"><i></i>Saved</span></div>
+  <div class="set-grid">
+    <div class="stack">
+      <section class="set-card">
+        <h3>Training</h3>
+        <div class="set-row"><div><b>Rest between sets</b><span class="sub">The timer in session mode starts after each set.</span></div><div class="seg"><button>1:00</button><button aria-pressed="true">1:30</button><button>2:00</button><button>3:00</button></div></div>
+        <div class="set-row"><div><b>Weigh-in every</b><span class="sub">Next one Tuesday 20 Oct. On the other days Today shows the countdown.</span></div><div class="seg"><button>Day</button><button>7 d</button><button aria-pressed="true">15 d</button><button>30 d</button></div></div>
+        <div class="set-row"><div><b>Weight goal</b><span class="sub">80 kg · shown on Progress.</span></div><a class="btn">Edit</a></div>
+      </section>
+      <section class="set-card">
+        <h3>Food</h3>
+        <div class="set-row"><div><b>Daily protein</b><span class="sub">Shown on Today against what you eat.</span></div><div class="ctl"><input class="field small num" value="150" style="width:84px;text-align:right"><span class="sub">g</span></div></div>
+        <div class="set-row"><div><b>Daily calories</b><span class="sub">Leave empty to hide calories.</span></div><div class="ctl"><input class="field small num" value="2400" style="width:84px;text-align:right"><span class="sub">kcal</span></div></div>
+      </section>
+    </div>
+    <div class="stack">
+      <section class="set-card">
+        <h3>Reminders</h3>
+        <div class="set-row"><div><b>On this computer <span class="pill mute">Off</span></b><span class="sub">Turned on for your iPhone. Turn on here too to get them on this computer.</span></div><button class="btn primary">Turn on here</button></div>
+        <div class="set-row"><div><b>Meals</b><span class="sub">At each meal's time, with what's on the plate.</span></div><button class="sw" role="switch" aria-checked="true"></button></div>
+        <div class="set-row"><div><b>Workout</b><span class="sub">Training days at</span></div><div class="ctl"><input class="field small num" type="text" size="5" value="18:00" style="width:110px"><button class="sw" role="switch" aria-checked="true"></button></div></div>
+        <div class="set-row"><div><b>Weigh-in day</b><span class="sub">On the day it's due, at</span></div><div class="ctl"><input class="field small num" type="text" size="5" value="08:00" style="width:110px"><button class="sw" role="switch" aria-checked="true"></button></div></div>
+        <div class="set-row"><div><b>Streak at risk</b><span class="sub">Only if today is still under 60, at</span></div><div class="ctl"><input class="field small num" type="text" size="5" value="21:00" style="width:110px"><button class="sw" role="switch" aria-checked="true"></button></div></div>
+      </section>
+      <section class="set-card">
+        <h3>Apple Watch &amp; Health</h3>
+        <div class="set-row"><div class="row" style="align-items:flex-start"><span class="hk-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20Z"/></svg></span><div><b>Connected <span class="pill good">Synced 19:12</span></b><span class="sub">Last: Upper body, 58 min, 412 kcal. Weight 82.4 kg on 5 Oct. Set up from your iPhone.</span></div></div><button class="btn danger">Revoke key</button></div>
+      </section>
+    </div>
+  </div>
+</main>
+</div>
+</template>
+
 <script>
 (() => {
   const css = document.getElementById('app-css').textContent + document.getElementById('ext-css').textContent;
@@ -1712,10 +2050,23 @@ body{overflow-x:hidden}
     f.srcdoc = `<!doctype html><html lang="en" data-theme="${theme()}"><head><meta charset="utf-8"><meta name="viewport" content="width=390"><style>${font}${css}</style></head><body>${tpl.innerHTML}</body></html>`;
     ph.appendChild(f);
   });
+  const fit = () => document.querySelectorAll('.dk').forEach(dk => {
+    const f = dk.querySelector('iframe'); const k = dk.clientWidth / 1440;
+    f.style.transform = `scale(${k})`; dk.style.height = (30 + f.offsetHeight * k) + 'px';
+  });
+  document.querySelectorAll('.dk[data-s]').forEach(dk => {
+    const tpl = document.getElementById(dk.dataset.s);
+    const f = document.createElement('iframe');
+    f.title = dk.nextElementSibling ? dk.nextElementSibling.textContent : dk.dataset.s;
+    f.style.height = (dk.dataset.h || 900) + 'px';
+    f.srcdoc = `<!doctype html><html lang="en" class="dk" data-theme="${theme()}"><head><meta charset="utf-8"><style>${font}${css}</style></head><body>${tpl.innerHTML}</body></html>`;
+    dk.appendChild(f);
+  });
+  fit(); addEventListener('resize', fit);
   const set = t => {
     document.documentElement.dataset.theme = t;
     document.querySelectorAll('[data-t]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === t)));
-    document.querySelectorAll('.ph iframe').forEach(f => { try { f.contentDocument.documentElement.dataset.theme = t; } catch (e) { } });
+    document.querySelectorAll('.ph iframe, .dk iframe').forEach(f => { try { f.contentDocument.documentElement.dataset.theme = t; } catch (e) { } });
   };
   document.querySelectorAll('[data-t]').forEach(b => b.addEventListener('click', () => set(b.dataset.t)));
   if (q) set(q);
