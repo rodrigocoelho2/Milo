@@ -7,7 +7,7 @@
   BO.screens.settings = async function settings(root) {
     let users = BO.me.isAdmin ? await BO.api('GET', '/api/admin/users') : [];
     let prefs = await BO.settings(true);
-    const [plan, foods] = await Promise.all([BO.api('GET', '/api/plan').catch(() => null), BO.loadFoods(true).catch(() => null)]);
+    const [plan, foods, weights] = await Promise.all([BO.api('GET', '/api/plan').catch(() => null), BO.loadFoods(true).catch(() => null), BO.api('GET', '/api/weights').catch(() => null)]);
 
     /** The plan's food per day, on average over the days with values: Settings shows it, the plan sets it. */
     function weekAverage() {
@@ -22,6 +22,15 @@
     let panel = null;          // 'password' | 'delete' while one of those forms is open
     let confirmUser = null;    // user id waiting for "Delete" confirmation
     const tempPasswords = {};  // user id → temporary password just set
+
+    /** When the next weigh-in is, in words. */
+    function weighText() {
+      const every = prefs.weighEveryDays || 1;
+      if (every <= 1) return 'Today shows it every morning.';
+      const w = weights ? BO.weighIn(weights.entries, every, BO.localToday()) : null;
+      const next = !w ? '' : w.entry ? `Next one ${BO.fullDate(w.next).replace(/ \d{4}$/, '')}. ` : w.due ? 'Due today. ' : `Next one ${BO.fullDate(w.next).replace(/ \d{4}$/, '')}. `;
+      return `${next}On the other days Today shows the countdown, and the score never counts it.`;
+    }
 
     function render() {
       const theme = BO.theme();
@@ -59,6 +68,8 @@
               <h3 id="h-train">Training</h3>
               <div class="set-row"><div><b>Rest between sets</b><span class="sub">The timer in session mode starts after each set.</span></div>
                 <div class="seg" role="group" aria-label="Rest between sets">${[60, 90, 120, 180].map(v => `<button type="button" data-rest="${v}" aria-pressed="${prefs.restSeconds === v}">${BO.clock(v)}</button>`).join('')}</div></div>
+              <div class="set-row"><div><b>Weigh-in every</b><span class="sub">${weighText()}</span></div>
+                <div class="seg" role="group" aria-label="Weigh-in every">${[...new Set([1, 7, 15, 30, prefs.weighEveryDays || 1])].sort((a, b) => a - b).map(v => `<button type="button" data-weigh-every="${v}" aria-pressed="${(prefs.weighEveryDays || 1) === v}">${v === 1 ? 'Day' : `${v} d`}</button>`).join('')}</div></div>
               <div class="set-row"><div><b>Weight goal</b><span class="sub">${prefs.weightGoalKg != null ? `${BO.kg(prefs.weightGoalKg)} kg` : 'None set'} · shown on Progress.</span></div><a class="btn" href="/progress" data-link>Edit</a></div>
             </section>
 
@@ -113,6 +124,11 @@
       const panelBtn = t.closest('[data-panel]');
       if (panelBtn) { panel = panel === panelBtn.dataset.panel ? null : panelBtn.dataset.panel; render(); return; }
 
+      const everyBtn = t.closest('[data-weigh-every]');
+      if (everyBtn) {
+        try { prefs = await BO.saveSettings({ weighEveryDays: Number(everyBtn.dataset.weighEvery) }); render(); } catch (e) { }
+        return;
+      }
       const restBtn = t.closest('[data-rest]');
       if (restBtn) {
         try { prefs = await BO.saveSettings({ restSeconds: Number(restBtn.dataset.rest) }); render(); } catch (e) { }

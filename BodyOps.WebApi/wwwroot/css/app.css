@@ -957,3 +957,8 @@ canvas.confetti{position:fixed; inset:0; z-index:90; pointer-events:none; width:
 /* Plan › Meals sits next to My foods on a computer: one column of meals until there is room for two. */
 @media (min-width: 1000px){ .plan-grid .meal-list{grid-template-columns:1fr} }
 @media (min-width: 1500px){ .plan-grid .meal-list{grid-template-columns:1fr 1fr} }
+/* the weigh-in when it isn't due yet, and on the day it is */
+.ti.later .dot{background:none; box-shadow:none; outline:2px dashed var(--line); outline-offset:-2px}
+.ti.later .body{background:none; box-shadow:inset 0 0 0 1.5px var(--line)}
+.ti.later .body b{color:var(--mute)}
+.ti.weigh.due .body{box-shadow:inset 0 0 0 2px var(--weigh), var(--shadow)}

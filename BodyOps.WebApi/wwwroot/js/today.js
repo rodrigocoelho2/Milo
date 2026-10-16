@@ -39,11 +39,13 @@
   BO.sessionName = day => day.name || (day.exercises.length === 1 ? day.exercises[0].name : 'Workout');
 
   BO.screens.today = async function today(root, query) {
-    const [first, streak, weights] = await Promise.all([
+    const [first, streak, weights, prefs] = await Promise.all([
       BO.api('GET', '/api/days/week' + (query.date ? `?date=${encodeURIComponent(query.date)}` : '')),
       BO.api('GET', '/api/days/streak').catch(() => null),
       BO.api('GET', '/api/weights').catch(() => ({ entries: [], goalKg: null })),
+      BO.settings().catch(() => ({ weighEveryDays: 1 })),
     ]);
+    const every = prefs.weighEveryDays || 1;
     let week = first;
     let date = query.date && week.days.some(d => d.date === query.date) ? query.date : (week.days.some(d => d.date === week.today) ? week.today : week.from);
     let shownScore = 0;
@@ -77,17 +79,24 @@
     }
 
     function weighIn(d) {
-      const entry = weights.entries.find(e => e.date === d.date);
-      const before = weights.entries.filter(e => e.date < d.date).at(-1);
-      if (!entry) return { done: false, sub: before ? `Last ${BO.kg(before.weightKg)} kg · ${BO.shortDate(before.date)}` : 'Step on the scale' };
-      return { done: true, sub: `${BO.kg(entry.weightKg)} kg${before ? ` · ${BO.signed(entry.weightKg - before.weightKg)} vs ${BO.DAYS[BO.weekday(before.date) - 1]}` : ''}` };
+      const w = BO.weighIn(weights.entries, every, d.date);
+      const before = w.last;
+      if (w.entry) return { done: true, sub: `${BO.kg(w.entry.weightKg)} kg${before ? ` · ${BO.signed(w.entry.weightKg - before.weightKg)} vs ${every > 1 ? BO.shortDate(before.date) : BO.DAYS[BO.weekday(before.date) - 1]}` : ''}` };
+      if (every > 1 && !w.due) {
+        return { done: false, later: true, next: w.next, sub: `Next in ${BO.plural(w.inDays, 'day')}${before ? ` · last ${BO.kg(before.weightKg)} kg on ${BO.shortDate(before.date)}` : ''}` };
+      }
+      if (every > 1 && before) return { done: false, due: true, sub: `${BO.daysBetween(before.date, d.date)} days since ${BO.kg(before.weightKg)} kg · before breakfast` };
+      return { done: false, due: every > 1, sub: before ? `Last ${BO.kg(before.weightKg)} kg · ${BO.shortDate(before.date)}` : 'Step on the scale' };
     }
 
     /** Weigh-in, meals and the workout, in the order of the day. */
     function items(d) {
       const list = [];
       const w = weighIn(d);
-      list.push({ kind: 'weigh', key: 6 * 60, time: 'AM', name: 'Weigh-in', sub: w.sub, done: w.done || d.weightKg != null });
+      list.push({
+        kind: 'weigh', key: 6 * 60, time: w.later ? BO.DAYS_SHORT[BO.weekday(w.next) - 1] : 'AM', name: 'Weigh-in', sub: w.sub,
+        done: w.done || d.weightKg != null, later: w.later, due: w.due,
+      });
       let last = 7 * 60;
       const timed = d.meals.some(m => m.time);
       d.meals.forEach((m, i) => {
@@ -106,15 +115,18 @@
         });
       }
       list.sort((a, b) => a.key - b.key);
-      const next = list.findIndex(x => !x.done && !x.missed && !x.live);
+      const next = list.findIndex(x => !x.done && !x.missed && !x.live && !x.later);
       if (next >= 0) list[next].next = true;
       return list;
     }
 
     function timeline(d) {
       return `<div class="tl">${items(d).map(x => {
-        const cls = `ti ${x.kind}${x.done ? ' done' : ''}${x.live ? ' live' : ''}${x.next ? ' next' : ''}${x.missed ? ' missed' : ''}`;
-        const pill = x.live ? '<span class="pill train">Live</span>' : x.next ? `<span class="pill ${x.kind}">Next</span>` : x.swap ? '<span class="pill eat">Something else</span>' : '';
+        const cls = `ti ${x.kind}${x.done ? ' done' : ''}${x.live ? ' live' : ''}${x.next ? ' next' : ''}${x.missed ? ' missed' : ''}${x.later ? ' later' : ''}${x.due && !x.done ? ' due' : ''}`;
+        const pill = x.live ? '<span class="pill train">Live</span>'
+          : x.later ? `<span class="pill mute">every ${every} days</span>`
+            : x.due && !x.done ? '<span class="pill weigh">Due today</span>'
+              : x.next ? `<span class="pill ${x.kind}">Next</span>` : x.swap ? '<span class="pill eat">Something else</span>' : '';
         const inner = `<span class="time num">${esc(x.time)}</span>
           <span class="rail"><span class="dot">${x.done ? icons.check : ''}</span><span class="ln"></span></span>
           <span class="body"><b>${esc(x.name)} ${pill}</b><span>${esc(x.sub)}</span>${x.mac ? `<span class="mac">${x.mac}</span>` : ''}</span>`;
@@ -158,7 +170,7 @@
         <div class="bars">
           ${d.setsPlanned ? bar('Training', d.setsDone / d.setsPlanned, 'var(--train)', `${d.setsDone}/${d.setsPlanned}`) : bar('Training', 0, 'var(--train)', 'rest')}
           ${d.meals.length ? bar('Meals', eaten / d.meals.length, 'var(--eat)', `${eaten}/${d.meals.length}`) : bar('Meals', 0, 'var(--eat)', '–')}
-          ${bar('Weigh-in', d.weightKg != null ? 1 : 0, 'var(--weigh)', d.weightKg != null ? 'done' : '–')}
+          ${(() => { const w = weighIn(d); return bar('Weigh-in', d.weightKg != null ? 1 : 0, 'var(--weigh)', d.weightKg != null ? 'done' : w.later ? `in ${BO.daysBetween(d.date, w.next)} d` : w.due ? 'today' : '–'); })()}
         </div></div>`;
     }
 

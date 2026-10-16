@@ -158,6 +158,20 @@ BO.parseDate = iso => { const [y, m, d] = iso.split('-').map(Number); return new
 BO.iso = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 BO.addDays = (iso, n) => { const d = BO.parseDate(iso); d.setDate(d.getDate() + n); return BO.iso(d); };
 BO.weekday = iso => { const day = BO.parseDate(iso).getDay(); return day === 0 ? 7 : day; };
+/** Days from a to b (both yyyy-MM-dd). */
+BO.daysBetween = (a, b) => Math.round((BO.parseDate(b) - BO.parseDate(a)) / 86400000);
+/**
+ * The weigh-in on a day for someone who weighs in every `every` days (mirrors WeighInSchedule on the server):
+ * { entry (that day's), last (the one before), due (the scale is waiting), next (yyyy-MM-dd of the next one), inDays }.
+ */
+BO.weighIn = (entries, every, date) => {
+  const entry = entries.find(e => e.date === date) || null;
+  const last = entries.filter(e => e.date < date).at(-1) || null;
+  every = Math.max(1, every || 1);
+  if (entry) return { entry, last, due: false, next: BO.addDays(date, every), inDays: every };
+  const next = !last || every <= 1 ? date : (BO.addDays(last.date, every) <= date ? date : BO.addDays(last.date, every));
+  return { entry, last, due: next === date, next, inDays: BO.daysBetween(date, next), every };
+};
 BO.monday = iso => BO.addDays(iso, 1 - BO.weekday(iso));
 BO.localToday = () => BO.iso(new Date());
 BO.dayNum = iso => BO.parseDate(iso).getDate();

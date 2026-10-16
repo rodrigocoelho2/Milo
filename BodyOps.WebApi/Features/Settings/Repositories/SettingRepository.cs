@@ -14,6 +14,19 @@ internal sealed class SettingRepository(ISqlConnectionFactory connectionFactory)
         QuerySingleOrDefaultAsync<UserSetting>("[dbo].[UserSettingGet]", new { UserID = userId });
 
     /// <inheritdoc />
-    public async Task<UserSetting> SaveAsync(long userId, decimal? weightGoalKg, int? restSeconds) =>
-        (await QuerySingleOrDefaultAsync<UserSetting>("[dbo].[UserSettingSave]", new { UserID = userId, WeightGoalKg = weightGoalKg, RestSeconds = restSeconds }))!;
+    public async Task<UserSetting> SaveAsync(long userId, UserSetting setting) =>
+        (await QuerySingleOrDefaultAsync<UserSetting>("[dbo].[UserSettingSave]", new
+        {
+            UserID = userId,
+            setting.WeightGoalKg,
+            RestSeconds = (short?)setting.RestSeconds,
+            WeighEveryDays = (byte?)setting.WeighEveryDays,
+            setting.RemindMeals,
+            setting.RemindWorkout,
+            setting.WorkoutTime,
+            setting.RemindWeighIn,
+            setting.WeighInTime,
+            setting.RemindStreak,
+            setting.StreakTime,
+        }))!;
 }

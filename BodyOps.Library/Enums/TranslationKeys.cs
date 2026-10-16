@@ -112,4 +112,7 @@ public enum TranslationKeys
 
     /// <summary>A barcode is not 8–14 digits.</summary>
     InvalidBarcode,
+
+    /// <summary>The weigh-in interval is out of range.</summary>
+    InvalidWeighEvery,
 }

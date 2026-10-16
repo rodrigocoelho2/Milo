@@ -81,6 +81,7 @@ internal sealed class GlobalizationHelper : IGlobalizationHelper
 
         // Weights
         [nameof(TranslationKeys.InvalidWeight)] = "Weight must be between {0} and {1} kg.",
+        [nameof(TranslationKeys.InvalidWeighEvery)] = "Weigh in every {0} to {1} days.",
         [nameof(TranslationKeys.InvalidRest)] = "Rest must be between {0} and {1} seconds.",
 
         // Backups

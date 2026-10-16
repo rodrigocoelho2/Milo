@@ -74,7 +74,13 @@ internal sealed class BackupService(
         var backup = new BackupDTO
         {
             ExportedAt = _timeProvider.GetUtcNow().UtcDateTime,
-            Settings = new BackupSettingsDTO { WeightGoalKg = setting?.WeightGoalKg, RestSeconds = setting?.RestSeconds },
+            Settings = new BackupSettingsDTO
+            {
+                WeightGoalKg = setting?.WeightGoalKg,
+                RestSeconds = setting?.RestSeconds,
+                WeighEveryDays = setting?.WeighEveryDays,
+                Reminders = SettingService.ToDTO(setting).Reminders,
+            },
             Plan = Enumerable.Range(1, 7).Select(weekday => new BackupPlanDayDTO
             {
                 Weekday = weekday,
@@ -305,7 +311,23 @@ internal sealed class BackupService(
 
         var goal = backup.Settings?.WeightGoalKg is >= WeightService.MinWeightKg and <= WeightService.MaxWeightKg ? backup.Settings.WeightGoalKg : null;
         var rest = backup.Settings?.RestSeconds is >= SettingService.MinRestSeconds and <= SettingService.MaxRestSeconds ? backup.Settings.RestSeconds : null;
-        await _settingRepository.SaveAsync(userId, goal is { } value ? Math.Round(value, 1) : null, rest);
+        var every = backup.Settings?.WeighEveryDays is >= 1 and <= WeighInSchedule.MaxDays ? backup.Settings.WeighEveryDays : null;
+        var reminders = backup.Settings?.Reminders;
+        TimeSpan? Time(string? text) => MealTimeText.TryParse(text, out var time) ? time : null;
+        await _settingRepository.SaveAsync(userId, new BodyOps.WebApi.Features.Settings.Models.Entities.UserSetting
+        {
+            UserID = userId,
+            WeightGoalKg = goal is { } value ? Math.Round(value, 1) : null,
+            RestSeconds = rest,
+            WeighEveryDays = every,
+            RemindMeals = reminders?.Meals,
+            RemindWorkout = reminders?.Workout,
+            WorkoutTime = Time(reminders?.WorkoutTime),
+            RemindWeighIn = reminders?.WeighIn,
+            WeighInTime = Time(reminders?.WeighInTime),
+            RemindStreak = reminders?.Streak,
+            StreakTime = Time(reminders?.StreakTime),
+        });
         return result;
     }
 }

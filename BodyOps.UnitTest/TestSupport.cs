@@ -542,9 +542,11 @@ internal sealed class FakeSettingRepository : ISettingRepository
 
     public Task<UserSetting?> GetAsync(long userId) => Task.FromResult(Setting);
 
-    public Task<UserSetting> SaveAsync(long userId, decimal? weightGoalKg, int? restSeconds)
+    public Task<UserSetting> SaveAsync(long userId, UserSetting setting)
     {
-        Setting = new UserSetting { UserID = userId, WeightGoalKg = weightGoalKg, RestSeconds = restSeconds, UpdatedAt = DateTime.UtcNow };
+        setting.UserID = userId;
+        setting.UpdatedAt = DateTime.UtcNow;
+        Setting = setting;
         return Task.FromResult(Setting);
     }
 }

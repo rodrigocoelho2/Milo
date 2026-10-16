@@ -15,11 +15,10 @@ internal interface ISettingRepository
     Task<UserSetting?> GetAsync(long userId);
 
     /// <summary>
-    /// Saves the settings (dbo.UserSettingSave).
+    /// Saves the settings (dbo.UserSettingSave): every column, null = the default.
     /// </summary>
     /// <param name="userId">The account.</param>
-    /// <param name="weightGoalKg">The weight goal.</param>
-    /// <param name="restSeconds">The rest between sets, or null for the default.</param>
+    /// <param name="setting">The settings.</param>
     /// <returns>The saved settings.</returns>
-    Task<UserSetting> SaveAsync(long userId, decimal? weightGoalKg, int? restSeconds);
+    Task<UserSetting> SaveAsync(long userId, UserSetting setting);
 }

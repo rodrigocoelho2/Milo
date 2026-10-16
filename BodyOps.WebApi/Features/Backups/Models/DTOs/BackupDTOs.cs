@@ -1,5 +1,6 @@
 using BodyOps.Library.Enums;
 using BodyOps.WebApi.Features.Days.Models.DTOs;
+using BodyOps.WebApi.Features.Settings.Models.DTOs;
 
 namespace BodyOps.WebApi.Features.Backups.Models.DTOs;
 
@@ -82,6 +83,12 @@ public sealed class BackupSettingsDTO
 
     /// <summary>Gets or sets the rest between sets in seconds, or null for the default.</summary>
     public int? RestSeconds { get; set; }
+
+    /// <summary>Gets or sets how often the account weighs in (days), or null for every day.</summary>
+    public int? WeighEveryDays { get; set; }
+
+    /// <summary>Gets or sets the reminders (older backups have none).</summary>
+    public ReminderSettingsDTO? Reminders { get; set; }
 }
 
 /// <summary>
