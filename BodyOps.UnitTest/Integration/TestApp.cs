@@ -29,6 +29,7 @@ internal sealed class TestApp : WebApplicationFactory<Program>
         builder.UseSetting("BodyOps:DataDirectory", _data.Path);
         builder.UseSetting("BodyOps:AllowRegistration", _allowRegistration ? "true" : "false");
         builder.UseSetting("BodyOps:AuthAttemptsPerMinute", "1000");
+        builder.UseSetting("BodyOps:RemindersEnabled", "false");
     }
 
     protected override void Dispose(bool disposing)

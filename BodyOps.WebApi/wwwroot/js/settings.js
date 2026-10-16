@@ -1,8 +1,8 @@
-/* BodyOps — Settings: account, training (rest timer), appearance, backups, and (for the admin) the other accounts. */
+/* BodyOps — Settings: account, training (rest timer), food, reminders, appearance, backups, and (for the admin) the other accounts. */
 'use strict';
 
 (() => {
-  const { esc } = BO;
+  const { esc, icons } = BO;
 
   BO.screens.settings = async function settings(root) {
     let users = BO.me.isAdmin ? await BO.api('GET', '/api/admin/users') : [];
@@ -18,6 +18,8 @@
       const avg = k => { const v = perDay.filter(t => t[k] != null); return v.length ? v.reduce((n, t) => n + t[k], 0) / v.length : null; };
       return { kcal: avg('kcal'), proteinG: avg('proteinG'), carbsG: avg('carbsG'), fatG: avg('fatG'), days: perDay.length };
     }
+    const push = BO.push;
+    push.load().then(() => { if (root.isConnected) render(); });
     let firstPaint = true;
     let panel = null;          // 'password' | 'delete' while one of those forms is open
     let confirmUser = null;    // user id waiting for "Delete" confirmation
@@ -30,6 +32,50 @@
       const w = weights ? BO.weighIn(weights.entries, every, BO.localToday()) : null;
       const next = !w ? '' : w.entry ? `Next one ${BO.fullDate(w.next).replace(/ \d{4}$/, '')}. ` : w.due ? 'Due today. ' : `Next one ${BO.fullDate(w.next).replace(/ \d{4}$/, '')}. `;
       return `${next}On the other days Today shows the countdown, and the score never counts it.`;
+    }
+
+    /** "last push 2 h ago" / "added 3 Oct". */
+    function deviceWhen(d) {
+      const at = d.lastSentAt || d.createdAt;
+      const day = at ? at.slice(0, 10) : null;
+      return day ? `${d.lastSentAt ? 'last reminder' : 'added'} ${day === BO.localToday() ? 'today' : BO.shortDate(day)}` : '';
+    }
+
+    /** The Reminders card: this device on or off, the other devices, and which reminders to get. */
+    function remindersCard() {
+      const st = push.state;
+      const r = prefs.reminders || {};
+      const devices = st ? st.devices : [];
+      const here = push.here;
+      let sub, actions = '';
+      if (!st) sub = 'Checking this device…';
+      else if (!st.enabled) sub = 'Turned off on this server (MILO_PUSH_ENABLED in .env).';
+      else if (here) sub = `${esc(push.deviceLabel())}. Each phone or computer turns it on once.`;
+      else if (!push.supported()) sub = esc(push.problem() || "This browser can't get reminders here.");
+      else sub = 'Each phone or computer turns it on once. Milo asks for permission first.';
+      if (st && st.enabled) {
+        if (here) actions = '<button type="button" class="btn" data-push-test>Send a test</button><button type="button" class="btn" data-push-off>Turn off</button>';
+        else if (push.supported()) actions = `${devices.length ? '<button type="button" class="btn" data-push-test>Send a test</button>' : ''}<button type="button" class="btn primary" data-push-on>${icons.bell} Turn on</button>`;
+      }
+      const others = devices.filter(d => d.key !== here).map(d => `<div class="set-row dev"><div><b>${esc(d.device || 'Device')}</b>
+          <span class="sub">${deviceWhen(d)}${d.lastError ? ` · <span class="warn-t">last one failed</span>` : ''}</span></div>
+          <button type="button" class="btn" data-push-remove="${d.id}">Remove</button></div>`).join('');
+      const row = (key, label, text, timeKey) => {
+        const on = r[key] !== false;
+        return `<div class="set-row rm"><div><b>${label}</b><span class="sub">${text}</span></div>
+          <div class="row remind-ctl">${timeKey ? `<input class="tm num" type="time" value="${esc(r[timeKey] || '')}" data-rtime="${timeKey}" aria-label="${label} time" ${on ? '' : 'disabled'} required>` : ''}
+          <button type="button" class="sw" role="switch" aria-checked="${on}" aria-label="${label}" data-remind="${key}"></button></div></div>`;
+      };
+      const every = prefs.weighEveryDays || 1;
+      return `<section class="set-card ${firstPaint ? 'rise' : ''}" style="--i:4" aria-labelledby="h-remind">
+          <h3 id="h-remind">Reminders</h3>
+          <div class="set-row"><div><b>On this device <span class="pill ${here ? 'good' : 'mute'}">${here ? 'On' : 'Off'}</span></b><span class="sub">${sub}</span></div>${actions ? `<div class="row">${actions}</div>` : ''}</div>
+          ${others ? `<div class="set-devs"><span class="sub">Also on</span>${others}</div>` : ''}
+          ${row('meals', 'Meals', 'At each meal’s time, with what’s on the plate. “Ate it” ticks it from the notification.')}
+          ${row('workout', 'Workout', 'Training days, if nothing is logged yet.', 'workoutTime')}
+          ${row('weighIn', 'Weigh-in day', every <= 1 ? 'Every day, until you weigh in.' : 'On the day it’s due.', 'weighInTime')}
+          ${row('streak', 'Streak at risk', `Only if today is still under ${BO.STREAK_AT}.`, 'streakTime')}
+        </section>`;
     }
 
     function render() {
@@ -94,6 +140,7 @@
             </section>
           </div>
           <div class="stack">
+            ${remindersCard()}
             <section class="set-card ${firstPaint ? 'rise' : ''}" style="--i:4" aria-labelledby="h-data">
               <h3 id="h-data">Your data</h3>
               <div class="set-row"><div><b>Export backup</b><span class="sub">Downloads your plan, days, weigh-ins and foods as JSON.</span></div><button type="button" class="btn" id="export">Export</button></div>
@@ -123,6 +170,19 @@
       }
       const panelBtn = t.closest('[data-panel]');
       if (panelBtn) { panel = panel === panelBtn.dataset.panel ? null : panelBtn.dataset.panel; render(); return; }
+
+      if (t.closest('[data-push-on]')) { await push.enable(); render(); return; }
+      if (t.closest('[data-push-off]')) { await push.disable(); render(); return; }
+      if (t.closest('[data-push-test]')) { await push.test(); render(); return; }
+      const removeDev = t.closest('[data-push-remove]');
+      if (removeDev) { await push.remove(Number(removeDev.dataset.pushRemove)); render(); return; }
+      const remind = t.closest('[data-remind]');
+      if (remind) {
+        const key = remind.dataset.remind;
+        const reminders = Object.assign({}, prefs.reminders, { [key]: !(prefs.reminders && prefs.reminders[key] !== false) });
+        try { prefs = await BO.saveSettings({ reminders }); render(); } catch (e) { }
+        return;
+      }
 
       const everyBtn = t.closest('[data-weigh-every]');
       if (everyBtn) {
@@ -181,6 +241,12 @@
     });
 
     root.addEventListener('change', async event => {
+      const rtime = event.target.closest('[data-rtime]');
+      if (rtime) {
+        if (!/^\d{2}:\d{2}$/.test(rtime.value)) return;
+        try { prefs = await BO.saveSettings({ reminders: Object.assign({}, prefs.reminders, { [rtime.dataset.rtime]: rtime.value }) }); } catch (e) { render(); }
+        return;
+      }
       if (event.target.id !== 'importFile' || !event.target.files.length) return;
       const file = event.target.files[0];
       let text;

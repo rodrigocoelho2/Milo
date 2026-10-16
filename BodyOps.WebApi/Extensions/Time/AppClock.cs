@@ -10,6 +10,9 @@ internal interface IAppClock
 {
     /// <summary>Gets today's date in the configured time zone.</summary>
     DateOnly Today { get; }
+
+    /// <summary>Gets the wall-clock time in the configured time zone.</summary>
+    DateTime Now { get; }
 }
 
 /// <summary>
@@ -23,7 +26,10 @@ internal sealed class AppClock(TimeProvider timeProvider, IOptions<BodyOpsOption
     private readonly TimeZoneInfo _zone = FindZone(options.Value.TimeZone);
 
     /// <inheritdoc />
-    public DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(_timeProvider.GetUtcNow(), _zone).DateTime);
+    public DateOnly Today => DateOnly.FromDateTime(Now);
+
+    /// <inheritdoc />
+    public DateTime Now => TimeZoneInfo.ConvertTime(_timeProvider.GetUtcNow(), _zone).DateTime;
 
     private static TimeZoneInfo FindZone(string id)
     {

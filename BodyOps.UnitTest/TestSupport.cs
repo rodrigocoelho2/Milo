@@ -17,6 +17,8 @@ using BodyOps.WebApi.Features.Foods.Repositories;
 using BodyOps.WebApi.Features.Foods.Services;
 using BodyOps.WebApi.Features.Plans.Models.Entities;
 using BodyOps.WebApi.Features.Plans.Repositories;
+using BodyOps.WebApi.Features.Push.Models.Entities;
+using BodyOps.WebApi.Features.Push.Repositories;
 using BodyOps.WebApi.Features.Settings.Models.Entities;
 using BodyOps.WebApi.Features.Settings.Repositories;
 using BodyOps.WebApi.Features.Weights.Models.Entities;
@@ -67,7 +69,15 @@ internal sealed class TempFolder : IDisposable
 /// <summary>A clock stopped on a given day.</summary>
 internal sealed class FakeClock(DateOnly today) : IAppClock
 {
+    private DateTime? _now;
+
     public DateOnly Today { get; set; } = today;
+
+    public DateTime Now
+    {
+        get => _now ?? Today.ToDateTime(new TimeOnly(12, 0));
+        set { _now = value; Today = DateOnly.FromDateTime(value); }
+    }
 }
 
 /// <summary>Accounts in memory, with the same rules as the stored procedures.</summary>
@@ -624,4 +634,55 @@ internal sealed class FakePackagedSource : IPackagedFoodSource
         var hit = Products.FirstOrDefault(product => product.SourceRef == barcode);
         return Task.FromResult((hit is null ? PackagedStatus.NotFound : PackagedStatus.Ok, hit));
     }
+}
+
+/// <summary>
+/// Push devices and sent reminders in memory, like dbo.PushSubscription* and dbo.PushSentClaim.
+/// </summary>
+internal sealed class FakePushRepository : IPushRepository
+{
+    private long _nextId = 900;
+
+    public List<PushSubscriptionRow> Devices { get; } = [];
+
+    public HashSet<(long UserId, string Key)> Sent { get; } = [];
+
+    public Task<List<PushSubscriptionRow>> ListAsync(long? userId) =>
+        Task.FromResult(Devices.Where(device => userId is null || device.UserID == userId).ToList());
+
+    public Task<PushSubscriptionRow> SaveAsync(long userId, string endpoint, string p256dh, string auth, string device)
+    {
+        var row = Devices.FirstOrDefault(existing => existing.Endpoint == endpoint);
+        if (row is null)
+        {
+            row = new PushSubscriptionRow { PushSubscriptionID = ++_nextId, Endpoint = endpoint, CreatedAt = DateTime.UtcNow };
+            Devices.Add(row);
+        }
+
+        row.UserID = userId;
+        row.P256dh = p256dh;
+        row.Auth = auth;
+        row.Device = device;
+        row.LastError = string.Empty;
+        return Task.FromResult(row);
+    }
+
+    public Task<bool> DeleteAsync(long? userId, long? id, string? endpoint) =>
+        Task.FromResult(Devices.RemoveAll(device => (id is not null && device.PushSubscriptionID == id && device.UserID == userId) || (endpoint is not null && device.Endpoint == endpoint)) > 0);
+
+    public Task MarkAsync(long id, string error)
+    {
+        foreach (var device in Devices.Where(device => device.PushSubscriptionID == id))
+        {
+            device.LastError = error;
+            if (error.Length == 0)
+            {
+                device.LastSentAt = DateTime.UtcNow;
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> ClaimAsync(long userId, string key) => Task.FromResult(Sent.Add((userId, key)));
 }

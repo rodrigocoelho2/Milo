@@ -30,6 +30,18 @@ public sealed class BodyOpsOptions
     /// <summary>Gets or sets how Open Food Facts can reach whoever runs this server (it asks apps to say so in the User-Agent).</summary>
     public string OpenFoodFactsContact { get; set; } = "self-hosted; https://github.com/rodrigocoelho2/Milo";
 
+    /// <summary>Gets or sets a value indicating whether the server sends push reminders to the devices that turned them on.</summary>
+    public bool PushEnabled { get; set; } = true;
+
+    /// <summary>Gets or sets a value indicating whether the reminder worker runs (off in the integration tests).</summary>
+    public bool RemindersEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets how the browsers' push services can reach whoever runs this server: "mailto:you@example.com" or an
+    /// https URL (Apple refuses pushes without a valid one).
+    /// </summary>
+    public string PushSubject { get; set; } = "https://github.com/rodrigocoelho2/Milo";
+
     /// <summary>
     /// Makes the folders absolute.
     /// </summary>

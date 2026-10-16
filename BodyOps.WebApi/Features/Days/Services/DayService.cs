@@ -22,6 +22,7 @@ namespace BodyOps.WebApi.Features.Days.Services;
 /// <param name="weightRepository">Weigh-ins (shown on each day).</param>
 /// <param name="clock">Today in the configured time zone.</param>
 /// <param name="globalizationHelper">Translations.</param>
+/// <param name="foodRepository">The account's foods (meal calories and protein), or null.</param>
 internal sealed class DayService(
     IDayRepository dayRepository,
     IPlanRepository planRepository,

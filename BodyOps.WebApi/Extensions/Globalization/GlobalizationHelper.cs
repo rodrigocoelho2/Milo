@@ -84,6 +84,12 @@ internal sealed class GlobalizationHelper : IGlobalizationHelper
         [nameof(TranslationKeys.InvalidWeighEvery)] = "Weigh in every {0} to {1} days.",
         [nameof(TranslationKeys.InvalidRest)] = "Rest must be between {0} and {1} seconds.",
 
+        // Push
+        [nameof(TranslationKeys.PushEndpointNotAllowed)] = "This browser's push service isn't one Milo knows.",
+        [nameof(TranslationKeys.PushKeysInvalid)] = "This browser sent a subscription without valid keys.",
+        [nameof(TranslationKeys.PushDisabled)] = "Push reminders are turned off on this server.",
+        [nameof(TranslationKeys.PushNoDevices)] = "Turn on reminders on this device first.",
+
         // Backups
         [nameof(TranslationKeys.InvalidBackup)] = "This file is not a Milo (BodyOps) or CorpoOps backup.",
         [nameof(TranslationKeys.BackupTooLarge)] = "The backup is larger than {0} MB.",

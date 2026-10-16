@@ -115,4 +115,16 @@ public enum TranslationKeys
 
     /// <summary>The weigh-in interval is out of range.</summary>
     InvalidWeighEvery,
+
+    /// <summary>A push endpoint is not one of the browsers' push services.</summary>
+    PushEndpointNotAllowed,
+
+    /// <summary>A push subscription's keys are missing or malformed.</summary>
+    PushKeysInvalid,
+
+    /// <summary>Push reminders are turned off on this server.</summary>
+    PushDisabled,
+
+    /// <summary>The account has no device with push on.</summary>
+    PushNoDevices,
 }

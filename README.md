@@ -43,6 +43,13 @@
   every week or two costs nothing.
   Days of 60 or more in a row make the streak, shown on Today, the side bar and the week.
 - **Quick log**: the **+** button logs a weigh-in, ticks the next meal or starts the workout from any screen.
+- **Food today**: every meal shows its calories and protein from your foods, and Today compares what you ate with
+  what the day's plan adds up to. No targets to type: they come from the plan. Ate something else? Tick the meal
+  with what you actually ate; the plan stays the same.
+- **Weigh-in every N days**: every day, 7, 15 or 30 days. On the other days Today shows the countdown.
+- **Push reminders** on the lock screen (same web push as Holo, no third party): each meal at its time with what's on
+  the plate ("Ate it" ticks it without opening Milo), the workout, the weigh-in day and a streak at risk. Each phone
+  turns them on once; times and which ones are in Settings. On iPhone, add Milo to the Home Screen first.
 
 **At the gym**
 
@@ -52,8 +59,12 @@
   in Settings). It survives locking the phone and keeps the screen awake.
 - **Cardio by type**: treadmill, elliptical and stairs are logged by time; bike, run, walk, rowing and swimming by
   time and distance.
+- **Rep ranges and automatic progression**: write `3×8–12` and Milo pushes reps until every set reaches the top,
+  then moves the weight up for next time (2.5 kg, or the step you pick per exercise) and the range starts again.
+  Fixed plans like `3×10` work as before.
 - **Records**: lift more than ever before and the record sheet comes up with confetti: how much more than your best,
-  how far you have come since you started, and which record of the month it is.
+  how far you have come since you started, and which record of the month it is. Records are also kept per rep count
+  (heaviest for 3, 5, 8, 10, 12 and 15 reps), and the **estimated 1RM** (Epley) makes 70 × 12 and 75 × 8 comparable.
 
 **The week and the long run**
 
@@ -61,12 +72,15 @@
   records, the sets each muscle got on a body map and a recap. Tap a day to fix its meals or session.
   Reset week has Undo.
 - **Progress**: body weight against your goal, with the pace ("90 kg is roughly 9 months away"), every lift's best
-  load with its trend line, and the list of records.
+  load or estimated 1RM with its trend line, rep records, and the list of records.
 
 **Your plan**
 
-- Each weekday gets a **name** ("Upper body", "Legs"), **exercises** (sets × reps, notes) and **meals** (a time,
-  foods in grams or pieces). Copy a day to others, drag to reorder; changes save themselves.
+- Each weekday gets a **name** ("Upper body", "Legs"), **exercises** (sets × reps or a rep range, notes) and **meals**
+  (a time, foods in grams or pieces). Copy a day to others, drag to reorder; changes save themselves.
+- **My foods**: enter a label once (per 100 g or per piece) and every meal that uses it totals itself. Pick from
+  Milo's built-in list of about 200 basics (USDA, public domain, works offline), search Open Food Facts or scan a
+  barcode for packaged food.
 - The **muscles** of each exercise are detected from its name (English or Portuguese) or picked by hand, and so is
   the **kind of cardio** ("Passadeira" is a treadmill, "Bicicleta" a bike).
 - Editing the plan updates this week and the weeks ahead; past weeks keep the plan they had.
@@ -78,7 +92,8 @@
 - **Accounts**: everyone has their own plan and history; the first account is the admin, who can reset a forgotten
   password. Sign-ups can be closed.
 - **Installs as an app** on iPhone and Android, with an offline page; light and dark themes follow the device.
-- **Nothing from the internet at runtime**: the Geist font and icons ship with the app.
+- **Nothing from the internet at runtime** except what you ask for (Open Food Facts lookups, push delivery): the
+  Geist font, icons and the food list ship with the app.
 
 ## Screenshots
 
@@ -141,6 +156,8 @@ Three containers start: **milo-sql** (SQL Server 2022 Express), **milo-db-deploy
 | `MILO_PORT` | `8086` | Host port of the app. |
 | `MILO_ALLOW_REGISTRATION` | `true` | `false` once everyone has an account (the first account can always be created). |
 | `MILO_BEHIND_PROXY` | `false` | `true` when Nginx Proxy Manager sits in front (trusts `X-Forwarded-*`). |
+| `MILO_PUSH_ENABLED` | `true` | `false` turns push reminders off. |
+| `MILO_PUSH_SUBJECT` | the repo URL | How the browsers' push services can reach you (`mailto:you@example.com` or an https URL). |
 
 The older `BODYOPS_PORT`, `BODYOPS_ALLOW_REGISTRATION` and `BODYOPS_BEHIND_PROXY` still work.
 
@@ -229,7 +246,9 @@ All under `/api`, JSON, cookie sign-in. Writes need the `X-BodyOps: 1` header.
 | `PUT days/{date}/meals/{planMealId}`, `PUT days/{date}/meals`, `PUT days/{date}/training`, `PUT days/{date}/exercises/{planExerciseId}` | logging (answers with the week) |
 | `DELETE days/week/{date}`, `POST days/week/{date}/restore` | reset week and undo |
 | `GET exercises`, `GET exercises/history?name=`, `GET exercises/records?limit=` | lifts, progression, records |
-| `GET weights`, `PUT weights/{date}`, `DELETE weights/{date}`, `GET`/`PUT settings` | weight, goal and rest between sets |
+| `GET weights`, `PUT weights/{date}`, `DELETE weights/{date}`, `GET`/`PUT settings` | weight, goal, rest, weigh-in interval, reminders |
+| `GET`/`POST foods`, `PUT`/`DELETE foods/{id}`, `GET foods/search?q=`, `GET foods/packaged?q=`, `GET foods/barcode/{code}` | your foods, the built-in list, Open Food Facts |
+| `GET push`, `POST push/subscribe` · `push/unsubscribe` · `push/test` | push reminders on this device |
 | `GET backup`, `POST backup` | export, import (Milo/BodyOps or CorpoOps) |
 
 ## Licences

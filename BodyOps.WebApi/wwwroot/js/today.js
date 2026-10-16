@@ -411,5 +411,14 @@
     });
 
     render();
+
+    // Opened from a reminder: ?meal= opens that meal of today, ?weigh=1 the weigh-in.
+    const q = BO.query();
+    if (q.meal || q.weigh) {
+      BO.setQuery({ meal: null, weigh: null });
+      const meal = q.meal && todayDay() ? todayDay().meals.find(m => String(m.planMealId) === q.meal) : null;
+      if (meal) { date = week.today; render(); mealSheet(meal); }
+      else if (q.weigh) BO.quickLog({ tab: 'weigh', date: week.today, onDone: () => BO.reload() });
+    }
   };
 })();

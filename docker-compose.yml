@@ -74,6 +74,10 @@ services:
       # Set to "true" when Nginx Proxy Manager (or another reverse proxy) sits in front of the app.
       BodyOps__BehindProxy: ${MILO_BEHIND_PROXY:-${BODYOPS_BEHIND_PROXY:-false}}
       BodyOps__TimeZone: Europe/Lisbon
+      # Push reminders: "false" turns them off. The subject is how Apple, Google and Mozilla can reach whoever runs
+      # this server (mailto: or an https URL); Apple refuses pushes without a valid one.
+      BodyOps__PushEnabled: ${MILO_PUSH_ENABLED:-true}
+      BodyOps__PushSubject: ${MILO_PUSH_SUBJECT:-https://github.com/rodrigocoelho2/Milo}
       TZ: Europe/Lisbon
     volumes:
       # Login keys: "keep me signed in" survives restarts and updates.

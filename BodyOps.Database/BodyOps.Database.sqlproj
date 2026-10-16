@@ -20,6 +20,7 @@
     <Folder Include="StoredProcedures\Days\" />
     <Folder Include="StoredProcedures\Foods\" />
     <Folder Include="StoredProcedures\Plans\" />
+    <Folder Include="StoredProcedures\Push\" />
     <Folder Include="StoredProcedures\Settings\" />
     <Folder Include="StoredProcedures\Users\" />
     <Folder Include="StoredProcedures\Weights\" />
@@ -36,6 +37,8 @@
     <Build Include="Tables\dbo.PlanExercise.sql" />
     <Build Include="Tables\dbo.PlanFood.sql" />
     <Build Include="Tables\dbo.PlanMeal.sql" />
+    <Build Include="Tables\dbo.PushSent.sql" />
+    <Build Include="Tables\dbo.PushSubscription.sql" />
     <Build Include="Tables\dbo.User.sql" />
     <Build Include="Tables\dbo.UserSetting.sql" />
     <Build Include="Tables\dbo.WeightEntry.sql" />
@@ -59,6 +62,11 @@
     <Build Include="StoredProcedures\Plans\dbo.PlanExercisesSave.sql" />
     <Build Include="StoredProcedures\Plans\dbo.PlanGet.sql" />
     <Build Include="StoredProcedures\Plans\dbo.PlanMealsSave.sql" />
+    <Build Include="StoredProcedures\Push\dbo.PushSentClaim.sql" />
+    <Build Include="StoredProcedures\Push\dbo.PushSubscriptionDelete.sql" />
+    <Build Include="StoredProcedures\Push\dbo.PushSubscriptionList.sql" />
+    <Build Include="StoredProcedures\Push\dbo.PushSubscriptionMark.sql" />
+    <Build Include="StoredProcedures\Push\dbo.PushSubscriptionSave.sql" />
     <Build Include="StoredProcedures\Settings\dbo.UserSettingGet.sql" />
     <Build Include="StoredProcedures\Settings\dbo.UserSettingSave.sql" />
     <Build Include="StoredProcedures\Users\dbo.UserCount.sql" />

@@ -264,6 +264,33 @@ public sealed class ApiTests
     }
 
     [SqlFact]
+    public async Task Push_SubscribeKeepsOneDevicePerBrowser_AndUnsubscribeRemovesIt()
+    {
+        using var app = new TestApp();
+        var client = app.NewClient();
+        await Register(client, "Rodas");
+        using var browser = System.Security.Cryptography.ECDiffieHellman.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+        var q = browser.ExportParameters(false).Q;
+        static string B64(byte[] bytes) => Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        var subscription = new { endpoint = "https://fcm.googleapis.com/fcm/send/milo-test", p256dh = B64([0x04, .. q.X!, .. q.Y!]), auth = B64(new byte[16]), device = "Android · Chrome" };
+
+        var state = await Json(await client.GetAsync("/api/push"));
+        Assert.True(state.GetProperty("enabled").GetBoolean());
+        Assert.Equal(87, state.GetProperty("publicKey").GetString()!.Length);
+        Assert.Equal(0, state.GetProperty("devices").GetArrayLength());
+
+        await Json(await client.PostAsJsonAsync("/api/push/subscribe", subscription));
+        state = await Json(await client.PostAsJsonAsync("/api/push/subscribe", subscription with { device = "Android · Milo app" }));
+        var device = Assert.Single(state.GetProperty("devices").EnumerateArray());
+        Assert.Equal("Android · Milo app", device.GetProperty("device").GetString());
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/push/subscribe", subscription with { endpoint = "https://nas.local/push" })).StatusCode);
+
+        state = await Json(await client.PostAsJsonAsync("/api/push/unsubscribe", new { id = device.GetProperty("id").GetInt64() }));
+        Assert.Equal(0, state.GetProperty("devices").GetArrayLength());
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsync("/api/push/test", null)).StatusCode);
+    }
+
+    [SqlFact]
     public async Task Weights_AndGoal()
     {
         using var app = new TestApp();
