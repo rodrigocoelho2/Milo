@@ -1,5 +1,10 @@
 # BodyOps on a NAS: SQL Server, the database deploy (runs once per "up" and exits) and the app.
 # Put SQL_SA_PASSWORD in a .env file next to this one (see .env.example), then:  docker compose up -d --build
+
+# The stack's name, fixed so the folder can be called anything (Milo, bodyops…): it prefixes the volumes, so the same
+# name always finds the same data. Never change it on a running install.
+name: bodyops
+
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
