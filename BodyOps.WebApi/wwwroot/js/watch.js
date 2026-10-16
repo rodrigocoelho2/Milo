@@ -84,16 +84,6 @@
         <button type="button" class="btn${watch.connected ? '' : ' primary'}" data-watch-setup>Set up</button></div>`;
   };
 
-  /** The fields the Shortcut sends, for step 2. */
-  const FIELDS = [
-    ['type', 'Workout › Type'],
-    ['start', 'Workout › Start Date'],
-    ['end', 'Workout › End Date'],
-    ['activeEnergy', 'Workout › Active Energy (or Total Energy)'],
-    ['distance', 'Workout › Distance (walks, runs, rides)'],
-    ['heartRate', 'the Heart Rate samples (action 2), if you added it'],
-  ];
-
   /**
    * The set-up sheet: make (or replace) the key, build the Shortcut, turn on the automations, revoke.
    * @param {{onChange: function}} options called with the new state when the key changes.
@@ -103,6 +93,7 @@
       let watch = await BO.watchLoad(true).catch(() => null);
       let fresh = null;   // the key, right after it was made (Milo keeps only its hash)
       let confirmRevoke = false;
+      let route = 'shortcuts';   // which way the workouts are sent (only changes the instructions)
       const url = `${location.origin}${(watch && watch.ingestPath) || '/api/watch/ingest'}`;
 
       const copy = async (text, what) => {
@@ -117,18 +108,36 @@
             <div class="hk-step"><span class="n">1</span><div><b>${fresh ? 'Copy your key now' : 'Your personal key'}</b>
               <span class="sub">${fresh ? 'It is shown only this once. It lets the Shortcut send to your account and nothing else.' : key ? 'Milo keeps only a fingerprint of it. Lost it? Make a new one: the old one stops working.' : 'It lets the Shortcut send to your account and nothing else.'}</span>
               <div class="row"><span class="keybox${fresh ? ' fresh' : ''}">${key ? esc(key) : 'No key yet'}</span>${fresh ? `<button type="button" class="btn primary" data-copy-key>${icons.copy}Copy</button>` : `<button type="button" class="btn${key ? '' : ' primary'}" data-new-key>${key ? 'New key' : 'Make a key'}</button>`}</div></div></div>
-            <div class="hk-step"><span class="n">2</span><div><b>Make the Milo Shortcut</b>
-              <span class="sub">In the Shortcuts app, a new shortcut called <b class="inl">Milo workout</b> with these actions:</span>
+            <div class="hk-step"><span class="n">2</span><div><b>Where to send it</b>
+              <span class="sub">Both ways below send here, with the header <i>Authorization</i> = <i>Bearer</i> + your key.</span>
+              <div class="row"><span class="keybox">${esc(url)}</span><button type="button" class="btn" data-copy-url>${icons.copy}Copy</button></div></div></div>
+            <div class="hk-step"><span class="n">3</span><div><b>Send the workouts</b>
+              <div class="seg hk-seg" role="tablist">${[['shortcuts', 'Shortcuts (free)'], ['hae', 'Health Auto Export']].map(([k, label]) => `<button type="button" role="tab" data-route="${k}" aria-selected="${route === k}" aria-pressed="${route === k}">${label}</button>`).join('')}</div>
+              ${route === 'shortcuts' ? `
+              <span class="sub">The Shortcuts app can't look up a Watch workout, so two automations note when it starts and send what Health recorded since then when it ends.</span>
               <ol class="hk-list">
-                <li><b class="inl">Find Health Samples</b> where Type is <i>Workouts</i>, sorted by End Date, latest first, limit 1.</li>
-                <li>Optional, for the heart-rate curve: <b class="inl">Find Health Samples</b> where Type is <i>Heart Rate</i>, Start Date is after the workout's Start Date and End Date is before its End Date.</li>
-                <li><b class="inl">Get Contents of URL</b>: the address below, Method <i>POST</i>, a Header <i>Authorization</i> = <i>Bearer</i> + your key, Request Body <i>JSON</i> with these fields:</li>
+                <li>Shortcut <b class="inl">Milo start</b>: <b class="inl">Format Date</b> (Current Date, ISO 8601) → <b class="inl">Save File</b> to the Shortcuts folder as <i>milo-start.txt</i>, Overwrite on.</li>
+                <li>Shortcut <b class="inl">Milo workout</b>:
+                  <b class="inl">Get File</b> <i>milo-start.txt</i> → <b class="inl">Get Dates from Input</b> →
+                  <b class="inl">Find Health Samples</b> where Type is <i>Active Energy</i> and Start Date is after <i>Dates</i> → <b class="inl">Get Details of Health Sample</b> <i>Value</i> → <b class="inl">Calculate Statistics</b> <i>Sum</i> →
+                  <b class="inl">Find Health Samples</b> where Type is <i>Heart Rate</i> and Start Date is after <i>Dates</i> → <b class="inl">Get Details of Health Sample</b> <i>Value</i> →
+                  <b class="inl">Get Contents of URL</b>: the address above, Method <i>POST</i>, the header, Request Body <i>JSON</i>:</li>
               </ol>
-              <div class="row"><span class="keybox">${esc(url)}</span><button type="button" class="btn" data-copy-url>${icons.copy}Copy</button></div>
-              <div class="hk-fields">${FIELDS.map(([k, v]) => `<div><code>${k}</code><span>${v}</span></div>`).join('')}</div>
-              <span class="sub" style="margin-top:8px">A second one, <b class="inl">Milo weight</b>: Find Health Samples where Type is <i>Weight</i>, latest first, limit 1, then the same Get Contents of URL with <code>weight</code> = its Value and <code>date</code> = its Start Date. Numbers can keep their units and dates any format: Milo reads “412 kcal”, “82,4 kg” and “16 Oct 2026 at 19:12”.</span></div></div>
-            <div class="hk-step"><span class="n">3</span><div><b>Turn on two automations</b><span class="sub">Shortcuts › Automation › New, choose Run Immediately.</span>
-              <div class="auto">${icons.watch}<span>Apple Watch Workout, when it ends <i>→ Milo workout</i></span></div>
+              <div class="hk-fields">${[['type', 'Shortcut Input (the workout type, see below)'], ['start', 'the File (milo-start.txt)'], ['end', 'Current Date'], ['activeEnergy', 'Statistics (the sum)'], ['heartRate', 'the heart-rate Values']].map(([k, v]) => `<div><code>${k}</code><span>${v}</span></div>`).join('')}</div>
+              <span class="sub" style="margin-top:8px">Automations (Automation › New › Apple Watch Workout, Run Immediately):</span>
+              <div class="auto">${icons.watch}<span>Any Workout, Starts <i>→ Run Shortcut Milo start</i></span></div>
+              <div class="auto">${icons.watch}<span>Strength workouts, Ends <i>→ Text “Strength” → Run Shortcut Milo workout with it</i></span></div>
+              <div class="auto">${icons.watch}<span>Indoor Walk, Ends <i>→ Text “Indoor Walk” → Run Shortcut Milo workout with it</i></span></div>
+              <span class="sub" style="margin-top:6px">The text is the workout type Milo sees: “Indoor Walk” or “Indoor Run” fills in the planned treadmill. No distance this way.</span>` : `
+              <span class="sub">The <b class="inl">Health Auto Export</b> app (App Store, its Premium) reads the Watch workouts with everything in them and sends them by itself. Milo reads its format as it comes.</span>
+              <ol class="hk-list">
+                <li>Automations › New › <i>REST API</i>. URL: the address above. Headers: <i>Authorization</i> = <i>Bearer</i> + your key.</li>
+                <li>Data Type <i>Workouts</i>, Export Format <i>JSON</i>, Export Version <i>2</i>, Date Range <i>Today</i>, include heart-rate data. Sync every 15 minutes or so.</li>
+                <li>A second automation with Data Type <i>Health Metrics</i> › <i>Weight &amp; Body Mass</i> sends the weight too (then you don't need the weight shortcut below).</li>
+              </ol>
+              <span class="sub" style="margin-top:6px">Sending the same workout again is fine: Milo keeps one, and fills in the planned cardio only once.</span>`}</div></div>
+            <div class="hk-step"><span class="n">4</span><div><b>Send the weight</b>
+              <span class="sub">Shortcut <b class="inl">Milo weight</b>: <b class="inl">Find Health Samples</b> where Type is <i>Weight</i>, sorted by Start Date, latest first, limit 1 → <b class="inl">Get Contents of URL</b> as above with <code>weight</code> = the sample's Value and <code>date</code> = its Start Date. Units and date formats don't matter: Milo reads “82,4 kg” and “16 Oct 2026 at 08:01”.</span>
               <div class="auto">${icons.today}<span>Time of Day, every day at 09:00 <i>→ Milo weight</i></span></div></div></div>
           </div>
           ${watch && watch.connected ? `<div class="row" style="flex-wrap:wrap">${confirmRevoke
@@ -142,6 +151,8 @@
         const t = event.target;
         if (t.closest('[data-copy-key]')) { copy(fresh, 'Key'); return; }
         if (t.closest('[data-copy-url]')) { copy(url, 'Address'); return; }
+        const routeBtn = t.closest('[data-route]');
+        if (routeBtn) { route = routeBtn.dataset.route; draw(); return; }
         if (t.closest('[data-new-key]')) {
           try {
             const made = await BO.saving(BO.api('POST', '/api/watch/key'));

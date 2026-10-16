@@ -72,7 +72,7 @@ internal sealed class WatchService(
 
         var userId = owner.UserID;
         var payload = WatchPayload.Parse(body, clock.Zone, clock.Now);
-        if (payload.Workout is null && payload.Weight is null)
+        if (payload.IsEmpty)
         {
             await watchRepository.MarkKeyAsync(userId, payload.Error ?? string.Empty);
             return ServiceApiResponse<WatchIngestResultDTO>.ValidationProblems(await globalizationHelper.TranslateAsync(nameof(TranslationKeys.WatchPayloadInvalid)))
@@ -81,11 +81,12 @@ internal sealed class WatchService(
 
         var result = new WatchIngestResultDTO();
         var parts = new List<string>();
-        if (payload.Workout is { } workout)
+        foreach (var workout in payload.Workouts)
         {
             var (saved, filled) = await SaveWorkoutAsync(userId, workout);
-            result.Workout = new WatchWorkoutDTO(saved);
-            result.FilledCardio = filled;
+            result.Workout ??= new WatchWorkoutDTO(saved);
+            result.Workouts.Add(new WatchWorkoutDTO(saved));
+            result.FilledCardio ??= filled;
             parts.Add($"Milo got {workout.Kind}: {Summary(saved)}.");
             if (filled is not null)
             {
@@ -93,7 +94,7 @@ internal sealed class WatchService(
             }
         }
 
-        if (payload.Weight is { } weight)
+        foreach (var weight in payload.Weights)
         {
             parts.Add(await SaveWeightAsync(userId, weight, result));
         }

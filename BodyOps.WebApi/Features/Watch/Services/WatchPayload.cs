@@ -22,11 +22,21 @@ internal sealed record WatchWorkoutData(string Kind, DateTime StartedAt, DateTim
 /// <param name="Date">The day it was measured.</param>
 internal sealed record WatchWeightData(decimal WeightKg, DateOnly Date);
 
-/// <summary>What the Shortcut sent, read.</summary>
-/// <param name="Workout">The workout, or null.</param>
-/// <param name="Weight">The weigh-in, or null.</param>
+/// <summary>What the Shortcut (or Health Auto Export) sent, read.</summary>
+/// <param name="Workouts">The workouts.</param>
+/// <param name="Weights">The weigh-ins.</param>
 /// <param name="Error">What was wrong, or null.</param>
-internal sealed record WatchPayloadData(WatchWorkoutData? Workout, WatchWeightData? Weight, string? Error);
+internal sealed record WatchPayloadData(IReadOnlyList<WatchWorkoutData> Workouts, IReadOnlyList<WatchWeightData> Weights, string? Error)
+{
+    /// <summary>Gets the first workout, or null.</summary>
+    public WatchWorkoutData? Workout => Workouts.Count > 0 ? Workouts[0] : null;
+
+    /// <summary>Gets the first weigh-in, or null.</summary>
+    public WatchWeightData? Weight => Weights.Count > 0 ? Weights[0] : null;
+
+    /// <summary>Gets a value indicating whether anything can be imported.</summary>
+    public bool IsEmpty => Workouts.Count == 0 && Weights.Count == 0;
+}
 
 /// <summary>What a Watch workout is, for Milo.</summary>
 internal enum WatchCategory
@@ -80,10 +90,15 @@ internal static partial class WatchPayload
     {
         if (root.ValueKind != JsonValueKind.Object)
         {
-            return new WatchPayloadData(null, null, "Send a JSON dictionary (Get Contents of URL › Request Body › JSON).");
+            return new WatchPayloadData([], [], "Send a JSON dictionary (Get Contents of URL › Request Body › JSON).");
         }
 
         var fields = Fields(root);
+        if (Child(fields, "data") is { } data && (data.ContainsKey("workouts") || data.ContainsKey("metrics")))
+        {
+            return HealthAutoExport(data, zone, now);
+        }
+
         var workoutFields = Child(fields, "workout") ?? fields;
         var weightFields = Child(fields, "weight") ?? Child(fields, "bodymass") ?? fields;
 
@@ -121,7 +136,151 @@ internal static partial class WatchPayload
             error ??= "Nothing to import: send a workout (type, start, end, duration, active energy, heart rate) or a weight.";
         }
 
-        return new WatchPayloadData(workout, weight, error);
+        return new WatchPayloadData(workout is null ? [] : [workout], weight is null ? [] : [weight], error);
+    }
+
+    /// <summary>
+    /// What the Health Auto Export app sends (REST API automation, JSON, export version 2):
+    /// { "data": { "workouts": [ { name, start, end, duration (s), isIndoor, activeEnergyBurned {qty, units},
+    /// distance {qty, units}, heartRate {min, avg, max}, heartRateData [ {date, Min, Avg, Max} ] } ],
+    /// "metrics": [ { name: "weight_body_mass", units: "kg", data: [ {qty, date} ] } ] } }.
+    /// Dates are "2024-02-06 07:00:00 -0800".
+    /// </summary>
+    private static WatchPayloadData HealthAutoExport(Dictionary<string, JsonElement> data, TimeZoneInfo zone, DateTime now)
+    {
+        var workouts = new List<WatchWorkoutData>();
+        string? error = null;
+        if (data.TryGetValue("workouts", out var list) && list.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in list.EnumerateArray().Where(static item => item.ValueKind == JsonValueKind.Object).Take(50))
+            {
+                var w = Fields(item);
+                var name = First(w, ["name"]) is { ValueKind: JsonValueKind.String } n ? n.GetString()! : "Workout";
+                if (First(w, ["isindoor"]) is { ValueKind: JsonValueKind.True } && !name.Contains("indoor", StringComparison.OrdinalIgnoreCase))
+                {
+                    name = "Indoor " + name;
+                }
+
+                var flat = new Dictionary<string, JsonElement>(StringComparer.Ordinal) { ["type"] = JsonSerializer.SerializeToElement(name) };
+                foreach (var (from, to) in new[] { ("start", "start"), ("end", "end") })
+                {
+                    if (First(w, [from]) is { } value)
+                    {
+                        flat[to] = value;
+                    }
+                }
+
+                if (First(w, ["duration"]) is { } duration)
+                {
+                    flat["durationseconds"] = duration;
+                }
+
+                if (Quantity(First(w, ["activeenergyburned", "activeenergy", "totalenergy"])) is { } kcal)
+                {
+                    flat["activeenergy"] = JsonSerializer.SerializeToElement(kcal);
+                }
+
+                if (Quantity(First(w, ["distance"])) is { } distance)
+                {
+                    flat["distance"] = JsonSerializer.SerializeToElement(distance);
+                }
+
+                var summary = Child(w, "heartrate");
+                if (Quantity(summary is not null ? First(summary, ["avg"]) : First(w, ["avgheartrate"])) is { } avg)
+                {
+                    flat["avgbpm"] = JsonSerializer.SerializeToElement(avg);
+                }
+
+                if (Quantity(summary is not null ? First(summary, ["max"]) : First(w, ["maxheartrate"])) is { } max)
+                {
+                    flat["maxbpm"] = JsonSerializer.SerializeToElement(max);
+                }
+
+                if (First(w, ["heartratedata"]) is { ValueKind: JsonValueKind.Array } samples)
+                {
+                    var bpm = samples.EnumerateArray()
+                        .Select(static sample => sample.ValueKind == JsonValueKind.Object ? First(Fields(sample), ["avg", "qty", "max"]) is { } v ? Number(v) : null : Number(sample))
+                        .Where(static v => v is not null)
+                        .Select(static v => v!.Value)
+                        .ToList();
+                    flat["heartrates"] = JsonSerializer.SerializeToElement(bpm);
+                }
+
+                var (workout, problem) = Workout(flat, zone, now);
+                if (workout is not null)
+                {
+                    workouts.Add(workout);
+                }
+                else
+                {
+                    error ??= problem;
+                }
+            }
+        }
+
+        var weights = new List<WatchWeightData>();
+        if (data.TryGetValue("metrics", out var metrics) && metrics.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var metric in metrics.EnumerateArray().Where(static metric => metric.ValueKind == JsonValueKind.Object))
+            {
+                var m = Fields(metric);
+                var name = First(m, ["name"]) is { ValueKind: JsonValueKind.String } n ? new string([.. n.GetString()!.ToLowerInvariant().Where(char.IsLetter)]) : string.Empty;
+                if (!(name.Contains("weight", StringComparison.Ordinal) || name.Contains("bodymass", StringComparison.Ordinal)) || name.Contains("lean", StringComparison.Ordinal)
+                    || First(m, ["data"]) is not { ValueKind: JsonValueKind.Array } points)
+                {
+                    continue;
+                }
+
+                var pounds = First(m, ["units"]) is { ValueKind: JsonValueKind.String } u && Regex.IsMatch(u.GetString()!, "lb|pound", RegexOptions.IgnoreCase);
+                var today = DateOnly.FromDateTime(now);
+                foreach (var point in points.EnumerateArray().Where(static point => point.ValueKind == JsonValueKind.Object))
+                {
+                    var p = Fields(point);
+                    if (First(p, ["qty", "value"]) is not { } qty || Number(qty) is not { } value || value <= 0
+                        || First(p, ["date"]) is not { } at || Date(at, zone, now) is not { } when)
+                    {
+                        continue;
+                    }
+
+                    var date = DateOnly.FromDateTime(when);
+                    if (date <= today && date > today.AddDays(-60))
+                    {
+                        weights.RemoveAll(existing => existing.Date == date);
+                        weights.Add(new WatchWeightData(Math.Round(pounds ? value * 0.45359237m : value, 1), date));
+                    }
+                }
+            }
+        }
+
+        if (workouts.Count == 0 && weights.Count == 0)
+        {
+            error ??= "Nothing to import: Health Auto Export sent no workouts and no weight. Check the automation's data type and date range.";
+        }
+
+        return new WatchPayloadData(workouts, [.. weights.OrderBy(static weight => weight.Date)], error);
+    }
+
+    /// <summary>A Health Auto Export quantity ({qty, units}) as text with its unit ("412 kcal"), or a plain number.</summary>
+    private static string? Quantity(JsonElement? value)
+    {
+        if (value is not { } element)
+        {
+            return null;
+        }
+
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return Number(element) is { } plain ? plain.ToString(CultureInfo.InvariantCulture) : null;
+        }
+
+        var q = Fields(element);
+        if (First(q, ["qty", "value"]) is not { } qty || Number(qty) is not { } number)
+        {
+            return null;
+        }
+
+        var units = First(q, ["units", "unit"]) is { ValueKind: JsonValueKind.String } u ? u.GetString()! : string.Empty;
+        return $"{number.ToString(CultureInfo.InvariantCulture)} {units}".Trim();
     }
 
     /// <summary>
@@ -308,6 +467,7 @@ internal static partial class WatchPayload
 
         var text = AtPattern().Replace(value.GetString()!.Trim().Replace('\u202f', ' ').Replace('\u00a0', ' '), " ");
         text = CommaBeforeTimePattern().Replace(text, " ");
+        text = OffsetNoColonPattern().Replace(text, "$1:$2");
         if (text.Length == 0)
         {
             return null;
@@ -538,6 +698,9 @@ internal static partial class WatchPayload
 
     [GeneratedRegex(@"\s+(?:at|às|as|a las|um)\s+", RegexOptions.IgnoreCase)]
     private static partial Regex AtPattern();
+
+    [GeneratedRegex(@"(?<=\d{2}:\d{2}(?::\d{2})?\s*)([+-]\d{2})(\d{2})$")]
+    private static partial Regex OffsetNoColonPattern();
 
     [GeneratedRegex(@",\s*(?=\d{1,2}[:h.]\d{2})")]
     private static partial Regex CommaBeforeTimePattern();

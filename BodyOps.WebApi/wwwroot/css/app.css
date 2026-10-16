@@ -1017,3 +1017,5 @@ canvas.confetti{position:fixed; inset:0; z-index:90; pointer-events:none; width:
 .auto span{flex:1}
 .auto i{font-style:normal; color:var(--mute); font-weight:500}
 .srow .wsub{color:var(--bad)}
+.hk-seg{margin:8px 0 6px; align-self:flex-start; display:inline-flex}
+.hk-list li b.inl{color:var(--ink)}

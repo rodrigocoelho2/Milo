@@ -129,8 +129,11 @@ public sealed class WatchIngestResultDTO
     /// <summary>Gets or sets the summary ("Milo got Traditional Strength Training: 58 min, 412 kcal, 128 bpm avg.").</summary>
     public string Message { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the workout saved, or null.</summary>
+    /// <summary>Gets or sets the (first) workout saved, or null.</summary>
     public WatchWorkoutDTO? Workout { get; set; }
+
+    /// <summary>Gets or sets every workout saved.</summary>
+    public List<WatchWorkoutDTO> Workouts { get; set; } = [];
 
     /// <summary>Gets or sets the planned cardio filled in ("Treadmill, 22 min"), or null.</summary>
     public string? FilledCardio { get; set; }

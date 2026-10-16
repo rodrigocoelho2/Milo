@@ -105,6 +105,47 @@ public sealed class WatchTests
     }
 
     [Fact]
+    public void Parse_TheFreeShortcutsRoute_StartFromTheFile_EndNow()
+    {
+        var data = WatchPayload.Parse(Json("""
+            { "type": "Strength", "start": "2026-10-13T18:14:05+01:00", "end": "13 Oct 2026 at 19:12", "activeEnergy": 412.6, "heartRate": [120, 128, 140] }
+            """), Lisbon, Now);
+
+        var workout = Assert.IsType<WatchWorkoutData>(data.Workout);
+        Assert.Equal((Today.ToDateTime(new TimeOnly(18, 14)), (58 * 60) - 5), (workout.StartedAt, workout.DurationSeconds));
+        Assert.Equal((412.6m, 129, 140), (workout.ActiveKcal!.Value, workout.AvgBpm!.Value, workout.MaxBpm!.Value));
+        Assert.Equal(WatchCategory.Strength, WatchPayload.Category(workout.Kind));
+    }
+
+    [Fact]
+    public void Parse_HealthAutoExport_WorkoutsAndWeight()
+    {
+        var data = WatchPayload.Parse(Json("""
+            { "data": {
+              "workouts": [
+                { "id": "a", "name": "Traditional Strength Training", "start": "2026-10-13 18:14:00 +0100", "end": "2026-10-13 19:12:00 +0100", "duration": 3480,
+                  "activeEnergyBurned": { "qty": 1724, "units": "kJ" }, "heartRate": { "min": { "qty": 90, "units": "bpm" }, "avg": { "qty": 128, "units": "bpm" }, "max": { "qty": 164, "units": "bpm" } },
+                  "heartRateData": [ { "date": "2026-10-13 18:15:00 +0100", "Min": 100, "Avg": 110, "Max": 120 }, { "date": "2026-10-13 18:16:00 +0100", "Min": 130, "Avg": 140, "Max": 150 } ] },
+                { "id": "b", "name": "Walking", "isIndoor": true, "start": "2026-10-13 19:14:00 +0100", "end": "2026-10-13 19:36:00 +0100", "duration": 1320,
+                  "activeEnergyBurned": { "qty": 186, "units": "kcal" }, "distance": { "qty": 1.9, "units": "km" } }
+              ],
+              "metrics": [ { "name": "weight_body_mass", "units": "kg", "data": [ { "qty": 82.6, "date": "2026-10-12 08:01:00 +0100" }, { "qty": 82.4, "date": "2026-10-13 08:01:00 +0100" } ] },
+                           { "name": "heart_rate", "units": "bpm", "data": [ { "date": "2026-10-13 08:00:00 +0100", "Min": 60, "Avg": 65, "Max": 70 } ] } ] } }
+            """), Lisbon, Now);
+
+        Assert.Null(data.Error);
+        Assert.Equal(2, data.Workouts.Count);
+        var strength = data.Workouts[0];
+        Assert.Equal((58 * 60, 412m, 128, 164), (strength.DurationSeconds, Math.Round(strength.ActiveKcal!.Value), strength.AvgBpm!.Value, strength.MaxBpm!.Value));
+        Assert.Equal([110, 140], strength.HeartRates);
+        Assert.Equal(Today.ToDateTime(new TimeOnly(18, 14)), strength.StartedAt);
+        var walk = data.Workouts[1];
+        Assert.Equal(("Indoor Walking", 1.9m), (walk.Kind, walk.DistanceKm!.Value));
+        Assert.Equal(CardioKind.Treadmill, WatchPayload.CardioKinds(walk.Kind)[0]);
+        Assert.Equal([new WatchWeightData(82.6m, Today.AddDays(-1)), new WatchWeightData(82.4m, Today)], data.Weights);
+    }
+
+    [Fact]
     public void Parse_Nonsense_SaysWhatIsMissing()
     {
         Assert.NotNull(WatchPayload.Parse(Json("""{ "hello": 1 }"""), Lisbon, Now).Error);
