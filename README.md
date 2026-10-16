@@ -126,32 +126,35 @@ docker network create nas-net # once, if it doesn't exist yet
 docker compose up -d --build
 ```
 
-Three containers start: **bodyops-sql** (SQL Server 2022 Express), **bodyops-db-deploy** (publishes
-`BodyOps.Database` — creates the database the first time, applies schema changes on later deploys — and exits)
-and **bodyops** (the app). Open `http://<nas-ip>:8086` and create the first account: it becomes the admin.
+Three containers start: **milo-sql** (SQL Server 2022 Express), **milo-db-deploy** (publishes the database project
+— creates the `Milo` database the first time, applies schema changes on later deploys — and exits) and **milo**
+(the app). Open `http://<nas-ip>:8086` and create the first account: it becomes the admin.
 
-> The containers, volumes, database and code still use the old name **BodyOps**, so an update never loses data.
+> The stack is called `milo` whatever the folder is called, so its volumes are always `milo_sql` and `milo_data`.
+> The code (projects, namespaces) still uses the old name BodyOps.
 
 | Setting (`.env`) | Default | What it does |
 | --- | --- | --- |
 | `SQL_SA_PASSWORD` | — | SQL Server `sa` password (8+ characters, three of upper, lower, digits, symbols). |
 | `SQL_PORT` | `1434` | Host port for SSMS / Azure Data Studio (`<nas-ip>,1434`, user `sa`). |
 | `SQL_MEMORY_LIMIT_MB` | `1024` | Keeps SQL Server from taking most of the NAS memory. |
-| `BODYOPS_PORT` | `8086` | Host port of the app. |
-| `BODYOPS_ALLOW_REGISTRATION` | `true` | `false` once everyone has an account (the first account can always be created). |
-| `BODYOPS_BEHIND_PROXY` | `false` | `true` when Nginx Proxy Manager sits in front (trusts `X-Forwarded-*`). |
+| `MILO_PORT` | `8086` | Host port of the app. |
+| `MILO_ALLOW_REGISTRATION` | `true` | `false` once everyone has an account (the first account can always be created). |
+| `MILO_BEHIND_PROXY` | `false` | `true` when Nginx Proxy Manager sits in front (trusts `X-Forwarded-*`). |
 
-**Nginx Proxy Manager:** the app joins `nas-net`, so a proxy host can forward to `http://bodyops:8080`
-(e.g. `bodyops.prometheus-nas.com`, with the wildcard certificate). Set `BODYOPS_BEHIND_PROXY=true`.
+The older `BODYOPS_PORT`, `BODYOPS_ALLOW_REGISTRATION` and `BODYOPS_BEHIND_PROXY` still work.
+
+**Nginx Proxy Manager:** the app joins `nas-net`, so a proxy host can forward to `http://milo:8080`
+(with your wildcard certificate). Set `MILO_BEHIND_PROXY=true`.
 
 **Updating:** `git pull && docker compose up -d --build`. The database deploy runs again and only applies what changed.
 
-**Backups:** the data lives in the `bodyops-sql` volume. Settings › Export backup downloads one account as JSON;
-for the whole server, back up the database (`BACKUP DATABASE BodyOps TO DISK = …` from SSMS) or the volume.
+**Backups:** the data lives in the `milo_sql` volume. Settings › Export backup downloads one account as JSON;
+for the whole server, back up the database (`BACKUP DATABASE Milo TO DISK = …` from SSMS) or the volume.
 
 **Already running SQL Server for HOME Living Dex?** Milo can share it: drop the `sqlserver` service, point
 `db-deploy`'s `SQL_SERVER` and the app's connection string at `livingdex-sql`, and put both stacks on one network.
-The database is called `BodyOps`, so it never touches `LivingDex`.
+The database is called `Milo`, so it never touches `LivingDex`.
 
 ## Moving from CorpoOps
 

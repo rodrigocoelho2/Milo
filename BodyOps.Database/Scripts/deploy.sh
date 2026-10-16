@@ -1,9 +1,9 @@
 #!/bin/bash
-# Publishes BodyOps.Database.dacpac to the SQL Server container. SQL Server takes a few seconds to accept
+# Publishes BodyOps.Database.dacpac (Milo's database) to the SQL Server container. SQL Server takes a few seconds to accept
 # connections after it starts, so the publish is retried for up to two minutes.
 set -u
 : "${SQL_SERVER:=sqlserver}"
-: "${SQL_DATABASE:=BodyOps}"
+: "${SQL_DATABASE:=Milo}"
 : "${SQL_USER:=sa}"
 : "${SQL_PASSWORD:?SQL_PASSWORD is required}"
 
@@ -13,7 +13,7 @@ for attempt in $(seq 1 24); do
       /TargetServerName:"$SQL_SERVER" /TargetDatabaseName:"$SQL_DATABASE" \
       /TargetUser:"$SQL_USER" /TargetPassword:"$SQL_PASSWORD" /TargetTrustServerCertificate:True \
       /p:BlockOnPossibleDataLoss=True; then
-    echo "BodyOps database is up to date."
+    echo "Milo database ($SQL_DATABASE) is up to date."
     exit 0
   fi
   echo "SQL Server not ready yet (attempt $attempt), retrying in 5 s…"

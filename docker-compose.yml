@@ -1,14 +1,14 @@
-# BodyOps on a NAS: SQL Server, the database deploy (runs once per "up" and exits) and the app.
+# Milo on a NAS: SQL Server, the database deploy (runs once per "up" and exits) and the app.
 # Put SQL_SA_PASSWORD in a .env file next to this one (see .env.example), then:  docker compose up -d --build
 
-# The stack's name, fixed so the folder can be called anything (Milo, bodyops…): it prefixes the volumes, so the same
-# name always finds the same data. Never change it on a running install.
-name: bodyops
+# The stack's name, fixed so the folder can be called anything: it prefixes the volumes (milo_sql, milo_data), so
+# the same name always finds the same data. Never change it on a running install.
+name: milo
 
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: bodyops-sql
+    container_name: milo-sql
     restart: unless-stopped
     environment:
       ACCEPT_EULA: "Y"
@@ -23,7 +23,7 @@ services:
       # For SSMS / Azure Data Studio / VS Code on the LAN (server: <nas-ip>,1434 · user: sa).
       - "${SQL_PORT:-1434}:1433"
     volumes:
-      - bodyops-sql:/var/opt/mssql
+      - sql:/var/opt/mssql
     healthcheck:
       test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" -b -o /dev/null"]
       interval: 10s
@@ -31,14 +31,14 @@ services:
       retries: 12
       start_period: 20s
 
-  # Publishes BodyOps.Database (tables, view and stored procedures) and exits: creates the database the first time,
-  # applies schema changes on later deploys.
+  # Publishes the database project (tables, view and stored procedures) and exits: creates the Milo database the
+  # first time, applies schema changes on later deploys.
   db-deploy:
     build:
       context: .
       dockerfile: BodyOps.Database/Dockerfile
-    image: bodyops-db-deploy:latest
-    container_name: bodyops-db-deploy
+    image: milo-db-deploy:latest
+    container_name: milo-db-deploy
     restart: "no"
     depends_on:
       sqlserver:
@@ -47,36 +47,37 @@ services:
       - default
     environment:
       SQL_SERVER: sqlserver
-      SQL_DATABASE: BodyOps
+      SQL_DATABASE: Milo
       SQL_USER: sa
       SQL_PASSWORD: ${SQL_SA_PASSWORD}
 
-  bodyops:
+  milo:
     build:
       context: .
       dockerfile: BodyOps.WebApi/Dockerfile
-    image: bodyops:latest
-    container_name: bodyops
+    image: milo:latest
+    container_name: milo
     restart: unless-stopped
     depends_on:
       db-deploy:
         condition: service_completed_successfully
     ports:
-      - "${BODYOPS_PORT:-8086}:8080"
+      - "${MILO_PORT:-${BODYOPS_PORT:-8086}}:8080"
     networks:
       - default   # to reach SQL Server
-      - nas-net   # the NAS's shared network: Nginx Proxy Manager reaches the app at http://bodyops:8080
+      - nas-net   # the NAS's shared network: Nginx Proxy Manager reaches the app at http://milo:8080
     environment:
-      ConnectionStrings__BodyOps: "Server=sqlserver,1433;Database=BodyOps;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True"
+      # The configuration keys keep the code's name (BodyOps); only the values matter here.
+      ConnectionStrings__BodyOps: "Server=sqlserver,1433;Database=Milo;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True"
       # Set to "false" once everyone who needs an account has one (the first account can always be created).
-      BodyOps__AllowRegistration: ${BODYOPS_ALLOW_REGISTRATION:-true}
+      BodyOps__AllowRegistration: ${MILO_ALLOW_REGISTRATION:-${BODYOPS_ALLOW_REGISTRATION:-true}}
       # Set to "true" when Nginx Proxy Manager (or another reverse proxy) sits in front of the app.
-      BodyOps__BehindProxy: ${BODYOPS_BEHIND_PROXY:-false}
+      BodyOps__BehindProxy: ${MILO_BEHIND_PROXY:-${BODYOPS_BEHIND_PROXY:-false}}
       BodyOps__TimeZone: Europe/Lisbon
       TZ: Europe/Lisbon
     volumes:
       # Login keys: "keep me signed in" survives restarts and updates.
-      - bodyops-data:/data
+      - data:/data
 
 networks:
   default:      # private network of this stack (SQL Server is not on nas-net)
@@ -85,5 +86,5 @@ networks:
     external: true
 
 volumes:
-  bodyops-data:
-  bodyops-sql:
+  data:
+  sql:

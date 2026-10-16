@@ -92,7 +92,7 @@ jobs:
           mkdir -p ci-output
           echo "SQL_SA_PASSWORD=$SA_PASSWORD" > .env
           docker network create nas-net
-          docker compose up -d --build --wait bodyops 2>&1 | tee ci-output/1-compose-up.log
+          docker compose up -d --build --wait milo 2>&1 | tee ci-output/1-compose-up.log
 
       - name: Smoke test
         run: |
