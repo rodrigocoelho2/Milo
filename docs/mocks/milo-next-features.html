@@ -1149,7 +1149,7 @@ body{overflow-x:hidden}
   <!-- 3 -->
   <section class="sec" id="food">
     <div><h2><i style="background:var(--eat)"></i>Protein, calories and off-plan meals</h2>
-      <p class="lede">You enter a food's label once (per 100 g, or per piece) and every meal that uses it shows its calories and protein. Today gets a "Food today" card against your targets. When you eat something else, you tick the meal with what you actually ate, so the day stays honest and the plan stays the same.</p></div>
+      <p class="lede">You enter a food's label once (per 100 g, or per piece) and every meal that uses it shows its calories and protein. Today gets a "Food today" card that compares what you ate with what the day's plan adds up to: no targets to type anywhere. When you eat something else, you tick the meal with what you actually ate, so the day stays honest and the plan stays the same.</p></div>
     <div class="phones">
       <div class="pcol"><div class="ph" data-s="s-today" data-h="1640"></div><span><b>Today (whole screen).</b> The Food today card, macros under each meal and a swapped lunch. The weigh-in isn't due, so it shows the countdown.</span></div>
       <div class="pcol"><div class="ph" data-s="s-meal"></div><span><b>Tap a meal.</b> "As planned" ticks it like today; "Something else" asks what, with your foods one tap away.</span></div>
@@ -1170,7 +1170,7 @@ body{overflow-x:hidden}
     <div><h2><i style="background:var(--weigh)"></i>Weigh-in every N days <span style="opacity:.4">·</span> <i style="background:var(--ink)"></i>Push reminders</h2>
       <p class="lede">You choose how often you weigh in (every day, 7, 15 or 30 days). On the other days Today shows "next in 4 days" in a quiet outline; on the due day it gets highlighted and a reminder arrives at 08:00. Reminders use the same web push as Holo: turn them on once per phone, then choose which ones you want.</p></div>
     <div class="phones" id="push">
-      <div class="pcol"><div class="ph" data-s="s-settings" data-h="1420"></div><span><b>Settings (whole screen).</b> Weigh-in frequency, food targets, reminders and Apple Health in one place.</span></div>
+      <div class="pcol"><div class="ph" data-s="s-settings" data-h="1420"></div><span><b>Settings (whole screen).</b> Weigh-in frequency, reminders and Apple Health. Food targets aren't set here: they come from the plan.</span></div>
       <div class="pcol"><div class="ph" data-s="s-lock"></div><span><b>Reminders on the lock screen.</b> Each one says what's next and can be answered without opening Milo.</span></div>
       <div class="pcol"><div class="ph" data-s="s-due"></div><span><b>Weigh-in day.</b> The timeline highlights it first thing in the morning.</span></div>
     </div>
@@ -1198,14 +1198,14 @@ body{overflow-x:hidden}
       <div class="dcol"><div class="dk" data-s="d-today" data-h="1000"></div><span><b>Today.</b> Timeline with macros; the session card shows the progression ("↑ 72.5 next time") and the Watch cardio; Food today sits above body weight and the week.</span></div>
       <div class="dcol"><div class="dk" data-s="d-plan" data-h="960"></div><span><b>Plan › Meals.</b> Meal totals, totals per day in the day chips and a new <b>My foods</b> list on the right, showing where each food came from. "Add" opens the same search as on the phone, as a centred card.</span></div>
       <div class="dcol"><div class="dk" data-s="d-progress" data-h="900"></div><span><b>Progress.</b> The picked lift opens big on the left: est. 1RM curve and all six rep records in one row.</span></div>
-      <div class="dcol"><div class="dk" data-s="d-settings" data-h="860"></div><span><b>Settings.</b> Reminder times are editable on a computer; each device turns reminders on for itself.</span></div>
+      <div class="dcol"><div class="dk" data-s="d-settings" data-h="860"></div><span><b>Settings.</b> Reminder times can be edited; each device turns reminders on for itself. Food shows the plan's averages, read-only.</span></div>
     </div>
   </section>
 
   <div class="q">
     <b>Decisions taken in this mock (tell me if any should change)</b>
     <ol>
-      <li><b>Protein and calories don't count for the day score</b>, like the weigh-in: they're shown, not scored. (Alternative: replace "meals ticked" with "protein reached".)</li>
+      <li><b>Food targets come from the plan</b>: each day's target is what its meals add up to. Protein and calories <b>don't count for the day score</b>, like the weigh-in.</li>
       <li><b>Progression step</b> defaults to 2.5 kg and is set per exercise. It only applies to plans written as a range.</li>
       <li><b>Estimated 1RM</b> uses sets of up to 12 reps; sets of 13+ still count for rep records but not for the 1RM.</li>
       <li><b>Reminders</b> default: meals at their time, workout 18:00, weigh-in 08:00 on the due day, streak-at-risk 21:00. All can be switched off.</li>
@@ -1468,9 +1468,9 @@ body{overflow-x:hidden}
     <div class="card-head" style="margin:0"><h2 class="h-l">Food today</h2><span class="sub">3 of 4 meals</span></div>
     <div class="two">
       <div><div class="k">Protein</div><div class="v num">98<small> / 150 g</small></div><div class="t"><i style="width:65%;background:var(--eat)"></i><i style="width:27%;background:var(--eat)"></i></div></div>
-      <div><div class="k">Calories</div><div class="v num">1,320<small> / 2,400</small></div><div class="t"><i style="width:55%;background:var(--ink)"></i><i style="width:24%;background:var(--ink)"></i></div></div>
+      <div><div class="k">Calories</div><div class="v num">1,320<small> / 1,880</small></div><div class="t"><i style="width:70%;background:var(--ink)"></i><i style="width:30%;background:var(--ink)"></i></div></div>
     </div>
-    <p class="note">Dinner brings <b>40 g</b> more: <b>138 g</b>, 12 g short of the target. The faded part of each bar is what's still planned.</p>
+    <p class="note">Targets are what today's plan adds up to. Dinner brings <b>40 g</b> more: <b>138 g</b>, because lunch was 12 g under the plan.</p>
   </section>
   <section>
     <div class="spread" style="margin:6px 0 4px"><h2 class="h-l">Your day</h2><span class="sub">tap to tick</span></div>
@@ -1524,9 +1524,9 @@ body{overflow-x:hidden}
     <div class="card-head" style="margin:0"><h2 class="h-l">Food today</h2><span class="sub">3 of 4 meals</span></div>
     <div class="two">
       <div><div class="k">Protein</div><div class="v num">98<small> / 150 g</small></div><div class="t"><i style="width:65%;background:var(--eat)"></i><i style="width:27%;background:var(--eat)"></i></div></div>
-      <div><div class="k">Calories</div><div class="v num">1,320<small> / 2,400</small></div><div class="t"><i style="width:55%;background:var(--ink)"></i><i style="width:24%;background:var(--ink)"></i></div></div>
+      <div><div class="k">Calories</div><div class="v num">1,320<small> / 1,880</small></div><div class="t"><i style="width:70%;background:var(--ink)"></i><i style="width:30%;background:var(--ink)"></i></div></div>
     </div>
-    <p class="note">Dinner brings <b>40 g</b> more: <b>138 g</b>, 12 g short of the target. The faded part of each bar is what's still planned.</p>
+    <p class="note">Targets are what today's plan adds up to. Dinner brings <b>40 g</b> more: <b>138 g</b>, because lunch was 12 g under the plan.</p>
   </section>
   <section>
     <div class="spread" style="margin:6px 0 4px"><h2 class="h-l">Your day</h2><span class="sub">tap to tick</span></div>
@@ -1615,8 +1615,8 @@ body{overflow-x:hidden}
     </section>
     <section class="set-card">
       <h3>Food</h3>
-      <div class="set-row"><div><b>Daily protein</b><span class="sub">Shown on Today against what you eat.</span></div><div class="ctl"><input class="field small num" value="150" style="width:76px;text-align:right"><span class="sub">g</span></div></div>
-      <div class="set-row"><div><b>Daily calories</b><span class="sub">Leave empty to hide calories.</span></div><div class="ctl"><input class="field small num" value="2400" style="width:76px;text-align:right"><span class="sub">kcal</span></div></div>
+      <div class="set-row"><div><b>Targets come from your plan</b><span class="sub">Each day's calories, protein, carbs and fat are what its planned meals add up to. Change the meals to change them.</span></div><a class="btn">Open Plan</a></div>
+      <div class="set-row"><div><b>Your week, on average</b><span class="sub">1,950 kcal · 151 g protein · 196 g carbs · 50 g fat a day</span></div></div>
     </section>
     <section class="set-card">
       <h3>Reminders</h3>
@@ -1693,8 +1693,8 @@ body{overflow-x:hidden}
     </section>
     <section class="set-card">
       <h3>Food</h3>
-      <div class="set-row"><div><b>Daily protein</b><span class="sub">Shown on Today against what you eat.</span></div><div class="ctl"><input class="field small num" value="150" style="width:76px;text-align:right"><span class="sub">g</span></div></div>
-      <div class="set-row"><div><b>Daily calories</b><span class="sub">Leave empty to hide calories.</span></div><div class="ctl"><input class="field small num" value="2400" style="width:76px;text-align:right"><span class="sub">kcal</span></div></div>
+      <div class="set-row"><div><b>Targets come from your plan</b><span class="sub">Each day's calories, protein, carbs and fat are what its planned meals add up to. Change the meals to change them.</span></div><a class="btn">Open Plan</a></div>
+      <div class="set-row"><div><b>Your week, on average</b><span class="sub">1,950 kcal · 151 g protein · 196 g carbs · 50 g fat a day</span></div></div>
     </section>
     <section class="set-card">
       <h3>Reminders</h3>
@@ -1859,9 +1859,9 @@ body{overflow-x:hidden}
         <div class="card-head" style="margin:0"><h2 class="h-l">Food today</h2><span class="sub">3 of 4 meals</span></div>
         <div class="two">
           <div><div class="k">Protein</div><div class="v num">98<small> / 150 g</small></div><div class="t"><i style="width:65%;background:var(--eat)"></i><i style="width:27%;background:var(--eat)"></i></div></div>
-          <div><div class="k">Calories</div><div class="v num">1,320<small> / 2,400</small></div><div class="t"><i style="width:55%;background:var(--ink)"></i><i style="width:24%;background:var(--ink)"></i></div></div>
+          <div><div class="k">Calories</div><div class="v num">1,320<small> / 1,880</small></div><div class="t"><i style="width:70%;background:var(--ink)"></i><i style="width:30%;background:var(--ink)"></i></div></div>
         </div>
-        <p class="note">Dinner brings <b>40 g</b> more: <b>138 g</b>, 12 g short of the target.</p>
+        <p class="note">Target = today's plan. Dinner brings <b>40 g</b>: <b>138 g</b>, lunch was 12 g under the plan.</p>
       </section>
       <a class="card" style="display:block;color:inherit;text-decoration:none">
         <div class="card-head"><span class="pill weigh">Body weight</span><span class="sub">goal 80 · next weigh-in Tue</span></div>
@@ -1902,7 +1902,7 @@ body{overflow-x:hidden}
   </div>
   <div class="plan-grid">
     <div class="stack">
-      <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="daytot"><span class="sub">Thursday, all meals · protein target 150 g</span><b class="num">1,880 kcal</b></div><div class="mtot"><i class="p">150 g protein</i><i>190 g carbs</i><i>48 g fat</i></div></div>
+      <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="daytot"><span class="sub">Thursday, all meals: this is the day's target</span><b class="num">1,880 kcal</b></div><div class="mtot"><i class="p">150 g protein</i><i>190 g carbs</i><i>48 g fat</i></div></div>
       <div class="meal-list">
         <div class="mealcard"><div class="mh"><input class="time num" type="text" size="5" value="08:00"><input class="mname" value="Breakfast"><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
           <div class="foodrow"><input class="field small" value="Oats"><input class="field small num" value="80"><span class="unit"><button aria-pressed="true">g</button><button>pc</button></span><button class="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
@@ -2010,10 +2010,10 @@ body{overflow-x:hidden}
         <div class="set-row"><div><b>Weight goal</b><span class="sub">80 kg · shown on Progress.</span></div><a class="btn">Edit</a></div>
       </section>
       <section class="set-card">
-        <h3>Food</h3>
-        <div class="set-row"><div><b>Daily protein</b><span class="sub">Shown on Today against what you eat.</span></div><div class="ctl"><input class="field small num" value="150" style="width:84px;text-align:right"><span class="sub">g</span></div></div>
-        <div class="set-row"><div><b>Daily calories</b><span class="sub">Leave empty to hide calories.</span></div><div class="ctl"><input class="field small num" value="2400" style="width:84px;text-align:right"><span class="sub">kcal</span></div></div>
-      </section>
+      <h3>Food</h3>
+      <div class="set-row"><div><b>Targets come from your plan</b><span class="sub">Each day's calories, protein, carbs and fat are what its planned meals add up to. Change the meals to change them.</span></div><a class="btn">Open Plan</a></div>
+      <div class="set-row"><div><b>Your week, on average</b><span class="sub">1,950 kcal · 151 g protein · 196 g carbs · 50 g fat a day</span></div></div>
+    </section>
     </div>
     <div class="stack">
       <section class="set-card">
