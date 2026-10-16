@@ -39,7 +39,7 @@
           <button type="button" class="btn ink lg block" data-save-w>${entry ? 'Update weigh-in' : 'Save weigh-in'}</button>
           <p class="fine" style="text-align:center">Saves to ${isToday ? 'today' : BO.fullDate(day.date)}. Hold − or + to move faster.</p>`;
         const meals = day.meals.length
-          ? `<div class="qmeals">${day.meals.map(m => `<button type="button" class="qmeal" role="checkbox" aria-checked="${m.eaten}" data-m="${m.planMealId}"><span class="tick">${icons.check}</span><span style="min-width:0"><b>${esc(m.name)}</b><span>${esc(m.foods || '')}</span></span>${m.time ? `<em>${m.time}</em>` : ''}</button>`).join('')}</div>`
+          ? `<div class="qmeals">${day.meals.map(m => `<button type="button" class="qmeal" role="checkbox" aria-checked="${m.eaten}" data-m="${m.planMealId}"><span class="tick">${icons.check}</span><span style="min-width:0"><b>${esc(m.name)}</b><span>${esc(m.swap ? `${m.swap.name} (instead)` : m.foods || '')}</span></span>${m.time ? `<em>${m.time}</em>` : ''}</button>`).join('')}</div>`
           : `<div class="empty"><b>No meals planned for ${BO.DAYS[day.weekday - 1]}.</b><a class="btn" href="/plan?day=${day.weekday}&tab=meals" data-link>Plan meals</a></div>`;
         body.innerHTML = `
           <div class="spread"><h3>Quick log</h3><span class="sub">${BO.DAYS_SHORT[day.weekday - 1]} ${BO.shortDate(day.date)}${isToday ? ` · ${BO.nowTime()}` : ''}</span></div>

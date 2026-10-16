@@ -20,7 +20,9 @@ public sealed class BackupServiceTests
 
     public BackupServiceTests() => _days = new FakeDayRepository(_plan);
 
-    private BackupService Service() => new(_users, _plan, _days, _weights, _settings, _clock, TimeProvider.System, TestSupport.Globalization, TestSupport.Options());
+    private readonly FakeFoodRepository _foods = new();
+
+    private BackupService Service() => new(_users, _plan, _days, _weights, _settings, _clock, TimeProvider.System, TestSupport.Globalization, TestSupport.Options(), _foods);
 
     private static JsonElement Json(string json) => JsonDocument.Parse(json).RootElement.Clone();
 
@@ -47,6 +49,29 @@ public sealed class BackupServiceTests
 
         // "Face Pull" was no longer planned: it keeps its history under a negative id.
         Assert.True(tuesday.GetProperty("exercises")[2].GetProperty("planExerciseId").GetInt64() < 0);
+    }
+
+    [Fact]
+    public async Task ExportThenImport_KeepsTheFoods_AndOffPlanMeals()
+    {
+        var plans = new PlanService(_plan, _clock, TestSupport.Globalization);
+        await plans.SaveMealsAsync(1, 2, [new PlanMealSaveDTO { Name = "Lunch", Foods = [new PlanFoodSaveDTO { Name = "Oats", Amount = 80 }] }]);
+        _foods.Foods.Add(new BodyOps.WebApi.Features.Foods.Models.Entities.Food { FoodID = 1, Name = "Oats", NameKey = "oats", Kcal = 372, ProteinG = 13.5m, Source = FoodSource.Milo, SourceRef = "u08120" });
+        await _days.SetMealEatenAsync(1, TestSupport.Tuesday, _plan.Meals[0].PlanMealID, true, new MealSwapDTO { Name = "Chicken wrap", Kcal = 610, ProteinG = 42 });
+
+        var exported = await Service().ExportAsync(1);
+        var json = JsonSerializer.Serialize(exported.Result, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        _foods.Foods.Clear();
+
+        var imported = await Service().ImportAsync(1, Json(json));
+
+        Assert.Equal(1, imported.Result!.Foods);
+        var oats = Assert.Single(_foods.Foods);
+        Assert.Equal((372m, FoodSource.Milo, "u08120"), (oats.Kcal!.Value, oats.Source, oats.SourceRef));
+        using var days = JsonDocument.Parse(Assert.Single(_days.Imports));
+        var lunch = days.RootElement[0].GetProperty("meals")[0];
+        Assert.Equal("Chicken wrap", lunch.GetProperty("swapName").GetString());
+        Assert.Equal(610m, lunch.GetProperty("swapKcal").GetDecimal());
     }
 
     [Fact]

@@ -65,6 +65,13 @@ internal sealed class GlobalizationHelper : IGlobalizationHelper
         [nameof(TranslationKeys.InvalidStep)] = "The weight to add must be between {0} and {1} kg.",
         [nameof(TranslationKeys.UnknownPlanItem)] = "That item is not in the plan for this day any more. Reload the page.",
 
+        // Foods
+        [nameof(TranslationKeys.InvalidFoodValue)] = "Values must be between 0 and {0}.",
+        [nameof(TranslationKeys.FoodNameTaken)] = "You already have a food called {0}.",
+        [nameof(TranslationKeys.PackagedUnavailable)] = "Open Food Facts didn't answer. Try again in a moment, or type the label.",
+        [nameof(TranslationKeys.PackagedSlowDown)] = "That's a lot of searches in a minute. Wait a moment and try again.",
+        [nameof(TranslationKeys.InvalidBarcode)] = "A barcode has 8 to 14 digits.",
+
         // Days
         [nameof(TranslationKeys.InvalidLoad)] = "Load must be between 0 and {0} kg.",
         [nameof(TranslationKeys.InvalidReps)] = "Reps must be between 0 and {0}.",

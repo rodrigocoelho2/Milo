@@ -33,6 +33,9 @@ public enum ServiceApiResponseStatus
 
     /// <summary>413 Payload Too Large.</summary>
     PayloadTooLarge,
+
+    /// <summary>503 Service Unavailable: an outside service did not answer, or asked to slow down.</summary>
+    Unavailable,
 }
 
 /// <summary>
@@ -136,6 +139,13 @@ public sealed class ServiceApiResponse<T>
     /// <param name="title">The translated message.</param>
     /// <returns>The response.</returns>
     public static ServiceApiResponse<T> PayloadTooLarge(string title) => Failure(ServiceApiResponseStatus.PayloadTooLarge, title, 413);
+
+    /// <summary>
+    /// 503: an outside service is not available right now.
+    /// </summary>
+    /// <param name="title">The translated message.</param>
+    /// <returns>The response.</returns>
+    public static ServiceApiResponse<T> Unavailable(string title) => Failure(ServiceApiResponseStatus.Unavailable, title, 503);
 
     /// <summary>
     /// Adds one error to a failure response.

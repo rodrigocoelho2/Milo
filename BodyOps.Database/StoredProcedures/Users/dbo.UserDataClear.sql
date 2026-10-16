@@ -1,6 +1,6 @@
 /*
     UserDataClear
-    Removes an account's plan, logged days, weigh-ins and settings, keeping the account itself.
+    Removes an account's plan, logged days, weigh-ins, settings and foods, keeping the account itself.
     Used before importing a backup, which replaces everything.
 */
 CREATE PROCEDURE [dbo].[UserDataClear]
@@ -18,6 +18,7 @@ BEGIN
     DELETE FROM [dbo].[PlanDay] WHERE [UserID] = @UserID;
     DELETE FROM [dbo].[WeightEntry] WHERE [UserID] = @UserID;
     DELETE FROM [dbo].[UserSetting] WHERE [UserID] = @UserID;
+    DELETE FROM [dbo].[Food] WHERE [UserID] = @UserID;
 
     COMMIT TRANSACTION;
 END

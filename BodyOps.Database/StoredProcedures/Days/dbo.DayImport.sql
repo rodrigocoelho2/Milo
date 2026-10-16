@@ -2,7 +2,8 @@
     DayImport
     Writes logged days from a backup (or puts back a week after Reset week), replacing those dates. @Json:
     [{"date":"2026-07-21","trainingState":1,
-      "meals":[{"planMealId":12,"name":"Breakfast","foods":"Whey 25 g","eaten":true,"time":"08:00"}],
+      "meals":[{"planMealId":12,"name":"Breakfast","foods":"Whey 25 g","eaten":true,"time":"08:00",
+                "swapName":null,"swapKcal":null,"swapProteinG":null}],
       "exercises":[{"planExerciseId":40,"type":1,"name":"Pec deck","detail":"3x12","notes":"","muscles":null,
                     "loadKg":70,"cardioMinutes":null,"cardioKm":null,"cardioKind":null,
                     "sets":[10,10,10],"setLoads":[60,65,70]}]}, …]
@@ -78,8 +79,11 @@ BEGIN
         INSERT ([UserID], [DayDate], [TrainingState]) VALUES (@UserID, source.[DayDate], source.[TrainingState])
     OUTPUT source.[DayDate], inserted.[DayID] INTO @DayMap ([DayDate], [DayID]);
 
-    INSERT INTO [dbo].[DayMeal] ([DayID], [PlanMealID], [Name], [Foods], [SortOrder], [Eaten], [MealTime])
-    SELECT map.[DayID], m.[PlanMealID], m.[Name], ISNULL(m.[Foods], N''), CAST(j.[key] AS INT), ISNULL(m.[Eaten], 0), TRY_CONVERT(TIME (0), m.[MealTime])
+    INSERT INTO [dbo].[DayMeal] ([DayID], [PlanMealID], [Name], [Foods], [SortOrder], [Eaten], [MealTime], [SwapName], [SwapKcal], [SwapProteinG])
+    SELECT map.[DayID], m.[PlanMealID], m.[Name], ISNULL(m.[Foods], N''), CAST(j.[key] AS INT), ISNULL(m.[Eaten], 0), TRY_CONVERT(TIME (0), m.[MealTime]),
+           CASE WHEN m.[Eaten] = 1 THEN m.[SwapName] END,
+           CASE WHEN m.[Eaten] = 1 AND m.[SwapName] IS NOT NULL AND m.[SwapKcal] BETWEEN 0 AND 10000 THEN m.[SwapKcal] END,
+           CASE WHEN m.[Eaten] = 1 AND m.[SwapName] IS NOT NULL AND m.[SwapProteinG] BETWEEN 0 AND 1000 THEN m.[SwapProteinG] END
     FROM @Days d
     INNER JOIN @DayMap map ON map.[DayDate] = d.[DayDate]
     CROSS APPLY OPENJSON(ISNULL(d.[Meals], N'[]')) j
@@ -88,7 +92,10 @@ BEGIN
         [Name]       NVARCHAR (80)   '$.name',
         [Foods]      NVARCHAR (2000) '$.foods',
         [Eaten]      BIT             '$.eaten',
-        [MealTime]   NVARCHAR (8)    '$.time') m;
+        [MealTime]   NVARCHAR (8)    '$.time',
+        [SwapName]     NVARCHAR (80)  '$.swapName',
+        [SwapKcal]     DECIMAL (7, 1) '$.swapKcal',
+        [SwapProteinG] DECIMAL (6, 1) '$.swapProteinG') m;
 
     MERGE [dbo].[DayExercise] AS target
     USING (

@@ -27,6 +27,9 @@ public sealed class BodyOpsOptions
     /// <summary>Gets or sets the largest accepted backup file, in bytes.</summary>
     public int MaxBackupBytes { get; set; } = 16 * 1024 * 1024;
 
+    /// <summary>Gets or sets how Open Food Facts can reach whoever runs this server (it asks apps to say so in the User-Agent).</summary>
+    public string OpenFoodFactsContact { get; set; } = "self-hosted; https://github.com/rodrigocoelho2/Milo";
+
     /// <summary>
     /// Makes the folders absolute.
     /// </summary>

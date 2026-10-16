@@ -7,9 +7,14 @@ using BodyOps.WebApi.Features;
 using BodyOps.WebApi.Features.Accounts.Models;
 using BodyOps.WebApi.Features.Accounts.Models.Entities;
 using BodyOps.WebApi.Features.Accounts.Repositories;
+using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Days.Models.Entities;
 using BodyOps.WebApi.Features.Days.Repositories;
 using BodyOps.WebApi.Features.Days.Services;
+using BodyOps.WebApi.Features.Foods.Models.DTOs;
+using BodyOps.WebApi.Features.Foods.Models.Entities;
+using BodyOps.WebApi.Features.Foods.Repositories;
+using BodyOps.WebApi.Features.Foods.Services;
 using BodyOps.WebApi.Features.Plans.Models.Entities;
 using BodyOps.WebApi.Features.Plans.Repositories;
 using BodyOps.WebApi.Features.Settings.Models.Entities;
@@ -379,13 +384,16 @@ internal sealed class FakeDayRepository(FakePlanRepository plan) : IDayRepositor
             .OrderBy(row => row.DayDate)
             .ToList());
 
-    public Task<bool> SetMealEatenAsync(long userId, DateOnly date, long planMealId, bool eaten)
+    public Task<bool> SetMealEatenAsync(long userId, DateOnly date, long planMealId, bool eaten, MealSwapDTO? swap = null)
     {
         var day = Ensure(date);
         var meal = Data.Meals.FirstOrDefault(candidate => candidate.DayID == day.DayID && candidate.PlanMealID == planMealId);
         if (meal is not null)
         {
             meal.Eaten = eaten;
+            meal.SwapName = eaten ? swap?.Name : null;
+            meal.SwapKcal = eaten ? swap?.Kcal : null;
+            meal.SwapProteinG = eaten ? swap?.ProteinG : null;
         }
 
         return Task.FromResult(meal is not null);
@@ -394,7 +402,16 @@ internal sealed class FakeDayRepository(FakePlanRepository plan) : IDayRepositor
     public Task SetAllMealsEatenAsync(long userId, DateOnly date, bool eaten)
     {
         var day = Ensure(date);
-        Data.Meals.Where(meal => meal.DayID == day.DayID).ToList().ForEach(meal => meal.Eaten = eaten);
+        Data.Meals.Where(meal => meal.DayID == day.DayID).ToList().ForEach(meal =>
+        {
+            meal.Eaten = eaten;
+            if (!eaten)
+            {
+                meal.SwapName = null;
+                meal.SwapKcal = null;
+                meal.SwapProteinG = null;
+            }
+        });
         return Task.CompletedTask;
     }
 
@@ -529,5 +546,80 @@ internal sealed class FakeSettingRepository : ISettingRepository
     {
         Setting = new UserSetting { UserID = userId, WeightGoalKg = weightGoalKg, RestSeconds = restSeconds, UpdatedAt = DateTime.UtcNow };
         return Task.FromResult(Setting);
+    }
+}
+
+/// <summary>
+/// Foods in memory, upserted by name like dbo.FoodSave.
+/// </summary>
+internal sealed class FakeFoodRepository : IFoodRepository
+{
+    private long _nextId = 5000;
+
+    public List<Food> Foods { get; } = [];
+
+    public Task<List<Food>> ListAsync(long userId) => Task.FromResult(Foods.OrderBy(food => food.NameKey).ToList());
+
+    public Task<(int Result, Food? Food)> SaveAsync(long userId, long? foodId, Food food)
+    {
+        var sameName = Foods.FirstOrDefault(candidate => candidate.NameKey == food.NameKey);
+        if (foodId is not null && Foods.All(candidate => candidate.FoodID != foodId))
+        {
+            return Task.FromResult<(int, Food?)>((0, null));
+        }
+
+        if (foodId is not null && sameName is not null && sameName.FoodID != foodId)
+        {
+            return Task.FromResult<(int, Food?)>((2, null));
+        }
+
+        var target = Foods.FirstOrDefault(candidate => candidate.FoodID == (foodId ?? sameName?.FoodID));
+        if (target is null)
+        {
+            food.FoodID = ++_nextId;
+            Foods.Add(food);
+            return Task.FromResult<(int, Food?)>((1, food));
+        }
+
+        food.FoodID = target.FoodID;
+        Foods[Foods.IndexOf(target)] = food;
+        return Task.FromResult<(int, Food?)>((1, food));
+    }
+
+    public Task<bool> DeleteAsync(long userId, long foodId) => Task.FromResult(Foods.RemoveAll(food => food.FoodID == foodId) > 0);
+
+    public Task ImportAsync(long userId, IEnumerable<Food> foods)
+    {
+        foreach (var food in foods.Where(food => Foods.All(existing => existing.NameKey != food.NameKey)).GroupBy(food => food.NameKey).Select(group => group.First()))
+        {
+            food.FoodID = ++_nextId;
+            Foods.Add(food);
+        }
+
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// Open Food Facts stand-in: answers from what the test put in.
+/// </summary>
+internal sealed class FakePackagedSource : IPackagedFoodSource
+{
+    public PackagedStatus Status { get; set; } = PackagedStatus.Ok;
+
+    public List<FoodHitDTO> Products { get; } = [];
+
+    public Task<(PackagedStatus Status, List<FoodHitDTO> Hits)> SearchAsync(string query) =>
+        Task.FromResult((Status, Status == PackagedStatus.Ok ? Products.Where(product => product.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList() : new List<FoodHitDTO>()));
+
+    public Task<(PackagedStatus Status, FoodHitDTO? Hit)> BarcodeAsync(string barcode)
+    {
+        if (Status != PackagedStatus.Ok)
+        {
+            return Task.FromResult<(PackagedStatus, FoodHitDTO?)>((Status, null));
+        }
+
+        var hit = Products.FirstOrDefault(product => product.SourceRef == barcode);
+        return Task.FromResult((hit is null ? PackagedStatus.NotFound : PackagedStatus.Ok, hit));
     }
 }

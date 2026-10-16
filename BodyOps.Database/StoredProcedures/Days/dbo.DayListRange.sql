@@ -27,7 +27,10 @@ BEGIN
            dm.[Foods],
            dm.[SortOrder],
            dm.[Eaten],
-           dm.[MealTime]
+           dm.[MealTime],
+           dm.[SwapName],
+           dm.[SwapKcal],
+           dm.[SwapProteinG]
     FROM [dbo].[DayMeal] dm
     INNER JOIN [dbo].[Day] d ON d.[DayID] = dm.[DayID]
     WHERE d.[UserID] = @UserID

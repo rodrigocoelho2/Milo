@@ -18,7 +18,13 @@ BEGIN
 
     EXEC [dbo].[DayEnsure] @UserID = @UserID, @DayDate = @DayDate, @DayID = @DayID OUTPUT;
 
-    UPDATE [dbo].[DayMeal] SET [Eaten] = @Eaten WHERE [DayID] = @DayID;
+    -- Ticking all keeps any off-plan swap already logged; unticking clears them.
+    UPDATE [dbo].[DayMeal]
+    SET [Eaten] = @Eaten,
+        [SwapName] = CASE WHEN @Eaten = 1 THEN [SwapName] END,
+        [SwapKcal] = CASE WHEN @Eaten = 1 THEN [SwapKcal] END,
+        [SwapProteinG] = CASE WHEN @Eaten = 1 THEN [SwapProteinG] END
+    WHERE [DayID] = @DayID;
     UPDATE [dbo].[Day] SET [UpdatedAt] = SYSUTCDATETIME() WHERE [DayID] = @DayID;
 
     COMMIT TRANSACTION;

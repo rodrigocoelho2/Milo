@@ -31,6 +31,45 @@ public sealed class BackupDTO
 
     /// <summary>Gets or sets the weigh-ins, oldest first.</summary>
     public List<BackupWeightDTO> Weights { get; set; } = [];
+
+    /// <summary>Gets or sets the account's foods with their values (older backups have none).</summary>
+    public List<FoodBackupDTO> Foods { get; set; } = [];
+}
+
+/// <summary>
+/// One of the account's foods in a backup.
+/// </summary>
+public sealed class FoodBackupDTO
+{
+    /// <summary>Gets or sets the name.</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets what the values are for.</summary>
+    public FoodBasis Basis { get; set; } = FoodBasis.Per100g;
+
+    /// <summary>Gets or sets the weight of one piece.</summary>
+    public decimal? PieceGrams { get; set; }
+
+    /// <summary>Gets or sets what one piece is called.</summary>
+    public string? PieceName { get; set; }
+
+    /// <summary>Gets or sets the calories.</summary>
+    public decimal? Kcal { get; set; }
+
+    /// <summary>Gets or sets the protein (g).</summary>
+    public decimal? ProteinG { get; set; }
+
+    /// <summary>Gets or sets the carbohydrates (g).</summary>
+    public decimal? CarbsG { get; set; }
+
+    /// <summary>Gets or sets the fat (g).</summary>
+    public decimal? FatG { get; set; }
+
+    /// <summary>Gets or sets where the values came from.</summary>
+    public FoodSource Source { get; set; } = FoodSource.Own;
+
+    /// <summary>Gets or sets the id in the source.</summary>
+    public string? SourceRef { get; set; }
 }
 
 /// <summary>
@@ -157,4 +196,7 @@ public sealed class BackupImportResultDTO
 
     /// <summary>Gets or sets the weigh-ins.</summary>
     public int Weights { get; set; }
+
+    /// <summary>Gets or sets how many foods were imported.</summary>
+    public int Foods { get; set; }
 }

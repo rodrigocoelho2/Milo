@@ -31,6 +31,9 @@ internal static class DayBackupMapper
                 Foods = meal.Foods,
                 Eaten = meal.Eaten,
                 Time = MealTimeText.Format(meal.MealTime),
+                SwapName = meal.SwapName,
+                SwapKcal = meal.SwapKcal,
+                SwapProteinG = meal.SwapProteinG,
             }).ToList(),
             Exercises = exercises[day.DayID].OrderBy(static exercise => exercise.SortOrder).Select(exercise =>
             {

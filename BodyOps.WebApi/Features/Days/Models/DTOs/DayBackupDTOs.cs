@@ -40,6 +40,15 @@ public sealed class DayMealBackupDTO
 
     /// <summary>Gets or sets when it was planned ("08:00"), or null.</summary>
     public string? Time { get; set; }
+
+    /// <summary>Gets or sets what was eaten instead (an off-plan meal), or null.</summary>
+    public string? SwapName { get; set; }
+
+    /// <summary>Gets or sets the calories of what was eaten instead.</summary>
+    public decimal? SwapKcal { get; set; }
+
+    /// <summary>Gets or sets the protein of what was eaten instead.</summary>
+    public decimal? SwapProteinG { get; set; }
 }
 
 /// <summary>

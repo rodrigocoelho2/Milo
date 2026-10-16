@@ -10,6 +10,9 @@ using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Days.Repositories;
 using BodyOps.WebApi.Features.Days.Services;
 using BodyOps.WebApi.Features.Exercises.Services;
+using BodyOps.WebApi.Features.Foods.Models.Entities;
+using BodyOps.WebApi.Features.Foods.Repositories;
+using BodyOps.WebApi.Features.Foods.Services;
 using BodyOps.WebApi.Features.Plans.Repositories;
 using BodyOps.WebApi.Features.Plans.Services;
 using BodyOps.WebApi.Features.Settings.Repositories;
@@ -33,6 +36,7 @@ namespace BodyOps.WebApi.Features.Backups.Services;
 /// <param name="timeProvider">The time source (export timestamp).</param>
 /// <param name="globalizationHelper">Translations.</param>
 /// <param name="options">The BodyOps options.</param>
+/// <param name="foodRepository">Food data access.</param>
 internal sealed class BackupService(
     IUserRepository userRepository,
     IPlanRepository planRepository,
@@ -42,7 +46,8 @@ internal sealed class BackupService(
     IAppClock clock,
     TimeProvider timeProvider,
     IGlobalizationHelper globalizationHelper,
-    IOptions<BodyOpsOptions> options) : IBackupService
+    IOptions<BodyOpsOptions> options,
+    IFoodRepository? foodRepository = null) : IBackupService
 {
     private static readonly JsonSerializerOptions ReadOptions = CreateReadOptions();
 
@@ -62,6 +67,7 @@ internal sealed class BackupService(
         var plan = await _planRepository.GetAsync(userId);
         var days = await _dayRepository.ListRangeAsync(userId, DayService.MinDate, _clock.Today.AddDays(366));
         var weights = await _weightRepository.ListAsync(userId);
+        var library = foodRepository is null ? [] : await foodRepository.ListAsync(userId);
         var setting = await _settingRepository.GetAsync(userId);
 
         var foods = plan.Foods.ToLookup(static food => food.PlanMealID);
@@ -95,6 +101,19 @@ internal sealed class BackupService(
             }).ToList(),
             Days = DayBackupMapper.ToBackup(days),
             Weights = weights.Select(static entry => new BackupWeightDTO { Date = DateOnly.FromDateTime(entry.EntryDate), WeightKg = entry.WeightKg }).ToList(),
+            Foods = library.Select(static food => new FoodBackupDTO
+            {
+                Name = food.Name,
+                Basis = food.Basis,
+                PieceGrams = food.PieceGrams,
+                PieceName = food.PieceName,
+                Kcal = food.Kcal,
+                ProteinG = food.ProteinG,
+                CarbsG = food.CarbsG,
+                FatG = food.FatG,
+                Source = food.Source,
+                SourceRef = food.SourceRef,
+            }).ToList(),
         };
 
         return ServiceApiResponse<BackupDTO>.Success(backup);
@@ -258,6 +277,31 @@ internal sealed class BackupService(
         }
 
         result.Weights = weights.Count;
+
+        var foods = (backup.Foods ?? [])
+            .Select(static food => (Food: food, Name: Truncate(NameText.Clean(food.Name), FoodService.MaxName)))
+            .Where(static item => item.Name.Length > 0)
+            .Select(static item => new Food
+            {
+                Name = item.Name,
+                NameKey = FoodService.Key(item.Name),
+                Basis = Enum.IsDefined(item.Food.Basis) ? item.Food.Basis : FoodBasis.Per100g,
+                PieceGrams = item.Food.PieceGrams is > 0 and <= FoodService.MaxPieceGrams ? item.Food.PieceGrams : null,
+                PieceName = item.Food.PieceName is { Length: > 0 } piece ? Truncate(piece, 20) : null,
+                Kcal = item.Food.Kcal,
+                ProteinG = item.Food.ProteinG,
+                CarbsG = item.Food.CarbsG,
+                FatG = item.Food.FatG,
+                Source = Enum.IsDefined(item.Food.Source) ? item.Food.Source : FoodSource.Own,
+                SourceRef = item.Food.SourceRef is { Length: > 0 } source ? Truncate(source, 40) : null,
+            })
+            .ToList();
+        if (foods.Count > 0 && foodRepository is not null)
+        {
+            await foodRepository.ImportAsync(userId, foods);
+        }
+
+        result.Foods = foods.Count;
 
         var goal = backup.Settings?.WeightGoalKg is >= WeightService.MinWeightKg and <= WeightService.MaxWeightKg ? backup.Settings.WeightGoalKg : null;
         var rest = backup.Settings?.RestSeconds is >= SettingService.MinRestSeconds and <= SettingService.MaxRestSeconds ? backup.Settings.RestSeconds : null;

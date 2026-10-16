@@ -297,6 +297,11 @@ BO.icons = {
   grip: svg('<path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/>', '0 0 24 24', 'stroke-width="3"'),
   bolt: svg('<path d="M13 2.5 4.5 13.5H11l-1 8 8.5-11H12z"/>'),
   up: svg('<path d="M12 19V5M6 11l6-6 6 6"/>', '0 0 24 24', 'stroke-width="2.6"'),
+  scan: svg('<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M8 9v6M11 9v6M14 9v6M17 9v6"/>'),
+  swap: svg('<path d="M4 8h13l-3-3M20 16H7l3 3"/>', '0 0 24 24', 'stroke-width="2.2"'),
+  heart: svg('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20Z"/>'),
+  watch: svg('<rect x="6" y="6" width="12" height="12" rx="3.5"/><path d="M9 6V3h6v3M9 18v3h6v-3M12 10v2.5l1.5 1"/>'),
+  bell: svg('<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15ZM10 20.5a2 2 0 0 0 4 0"/>'),
 };
 
 /** The logo: a bumper plate with three grip holes (in the current text colour). Each copy gets its own mask id,

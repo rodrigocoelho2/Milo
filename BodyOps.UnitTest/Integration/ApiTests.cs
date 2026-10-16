@@ -226,6 +226,44 @@ public sealed class ApiTests
     }
 
     [SqlFact]
+    public async Task Foods_GiveMealsTheirMacros_AndAnOffPlanMealCountsWhatWasEaten()
+    {
+        using var app = new TestApp();
+        var client = app.NewClient();
+        await Register(client, "Rodas");
+        var weekday = Weekday(Today);
+
+        var oats = await Json(await client.PostAsJsonAsync("/api/foods", new { name = "Oats", basis = "per100g", kcal = 372, proteinG = 13.5, carbsG = 59, fatG = 7, source = "milo", sourceRef = "u08120" }));
+        await Json(await client.PostAsJsonAsync("/api/foods", new { name = "oats", kcal = 380, proteinG = 13 }));
+        await Json(await client.PostAsJsonAsync("/api/foods", new { name = "Whey", basis = "perPiece", pieceGrams = 30, kcal = 117, proteinG = 23.4 }));
+        var foods = await Json(await client.GetAsync("/api/foods"));
+        Assert.Equal(2, foods.GetArrayLength());
+        Assert.Equal(380m, foods[0].GetProperty("kcal").GetDecimal());
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PutAsJsonAsync($"/api/foods/{foods[1].GetProperty("id").GetInt64()}", new { name = "OATS", kcal = 1 })).StatusCode);
+
+        var search = await Json(await client.GetAsync("/api/foods/search?q=frango"));
+        Assert.Contains(search.GetProperty("milo").EnumerateArray(), hit => hit.GetProperty("sourceRef").GetString() == "u05062");
+
+        var plan = await SaveMeals(client, weekday,
+            new { name = "Breakfast", foods = new object[] { new { name = "Oats", amount = 80, unit = "grams" }, new { name = "Whey", amount = 1, unit = "pieces" } } },
+            new { name = "Lunch", foods = new object[] { new { name = "Oats", amount = 100, unit = "grams" } } });
+        var lunchId = plan.GetProperty("meals")[1].GetProperty("id").GetInt64();
+
+        var week = await Json(await client.PutAsJsonAsync($"/api/days/{Iso(Today)}/meals/{lunchId}", new { eaten = true, swapName = "Chicken wrap", swapKcal = 610, swapProteinG = 42 }));
+        var day = DayOf(week, Today);
+        Assert.Equal(421m, day.GetProperty("meals")[0].GetProperty("macros").GetProperty("kcal").GetDecimal());
+        Assert.Equal("Chicken wrap", day.GetProperty("meals")[1].GetProperty("swap").GetProperty("name").GetString());
+        Assert.Equal(801m, day.GetProperty("food").GetProperty("planned").GetProperty("kcal").GetDecimal());
+        Assert.Equal(610m, day.GetProperty("food").GetProperty("eaten").GetProperty("kcal").GetDecimal());
+
+        week = await Json(await client.PutAsJsonAsync($"/api/days/{Iso(Today)}/meals/{lunchId}", new { eaten = false }));
+        Assert.Equal(JsonValueKind.Null, DayOf(week, Today).GetProperty("meals")[1].GetProperty("swap").ValueKind);
+
+        Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/api/foods/{oats.GetProperty("id").GetInt64()}")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync("/api/foods/barcode/12ab")).StatusCode);
+    }
+
+    [SqlFact]
     public async Task Weights_AndGoal()
     {
         using var app = new TestApp();

@@ -5,6 +5,8 @@ using BodyOps.WebApi.Extensions.Globalization;
 using BodyOps.WebApi.Extensions.Time;
 using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Days.Repositories;
+using BodyOps.WebApi.Features.Foods.Repositories;
+using BodyOps.WebApi.Features.Foods.Services;
 using BodyOps.WebApi.Features.Plans.Repositories;
 using BodyOps.WebApi.Features.Plans.Services;
 using BodyOps.WebApi.Features.Weights.Repositories;
@@ -25,7 +27,8 @@ internal sealed class DayService(
     IPlanRepository planRepository,
     IWeightRepository weightRepository,
     IAppClock clock,
-    IGlobalizationHelper globalizationHelper) : IDayService
+    IGlobalizationHelper globalizationHelper,
+    IFoodRepository? foodRepository = null) : IDayService
 {
     /// <summary>The day score a day needs to keep the streak going.</summary>
     public const int StreakThreshold = 60;
@@ -89,7 +92,29 @@ internal sealed class DayService(
             return problem;
         }
 
-        if (!await _dayRepository.SetMealEatenAsync(userId, date, planMealId, request.Eaten))
+        MealSwapDTO? swap = null;
+        var swapName = NameText.Clean(request.SwapName);
+        if (request.Eaten && swapName.Length > 0)
+        {
+            if (swapName.Length > FoodService.MaxName)
+            {
+                return await _globalizationHelper.ValidationProblemAsync<WeekDTO>("swapName", nameof(TranslationKeys.InvalidName), FoodService.MaxName);
+            }
+
+            if (request.SwapKcal is < 0 or > FoodMath.MaxKcal || request.SwapProteinG is < 0 or > FoodMath.MaxGrams)
+            {
+                return await _globalizationHelper.ValidationProblemAsync<WeekDTO>(request.SwapKcal is < 0 or > FoodMath.MaxKcal ? "swapKcal" : "swapProteinG", nameof(TranslationKeys.InvalidFoodValue), FoodMath.MaxKcal);
+            }
+
+            swap = new MealSwapDTO
+            {
+                Name = swapName,
+                Kcal = request.SwapKcal is { } kcal ? Math.Round(kcal, 1) : null,
+                ProteinG = request.SwapProteinG is { } protein ? Math.Round(protein, 1) : null,
+            };
+        }
+
+        if (!await _dayRepository.SetMealEatenAsync(userId, date, planMealId, request.Eaten, swap))
         {
             return ServiceApiResponse<WeekDTO>.NotFound(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.UnknownPlanItem)));
         }
@@ -268,7 +293,8 @@ internal sealed class DayService(
         var logged = await _dayRepository.ListRangeAsync(userId, monday, monday.AddDays(6));
         var history = await _dayRepository.ListExerciseLogAsync(userId);
         var weights = await _weightRepository.ListAsync(userId);
-        return WeekBuilder.Week(monday, _clock.Today, plan, logged, history, weights);
+        var foods = foodRepository is null ? [] : await foodRepository.ListAsync(userId);
+        return WeekBuilder.Week(monday, _clock.Today, plan, logged, history, weights, foods);
     }
 
     private async Task<ServiceApiResponse<T>?> DateProblemAsync<T>(DateOnly date)

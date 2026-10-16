@@ -93,7 +93,9 @@
       d.meals.forEach((m, i) => {
         const key = m.time ? minutes(m.time) : (timed ? last + 1 : 7 * 60 + i * 120);
         last = key;
-        list.push({ kind: 'eat', key, time: m.time || '', name: m.name, sub: m.foods || 'No foods listed', done: m.eaten, meal: m.planMealId });
+        const sub = m.swap ? `${m.swap.name}${m.foods ? `, instead of ${m.foods}` : ''}` : (m.foods || 'No foods listed');
+        const mac = m.swap ? BO.macroChips({ kcal: m.swap.kcal, proteinG: m.swap.proteinG }) : BO.macroChips(m.macros);
+        list.push({ kind: 'eat', key, time: m.time || '', name: m.name, sub, mac, swap: !!m.swap, done: m.eaten, meal: m.planMealId });
       });
       if (d.exercises.length) {
         const state = BO.sessionState(d);
@@ -112,10 +114,10 @@
     function timeline(d) {
       return `<div class="tl">${items(d).map(x => {
         const cls = `ti ${x.kind}${x.done ? ' done' : ''}${x.live ? ' live' : ''}${x.next ? ' next' : ''}${x.missed ? ' missed' : ''}`;
-        const pill = x.live ? '<span class="pill train">Live</span>' : x.next ? `<span class="pill ${x.kind}">Next</span>` : '';
+        const pill = x.live ? '<span class="pill train">Live</span>' : x.next ? `<span class="pill ${x.kind}">Next</span>` : x.swap ? '<span class="pill eat">Something else</span>' : '';
         const inner = `<span class="time num">${esc(x.time)}</span>
           <span class="rail"><span class="dot">${x.done ? icons.check : ''}</span><span class="ln"></span></span>
-          <span class="body"><b>${esc(x.name)} ${pill}</b><span>${esc(x.sub)}</span></span>`;
+          <span class="body"><b>${esc(x.name)} ${pill}</b><span>${esc(x.sub)}</span>${x.mac ? `<span class="mac">${x.mac}</span>` : ''}</span>`;
         if (x.kind === 'eat') return `<button type="button" class="${cls}" role="checkbox" aria-checked="${x.done}" data-meal="${x.meal}">${inner}</button>`;
         if (x.kind === 'weigh') return `<button type="button" class="${cls}" data-weigh>${inner}</button>`;
         return `<a class="${cls}" href="/session?date=${d.date}" data-link>${inner}</a>`;
@@ -187,6 +189,39 @@
       }).join('')}</div>`;
     }
 
+    /** What was eaten against what the day's plan adds up to (the target), with what the meals still to eat bring. */
+    function foodCard(d) {
+      const f = d.food;
+      if (!f || !(BO.macrosKnown(f.planned))) return '';
+      const eaten = d.meals.filter(m => m.eaten).length;
+      const part = (label, key, unit, color) => {
+        const plan = f.planned[key];
+        if (plan == null || plan <= 0) return '';
+        const done = f.eaten[key] || 0, left = f.left[key] || 0;
+        const w = v => Math.max(0, Math.min(100, v / plan * 100)).toFixed(1);
+        const val = key === 'kcal' ? `${BO.kcalText(done)}<small> / ${BO.kcalText(plan)}</small>` : `${Math.round(done)}<small> / ${Math.round(plan)} ${unit}</small>`;
+        return `<div><div class="k">${label}</div><div class="v num">${val}</div><div class="t"><i style="width:${w(done)}%;background:${color}"></i><i style="width:${w(Math.min(left, Math.max(0, plan - done)))}%;background:${color}"></i></div></div>`;
+      };
+      const next = d.meals.find(m => !m.eaten && m.macros && m.macros.proteinG != null);
+      let note = 'The target is what today’s plan adds up to; the faded part is still to eat.';
+      if (f.planned.proteinG != null) {
+        const done = f.eaten.proteinG || 0;
+        if (next) {
+          const after = done + (f.left.proteinG || 0);
+          const diff = Math.round(after - f.planned.proteinG);
+          note = `${esc(next.name)} brings <b>${Math.round(next.macros.proteinG)} g</b>. Eating the rest of the plan: <b>${Math.round(after)} g</b>${diff < -2 ? `, ${-diff} g under the plan` : diff > 2 ? `, ${diff} g over the plan` : ', right on the plan'}.`;
+        } else if (eaten === d.meals.length && d.meals.length) {
+          const diff = Math.round(done - f.planned.proteinG);
+          note = `All meals done: <b>${Math.round(done)} g</b> protein${diff < -2 ? `, ${-diff} g under the plan` : diff > 2 ? `, ${diff} g over the plan` : ', right on the plan'}.`;
+        }
+      }
+      return `<section class="card fuel" aria-labelledby="h-fuel">
+        <div class="card-head" style="margin:0"><h2 class="h-l" id="h-fuel">Food today</h2><span class="sub">${eaten} of ${d.meals.length} meals</span></div>
+        <div class="two">${part('Protein', 'proteinG', 'g', 'var(--eat)')}${part('Calories', 'kcal', '', 'var(--ink)')}</div>
+        <p class="note">${note}</p>
+      </section>`;
+    }
+
     function weightCard() {
       const entries = weights.entries.slice(-12);
       const latest = weights.entries.at(-1);
@@ -213,6 +248,7 @@
             <div class="${firstPaint ? 'rise' : ''}" style="--i:1">${scoreCard(d)}</div>
             <div class="${firstPaint ? 'rise' : ''}" style="--i:2">${pips()}</div>
             <div class="phone-hero ${firstPaint ? 'rise' : ''}" style="--i:3">${hero(d)}</div>
+            <div class="phone-hero ${firstPaint ? 'rise' : ''}" style="--i:3">${foodCard(d)}</div>
             <section class="${firstPaint ? 'rise' : ''}" style="--i:4" aria-labelledby="h-day">
               <div class="spread" style="margin:6px 0 4px"><h2 class="h-l" id="h-day">${isToday ? 'Your day' : 'The day'}</h2><span class="sub">tap to tick</span></div>
               ${timeline(d)}
@@ -226,6 +262,7 @@
             </section>
           </div>
           <div class="col side-col">
+            <div class="desk-hero ${firstPaint ? 'rise' : ''}" style="--i:3">${foodCard(d)}</div>
             <div class="${firstPaint ? 'rise' : ''}" style="--i:4">${weightCard()}</div>
             <section class="card ${firstPaint ? 'rise' : ''}" style="--i:5" aria-labelledby="h-week">
               <div class="card-head"><h2 class="h-l" id="h-week">This week</h2><span class="sub">day scores</span></div>
@@ -256,6 +293,90 @@
       }
     }
 
+    /** Ticks, unticks or swaps a meal; the score and the timeline update at once, the server catches up. */
+    function setMeal(meal, eaten, swap = null) {
+      const d = day();
+      const before = d.score;
+      meal.eaten = eaten;
+      meal.swap = eaten ? swap : null;
+      if (eaten) BO.buzz(10);
+      BO.scoreDay(d);
+      render();
+      celebrate(before);
+      const body = { eaten };
+      if (eaten && swap) Object.assign(body, { swapName: swap.name, swapKcal: swap.kcal, swapProteinG: swap.proteinG });
+      save('PUT', `/api/days/${date}/meals/${meal.planMealId}`, body).catch(() => refresh());
+    }
+
+    /** Tap a meal: as planned, something else (what, with its calories and protein), or not eaten. */
+    function mealSheet(meal) {
+      BO.sheet(async (body, close) => {
+        const foods = await BO.loadFoods().catch(() => ({ list: [], byKey: new Map() }));
+        let other = !!meal.swap;
+        let picked = null;
+        const swap = Object.assign({ name: '', kcal: null, proteinG: null }, meal.swap || {});
+        const planned = [meal.foods, meal.macros && meal.macros.kcal != null ? `${BO.kcalText(meal.macros.kcal)} kcal` : '', meal.macros && meal.macros.proteinG != null ? `${BO.gramsText(meal.macros.proteinG)} protein` : ''].filter(Boolean).join(' · ');
+        const paint = () => {
+          const matches = foods.list.filter(f => !swap.name || BO.foodKey(f.name).includes(BO.foodKey(swap.name))).slice(0, 6);
+          body.innerHTML = `<div><h3>${esc(meal.name)}</h3><span class="sub">${meal.time ? `${esc(meal.time)} · ` : ''}${planned ? `planned: ${esc(planned)}` : 'nothing listed for it'}</span></div>
+            <div class="ql two"><button type="button" class="e" data-plan aria-pressed="${meal.eaten && !meal.swap && !other}">${icons.check}As planned</button><button type="button" class="e" data-other aria-pressed="${other}">${icons.swap}Something else</button></div>
+            ${other ? `<label class="lbl-f">What did you eat?<input class="field" data-sw-name value="${esc(swap.name)}" maxlength="80" placeholder="e.g. Chicken wrap" autocomplete="off"></label>
+              ${matches.length ? `<div class="pick-chips">${matches.map(f => `<button type="button" data-sw-food="${f.id}" aria-pressed="${picked && picked.id === f.id}">${esc(f.name)}</button>`).join('')}</div>` : ''}
+              ${picked ? `<label class="lbl-f">How much<span class="row" style="gap:8px"><input class="field small num" inputmode="decimal" data-sw-amount value="${BO.load(picked.amount)}" style="max-width:110px"><span class="sub">${picked.basis === 'perPiece' ? esc(picked.pieceName || 'pieces') : 'g'}</span></span></label>` : ''}
+              <div class="mac-in">
+                <label>Calories<span><input class="num" inputmode="decimal" data-sw="kcal" value="${swap.kcal == null ? '' : BO.load(Math.round(swap.kcal))}" placeholder="–"><em>kcal</em></span></label>
+                <label class="p">Protein<span><input class="num" inputmode="decimal" data-sw="proteinG" value="${swap.proteinG == null ? '' : BO.load(Math.round(swap.proteinG * 10) / 10)}" placeholder="–"><em>g</em></span></label>
+              </div>
+              <p class="fine">${picked ? `Worked out from “${esc(picked.name)}” in your foods. ` : 'Calories and protein are optional. '}It ticks the meal for the day score; next week’s plan stays the same.</p>
+              <button type="button" class="btn lg block" style="background:var(--eat);color:#fff;box-shadow:none" data-sw-save>Save ${esc(meal.name.toLowerCase())}</button>` : ''}
+            ${meal.eaten ? '<button type="button" class="btn ghost" data-uneat>Not eaten</button>' : ''}`;
+        };
+        const fill = () => {
+          if (!picked) return;
+          const m = BO.macrosFor(picked, picked.amount, picked.basis === 'perPiece' ? 'pieces' : 'grams');
+          swap.kcal = m ? m.kcal : null;
+          swap.proteinG = m ? m.proteinG : null;
+        };
+        body.addEventListener('click', e => {
+          if (e.target.closest('[data-plan]')) { close(); setMeal(meal, true, null); return; }
+          if (e.target.closest('[data-other]')) { other = true; paint(); const i = body.querySelector('[data-sw-name]'); if (i) i.focus(); return; }
+          if (e.target.closest('[data-uneat]')) { close(); setMeal(meal, false); return; }
+          const pf = e.target.closest('[data-sw-food]');
+          if (pf) {
+            const f = foods.list.find(x => String(x.id) === pf.dataset.swFood);
+            picked = Object.assign({}, f, { amount: f.basis === 'perPiece' ? 1 : 100 });
+            swap.name = f.name;
+            fill();
+            paint();
+            return;
+          }
+          if (e.target.closest('[data-sw-save]')) {
+            if (!swap.name.trim()) { BO.toast('Say what you ate.', { error: true }); return; }
+            close();
+            setMeal(meal, true, { name: swap.name.trim(), kcal: swap.kcal == null ? null : Math.round(swap.kcal * 10) / 10, proteinG: swap.proteinG == null ? null : Math.round(swap.proteinG * 10) / 10 });
+          }
+        });
+        body.addEventListener('input', e => {
+          const t = e.target;
+          if (t.matches('[data-sw-name]')) {
+            swap.name = t.value;
+            if (picked && BO.foodKey(picked.name) !== BO.foodKey(t.value)) picked = null;
+            const chips = body.querySelector('.pick-chips');
+            const matches = foods.list.filter(f => !swap.name || BO.foodKey(f.name).includes(BO.foodKey(swap.name))).slice(0, 6);
+            if (chips) chips.innerHTML = matches.map(f => `<button type="button" data-sw-food="${f.id}">${esc(f.name)}</button>`).join('');
+          } else if (t.matches('[data-sw-amount]') && picked) {
+            picked.amount = BO.readNumber(t.value);
+            fill();
+            body.querySelector('[data-sw="kcal"]').value = swap.kcal == null ? '' : BO.load(Math.round(swap.kcal));
+            body.querySelector('[data-sw="proteinG"]').value = swap.proteinG == null ? '' : BO.load(Math.round(swap.proteinG * 10) / 10);
+          } else if (t.matches('[data-sw]')) {
+            swap[t.dataset.sw] = BO.readNumber(t.value);
+          }
+        });
+        paint();
+      }, { label: meal.name });
+    }
+
     root.addEventListener('click', event => {
       const t = event.target;
       const pip = t.closest('[data-date]');
@@ -272,15 +393,8 @@
       }
       const mealBtn = t.closest('[data-meal]');
       if (mealBtn) {
-        const d = day();
-        const before = d.score;
-        const meal = d.meals.find(m => String(m.planMealId) === mealBtn.dataset.meal);
-        meal.eaten = !meal.eaten;
-        if (meal.eaten) BO.buzz(10);
-        BO.scoreDay(d);
-        render();
-        celebrate(before);
-        save('PUT', `/api/days/${date}/meals/${meal.planMealId}`, { eaten: meal.eaten }).catch(() => refresh());
+        const meal = day().meals.find(m => String(m.planMealId) === mealBtn.dataset.meal);
+        if (meal) mealSheet(meal);
       }
     });
 

@@ -7,6 +7,17 @@
   BO.screens.settings = async function settings(root) {
     let users = BO.me.isAdmin ? await BO.api('GET', '/api/admin/users') : [];
     let prefs = await BO.settings(true);
+    const [plan, foods] = await Promise.all([BO.api('GET', '/api/plan').catch(() => null), BO.loadFoods(true).catch(() => null)]);
+
+    /** The plan's food per day, on average over the days with values: Settings shows it, the plan sets it. */
+    function weekAverage() {
+      if (!plan || !foods) return null;
+      const perDay = plan.days.map(d => BO.sumMacros(d.meals.map(m => BO.mealMacros({ foods: m.foods.map(f => ({ name: f.name, amount: f.amount, unit: f.unit })) }, foods)).filter(BO.macrosKnown)))
+        .filter(BO.macrosKnown);
+      if (!perDay.length) return null;
+      const avg = k => { const v = perDay.filter(t => t[k] != null); return v.length ? v.reduce((n, t) => n + t[k], 0) / v.length : null; };
+      return { kcal: avg('kcal'), proteinG: avg('proteinG'), carbsG: avg('carbsG'), fatG: avg('fatG'), days: perDay.length };
+    }
     let firstPaint = true;
     let panel = null;          // 'password' | 'delete' while one of those forms is open
     let confirmUser = null;    // user id waiting for "Delete" confirmation
@@ -51,6 +62,16 @@
               <div class="set-row"><div><b>Weight goal</b><span class="sub">${prefs.weightGoalKg != null ? `${BO.kg(prefs.weightGoalKg)} kg` : 'None set'} · shown on Progress.</span></div><a class="btn" href="/progress" data-link>Edit</a></div>
             </section>
 
+            <section class="set-card ${firstPaint ? 'rise' : ''}" style="--i:3" aria-labelledby="h-food">
+              <h3 id="h-food">Food</h3>
+              <div class="set-row"><div><b>Targets come from your plan</b><span class="sub">Each day’s calories, protein, carbs and fat are what its planned meals add up to. Change the meals to change them.</span></div><a class="btn" href="/plan?tab=meals" data-link>Open Plan</a></div>
+              ${(() => {
+                const a = weekAverage();
+                return a ? `<div class="set-row"><div><b>Your week, on average</b><span class="sub">${[a.kcal != null ? `${BO.kcalText(a.kcal)} kcal` : '', a.proteinG != null ? `${Math.round(a.proteinG)} g protein` : '', a.carbsG != null ? `${Math.round(a.carbsG)} g carbs` : '', a.fatG != null ? `${Math.round(a.fatG)} g fat` : ''].filter(Boolean).join(' · ')} a day${a.days < 7 ? ` (${BO.plural(a.days, 'day')} with values)` : ''}</span></div></div>`
+                  : '<div class="set-row"><div><b>No values yet</b><span class="sub">Add your foods’ labels in Plan › Meals › My foods and the targets appear.</span></div></div>';
+              })()}
+            </section>
+
             <section class="set-card ${firstPaint ? 'rise' : ''}" style="--i:3" aria-labelledby="h-look">
               <h3 id="h-look">Appearance</h3>
               <div class="set-row"><div><b>Theme</b><span class="sub">Device follows your phone or computer.</span></div>
@@ -64,7 +85,7 @@
           <div class="stack">
             <section class="set-card ${firstPaint ? 'rise' : ''}" style="--i:4" aria-labelledby="h-data">
               <h3 id="h-data">Your data</h3>
-              <div class="set-row"><div><b>Export backup</b><span class="sub">Downloads your plan, days and weigh-ins as JSON.</span></div><button type="button" class="btn" id="export">Export</button></div>
+              <div class="set-row"><div><b>Export backup</b><span class="sub">Downloads your plan, days, weigh-ins and foods as JSON.</span></div><button type="button" class="btn" id="export">Export</button></div>
               <div class="set-row"><div><b>Import backup</b><span class="sub">Milo (BodyOps) or old CorpoOps file. Replaces your data, with Undo.</span></div>
                 <label class="btn" style="cursor:pointer">Import<input type="file" id="importFile" accept="application/json,.json" hidden></label></div>
               <div class="set-row"><div><b>Reset this week</b><span class="sub">Clears this week's ticks, sets and sessions.</span></div><button type="button" class="btn danger" id="resetWeek">Reset</button></div>
@@ -73,7 +94,7 @@
             ${BO.me.isAdmin ? `<section class="set-card ${firstPaint ? 'rise' : ''}" style="--i:5" aria-labelledby="h-users">
               <h3 id="h-users">Users</h3>
               ${userRows || '<div class="set-row"><span class="sub">Nobody else has an account yet.</span></div>'}
-              <div class="set-row"><span class="sub">${BO.health && BO.health.registration ? 'Anyone who can open this site can create an account. Set BodyOps__AllowRegistration (BODYOPS_ALLOW_REGISTRATION) to false to stop that.' : 'New accounts are turned off on this server.'}</span></div>
+              <div class="set-row"><span class="sub">${BO.health && BO.health.registration ? 'Anyone who can open this site can create an account. Set MILO_ALLOW_REGISTRATION to false in .env to stop that.' : 'New accounts are turned off on this server.'}</span></div>
             </section>` : ''}
           </div>
         </div>

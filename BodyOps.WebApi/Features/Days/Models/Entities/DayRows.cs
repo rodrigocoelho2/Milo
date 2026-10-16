@@ -45,6 +45,15 @@ public sealed class DayMealRow
 
     /// <summary>Gets or sets when the meal is planned, or null.</summary>
     public TimeSpan? MealTime { get; set; }
+
+    /// <summary>Gets or sets what was eaten instead (an off-plan meal), or null.</summary>
+    public string? SwapName { get; set; }
+
+    /// <summary>Gets or sets the calories of what was eaten instead.</summary>
+    public decimal? SwapKcal { get; set; }
+
+    /// <summary>Gets or sets the protein of what was eaten instead.</summary>
+    public decimal? SwapProteinG { get; set; }
 }
 
 /// <summary>

@@ -27,6 +27,9 @@ internal static class DayJson
             foods = Truncate(meal.Foods ?? string.Empty, 2000),
             eaten = meal.Eaten,
             time = MealTimeText.TryParse(meal.Time, out var time) ? MealTimeText.Format(time) : null,
+            swapName = meal.Eaten && !string.IsNullOrWhiteSpace(meal.SwapName) ? Truncate(NameText.Clean(meal.SwapName), 80) : null,
+            swapKcal = meal.SwapKcal,
+            swapProteinG = meal.SwapProteinG,
         }).ToList(),
         exercises = day.Exercises.Select(static exercise => new
         {

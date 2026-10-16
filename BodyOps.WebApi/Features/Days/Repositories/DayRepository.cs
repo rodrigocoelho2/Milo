@@ -2,6 +2,7 @@ using System.Data;
 using System.Text.Json;
 using BodyOps.Library.Enums;
 using BodyOps.WebApi.Extensions.Data;
+using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Days.Models.Entities;
 using Dapper;
 
@@ -27,9 +28,18 @@ internal sealed class DayRepository(ISqlConnectionFactory connectionFactory) : R
         QueryAsync<ExerciseLogRow>("[dbo].[ExerciseLogList]", new { UserID = userId });
 
     /// <inheritdoc />
-    public async Task<bool> SetMealEatenAsync(long userId, DateOnly date, long planMealId, bool eaten)
+    public async Task<bool> SetMealEatenAsync(long userId, DateOnly date, long planMealId, bool eaten, MealSwapDTO? swap = null)
     {
-        var parameters = new DynamicParameters(new { UserID = userId, DayDate = Date(date), PlanMealID = planMealId, Eaten = eaten });
+        var parameters = new DynamicParameters(new
+        {
+            UserID = userId,
+            DayDate = Date(date),
+            PlanMealID = planMealId,
+            Eaten = eaten,
+            SwapName = swap?.Name,
+            SwapKcal = swap?.Kcal,
+            SwapProteinG = swap?.ProteinG,
+        });
         parameters.Add("Found", dbType: DbType.Boolean, direction: ParameterDirection.Output);
 
         await ExecuteAsync("[dbo].[DayMealSetEaten]", parameters);

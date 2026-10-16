@@ -1,4 +1,5 @@
 using BodyOps.Library.Enums;
+using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Days.Models.Entities;
 
 namespace BodyOps.WebApi.Features.Days.Repositories;
@@ -31,8 +32,9 @@ internal interface IDayRepository
     /// <param name="date">The date.</param>
     /// <param name="planMealId">The planned meal.</param>
     /// <param name="eaten">Eaten or not.</param>
+    /// <param name="swap">What was eaten instead of the plan, or null when eaten as planned.</param>
     /// <returns>False when that day has no such meal.</returns>
-    Task<bool> SetMealEatenAsync(long userId, DateOnly date, long planMealId, bool eaten);
+    Task<bool> SetMealEatenAsync(long userId, DateOnly date, long planMealId, bool eaten, MealSwapDTO? swap = null);
 
     /// <summary>
     /// Ticks or unticks every meal of a day (dbo.DayMealSetAllEaten).

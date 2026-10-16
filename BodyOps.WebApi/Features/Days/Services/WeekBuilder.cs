@@ -4,6 +4,9 @@ using BodyOps.WebApi.Extensions.Time;
 using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Days.Models.Entities;
 using BodyOps.WebApi.Features.Exercises.Services;
+using BodyOps.WebApi.Features.Foods.Models.DTOs;
+using BodyOps.WebApi.Features.Foods.Models.Entities;
+using BodyOps.WebApi.Features.Foods.Services;
 using BodyOps.WebApi.Features.Plans.Models.Entities;
 using BodyOps.WebApi.Features.Plans.Services;
 using BodyOps.WebApi.Features.Weights.Models.Entities;
@@ -31,10 +34,12 @@ internal static class WeekBuilder
     /// <param name="logged">The logged days of that week.</param>
     /// <param name="history">Every logged strength exercise (for last session and records).</param>
     /// <param name="weights">The weigh-ins (may include other dates), shown on each day.</param>
+    /// <param name="foods">The account's foods, for each meal's calories and macros.</param>
     /// <returns>The week.</returns>
-    public static WeekDTO Week(DateOnly monday, DateOnly today, PlanData plan, DayRange logged, IReadOnlyList<ExerciseLogRow> history, IReadOnlyList<WeightEntry>? weights = null)
+    public static WeekDTO Week(DateOnly monday, DateOnly today, PlanData plan, DayRange logged, IReadOnlyList<ExerciseLogRow> history, IReadOnlyList<WeightEntry>? weights = null, IReadOnlyList<Food>? foods = null)
     {
-        var days = Enumerable.Range(0, 7).Select(offset => Day(monday.AddDays(offset), plan, logged, history, weights)).ToList();
+        var library = Library(foods);
+        var days = Enumerable.Range(0, 7).Select(offset => Day(monday.AddDays(offset), plan, logged, history, weights, library)).ToList();
         return new WeekDTO
         {
             From = monday,
@@ -53,10 +58,16 @@ internal static class WeekBuilder
     /// <param name="logged">Logged days (may include other dates).</param>
     /// <param name="history">Every logged strength exercise.</param>
     /// <param name="weights">The weigh-ins (may include other dates).</param>
+    /// <param name="foods">The account's foods by key (see <see cref="Library"/>), or null.</param>
     /// <returns>The day.</returns>
-    public static DayDTO Day(DateOnly date, PlanData plan, DayRange logged, IReadOnlyList<ExerciseLogRow> history, IReadOnlyList<WeightEntry>? weights = null)
+    public static DayDTO Day(DateOnly date, PlanData plan, DayRange logged, IReadOnlyList<ExerciseLogRow> history, IReadOnlyList<WeightEntry>? weights = null, IReadOnlyDictionary<string, Food>? foods = null)
     {
         var dto = Items(date, plan, logged, history);
+        if (foods is { Count: > 0 })
+        {
+            FoodTotals(dto, foods);
+        }
+
         dto.Name = plan.Names.FirstOrDefault(name => name.Weekday == dto.Weekday)?.Name ?? string.Empty;
         dto.WeightKg = weights?.FirstOrDefault(entry => DateOnly.FromDateTime(entry.EntryDate) == date)?.WeightKg;
         (dto.SetsDone, dto.SetsPlanned) = SetProgress(dto);
@@ -140,7 +151,15 @@ internal static class WeekBuilder
             dto.Meals = logged.Meals
                 .Where(meal => meal.DayID == row.DayID)
                 .OrderBy(static meal => meal.SortOrder)
-                .Select(static meal => new DayMealDTO { PlanMealId = meal.PlanMealID, Name = meal.Name, Foods = meal.Foods, Eaten = meal.Eaten, Time = MealTimeText.Format(meal.MealTime) })
+                .Select(static meal => new DayMealDTO
+                {
+                    PlanMealId = meal.PlanMealID,
+                    Name = meal.Name,
+                    Foods = meal.Foods,
+                    Eaten = meal.Eaten,
+                    Time = MealTimeText.Format(meal.MealTime),
+                    Swap = meal.Eaten && !string.IsNullOrEmpty(meal.SwapName) ? new MealSwapDTO { Name = meal.SwapName, Kcal = meal.SwapKcal, ProteinG = meal.SwapProteinG } : null,
+                })
                 .ToList();
 
             var sets = logged.Sets.ToLookup(static set => set.DayExerciseID);
@@ -167,6 +186,50 @@ internal static class WeekBuilder
                 null, [], null, null, exercise.CardioKind, history, exercise.ProgressStepKg))
             .ToList();
         return dto;
+    }
+
+    /// <summary>
+    /// The account's foods by the key they are matched with.
+    /// </summary>
+    /// <param name="foods">The foods, or null.</param>
+    /// <returns>Key → food.</returns>
+    public static IReadOnlyDictionary<string, Food> Library(IReadOnlyList<Food>? foods) =>
+        (foods ?? []).GroupBy(static food => FoodService.Key(food.Name)).ToDictionary(static group => group.Key, static group => group.First());
+
+    /// <summary>
+    /// Each meal's calories and macros from its foods line, and the day's totals: planned (the target), eaten (an
+    /// off-plan meal counts what was eaten instead) and still to eat.
+    /// </summary>
+    /// <param name="day">The day, filled in.</param>
+    /// <param name="foods">The account's foods by key.</param>
+    private static void FoodTotals(DayDTO day, IReadOnlyDictionary<string, Food> foods)
+    {
+        foreach (var meal in day.Meals)
+        {
+            var parts = FoodMath.ParseFoodsLine(meal.Foods);
+            if (parts.Count == 0)
+            {
+                continue;
+            }
+
+            var total = FoodMath.Sum(parts.Select(part => FoodMath.For(foods.GetValueOrDefault(FoodService.Key(part.Name)), part.Amount, part.Unit)));
+            meal.Macros = FoodMath.Known(total) ? total : null;
+        }
+
+        if (!day.Meals.Any(static meal => meal.Macros is not null || meal.Swap is not null))
+        {
+            return;
+        }
+
+        var none = new MacrosDTO();
+        day.Food = new DayFoodDTO
+        {
+            Planned = FoodMath.Add(day.Meals.Select(meal => meal.Macros ?? none)),
+            Eaten = FoodMath.Add(day.Meals.Where(static meal => meal.Eaten).Select(meal => meal.Swap is { } swap
+                ? new MacrosDTO { Kcal = swap.Kcal, ProteinG = swap.ProteinG, Unknown = swap.Kcal is null && swap.ProteinG is null ? 1 : 0 }
+                : meal.Macros ?? none)),
+            Left = FoodMath.Add(day.Meals.Where(static meal => !meal.Eaten).Select(meal => meal.Macros ?? none)),
+        };
     }
 
     /// <summary>

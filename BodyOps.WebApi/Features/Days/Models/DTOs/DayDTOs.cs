@@ -1,4 +1,5 @@
 using BodyOps.Library.Enums;
+using BodyOps.WebApi.Features.Foods.Models.DTOs;
 
 namespace BodyOps.WebApi.Features.Days.Models.DTOs;
 
@@ -60,6 +61,39 @@ public sealed class DayDTO
 
     /// <summary>Gets or sets the exercises.</summary>
     public List<DayExerciseDTO> Exercises { get; set; } = [];
+
+    /// <summary>Gets or sets what the day's food adds up to (null when no food has values).</summary>
+    public DayFoodDTO? Food { get; set; }
+}
+
+/// <summary>
+/// A day's food: what the plan adds up to (the day's target), what was eaten, and what the meals still to eat bring.
+/// </summary>
+public sealed class DayFoodDTO
+{
+    /// <summary>Gets or sets every planned meal added up (the target).</summary>
+    public MacrosDTO Planned { get; set; } = new();
+
+    /// <summary>Gets or sets the meals eaten (an off-plan meal counts what was eaten instead).</summary>
+    public MacrosDTO Eaten { get; set; } = new();
+
+    /// <summary>Gets or sets the planned meals not eaten yet.</summary>
+    public MacrosDTO Left { get; set; } = new();
+}
+
+/// <summary>
+/// What was eaten instead of a planned meal.
+/// </summary>
+public sealed class MealSwapDTO
+{
+    /// <summary>Gets or sets what was eaten ("Chicken wrap").</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets its calories, when known.</summary>
+    public decimal? Kcal { get; set; }
+
+    /// <summary>Gets or sets its protein, when known.</summary>
+    public decimal? ProteinG { get; set; }
 }
 
 /// <summary>
@@ -81,6 +115,12 @@ public sealed class DayMealDTO
 
     /// <summary>Gets or sets when it is planned ("08:00"), or null.</summary>
     public string? Time { get; set; }
+
+    /// <summary>Gets or sets what the planned foods add up to (null when none has values).</summary>
+    public MacrosDTO? Macros { get; set; }
+
+    /// <summary>Gets or sets what was eaten instead, when it was eaten off plan.</summary>
+    public MealSwapDTO? Swap { get; set; }
 }
 
 /// <summary>
@@ -280,6 +320,15 @@ public sealed class ConsistencyDayDTO
 /// </summary>
 public sealed class MealEatenDTO
 {
+    /// <summary>Gets or sets what was eaten instead of the plan (an off-plan meal), or null when eaten as planned.</summary>
+    public string? SwapName { get; set; }
+
+    /// <summary>Gets or sets the calories of what was eaten instead (optional).</summary>
+    public decimal? SwapKcal { get; set; }
+
+    /// <summary>Gets or sets the protein of what was eaten instead (optional).</summary>
+    public decimal? SwapProteinG { get; set; }
+
     /// <summary>Gets or sets a value indicating whether it was eaten.</summary>
     public bool Eaten { get; set; }
 }

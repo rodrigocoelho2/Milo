@@ -8,7 +8,8 @@
   const key = () => 'k' + (++keySeq);
 
   BO.screens.plan = async function plan(root, query) {
-    const loaded = await BO.api('GET', '/api/plan');
+    const [loaded, firstFoods] = await Promise.all([BO.api('GET', '/api/plan'), BO.loadFoods().catch(() => ({ list: [], byKey: new Map() }))]);
+    let foods = firstFoods;
     let weekday = Math.min(7, Math.max(1, Number(query.day) || BO.weekday(BO.localToday())));
     let tab = query.tab === 'meals' || query.tab === 'diet' ? 'meals' : 'training';
     let openMuscles = null;     // key of the exercise whose muscle picker is open
@@ -152,6 +153,47 @@
         </div>`;
     }
 
+    /* ---------- food values ---------- */
+
+    /** The line under a food: its calories and protein, or a way to add its values. */
+    function foodValues(f) {
+      if (!f.name.trim()) return '';
+      const food = foods.byKey.get(BO.foodKey(f.name));
+      if (!food) return `<span class="miss">+ add values</span>`;
+      const m = BO.macrosFor(food, f.amount, f.unit);
+      if (!m) return f.amount == null ? `per ${food.basis === 'perPiece' ? 'piece' : '100 g'}: <b>${BO.kcalText(food.kcal)} kcal</b>` : `${f.unit === 'pieces' ? 'pieces need' : 'grams need'} a piece weight · <b>set it</b>`;
+      return `<b>${BO.kcalText(m.kcal)} kcal</b>${m.proteinG != null ? ` · ${BO.gramsText(m.proteinG)} protein` : ''}`;
+    }
+    const foodsLib = () => foods;
+    const mealTotal = m => { const t = BO.mealMacros(m, foods); return BO.macrosKnown(t) ? BO.macroChips(t, { full: true }) : ''; };
+    function dayTotal(day) {
+      const t = BO.sumMacros(day.meals.map(m => BO.mealMacros(m, foods)).filter(BO.macrosKnown));
+      if (!BO.macrosKnown(t)) return '';
+      return `<div class="daytot"><span class="sub">${BO.DAYS[day.weekday - 1]}, all meals: the day’s target</span><b class="num">${BO.kcalText(t.kcal)} kcal</b></div><div class="mtot">${BO.macroChips(t, { full: true, kcal: false })}</div>`;
+    }
+    /** Updates the values on screen while typing (no re-render, so the field keeps its focus). */
+    function paintValues(meal) {
+      meal.foods.forEach(f => { const el = root.querySelector(`[data-fv="${f._k}"]`); if (el) { el.innerHTML = foodValues(f); el.classList.toggle('miss', !!f.name.trim() && !foods.byKey.get(BO.foodKey(f.name))); } });
+      const mt = root.querySelector(`[data-mt="${meal._k}"]`);
+      if (mt) { const html = mealTotal(meal); mt.innerHTML = html; mt.hidden = !html; }
+      const dt = root.querySelector('[data-daytot]');
+      if (dt) { const html = dayTotal(dayOf(weekday)); dt.innerHTML = html; dt.hidden = !html; }
+    }
+    async function reloadFoods() {
+      foods = await BO.loadFoods(true).catch(() => foods);
+      if (root.isConnected) BO.rerender(render);
+    }
+
+    function myFoods() {
+      const rows = foods.list.map(f => `<button type="button" data-food-edit="${f.id}"><b>${esc(f.name)} ${BO.foodSourceTag(f)}</b><span class="num">${BO.kcalText(f.kcal)}</span><span class="num p">${BO.gramsText(f.proteinG)}</span><span>${f.basis === 'perPiece' ? esc(f.pieceName || 'piece') : '100 g'}</span></button>`).join('');
+      return `<section class="card ${firstPaint ? 'rise' : ''}" style="--i:4" aria-labelledby="h-foods">
+        <div class="card-head"><h2 class="h-l" id="h-foods">My foods</h2><button type="button" class="btn primary" style="padding:9px 13px" data-food-new>${icons.plus} Add</button></div>
+        ${rows ? `<div class="ftable"><div class="fh"><span style="text-align:left">Food</span><span>kcal</span><span>protein</span><span>per</span></div>${rows}</div>
+          <p class="fine" style="margin-top:12px">A food is matched to the plan by its name. Change its values and every meal that uses it updates.</p>`
+          : '<div class="empty"><b>No foods yet.</b><span>Add the foods you eat (from Milo’s list, a barcode or the label) and every meal shows its calories and protein.</span></div>'}
+      </section>`;
+    }
+
     function mealCard(m, i) {
       const k = m._k;
       const foods = m.foods.map(f => `<div class="foodrow" data-f-k="${f._k}">
@@ -159,10 +201,13 @@
           <input class="field small num" id="amount-${f._k}" data-food="amount" inputmode="decimal" value="${f.amount ?? ''}" placeholder="0" aria-label="Amount">
           <span class="unit"><button type="button" data-unit="grams" aria-pressed="${f.unit === 'grams'}">g</button><button type="button" data-unit="pieces" aria-pressed="${f.unit === 'pieces'}">pc</button></span>
           <button type="button" class="del" data-del-food aria-label="Remove ${esc(f.name || 'food')}">${icons.x}</button>
+          <button type="button" class="fmac${f.name.trim() && !foodsLib().byKey.get(BO.foodKey(f.name)) ? ' miss' : ''}" data-fv="${f._k}" data-food-values>${foodValues(f)}</button>
         </div>`).join('');
+      const total = mealTotal(m);
       return `<div class="mealcard ${firstPaint ? 'rise' : ''}" style="--i:${i + 2}" data-k="${k}">
         <div class="mh"><input class="time num" type="time" id="time-${k}" data-meal-time value="${esc(m.time)}" aria-label="Time"><input class="mname" id="meal-${k}" data-meal-name value="${esc(m.name)}" aria-label="Meal name" maxlength="80"><button type="button" class="del" data-del-meal aria-label="Remove ${esc(m.name)}">${icons.x}</button></div>
         ${foods || '<span class="sub">No foods yet.</span>'}
+        <div class="mtot" data-mt="${k}"${total ? '' : ' hidden'}>${total}</div>
         <button type="button" class="link-btn" style="align-self:flex-start" data-add-food>+ Add food</button>
       </div>`;
     }
@@ -201,9 +246,12 @@
         </section>
       </div>`;
 
-      const meals = `<section class="card ${firstPaint ? 'rise' : ''}" style="--i:2" aria-label="Meals">${head}${copyBox()}</section>
+      const totalHtml = dayTotal(day);
+      const meals = `<div class="plan-grid"><div class="stack">
+        <section class="card ${firstPaint ? 'rise' : ''}" style="--i:2" aria-label="Meals">${head}${copyBox()}<div data-daytot style="display:flex;flex-direction:column;gap:10px;margin-top:12px"${totalHtml ? '' : ' hidden'}>${totalHtml}</div></section>
         ${day.meals.length ? `<div class="meal-list">${day.meals.map(mealCard).join('')}</div>` : `<div class="empty"><b>No meals planned for ${BO.DAYS[weekday - 1]}.</b><span>Add the meals you plan to eat, with a time, foods and amounts.</span></div>`}
-        <button type="button" class="add-row" id="addMeal" style="margin-top:0">${icons.plus} Add meal</button>`;
+        <button type="button" class="add-row" id="addMeal" style="margin-top:0">${icons.plus} Add meal</button>
+        </div>${myFoods()}</div>`;
 
       root.innerHTML = `
         <div class="page-head ${firstPaint ? 'rise' : ''}">
@@ -326,6 +374,15 @@
         }
       }
 
+      // My foods
+      const editFood = t.closest('[data-food-edit]');
+      if (editFood) {
+        const food = foods.list.find(f => String(f.id) === editFood.dataset.foodEdit);
+        if (food) BO.foodEditor({ food, onSaved: reloadFoods, onDeleted: reloadFoods });
+        return;
+      }
+      if (t.closest('[data-food-new]')) { BO.foodPicker({ title: 'Add a food', onPick: reloadFoods }); return; }
+
       // Meals
       if (t.closest('#addMeal')) {
         const lastTime = day.meals.map(m => m.time).filter(Boolean).sort().at(-1);
@@ -350,13 +407,31 @@
           return;
         }
         if (t.closest('[data-add-food]')) {
-          const f = { _k: key(), name: '', amount: null, unit: 'grams' };
-          meal.foods.push(f);
-          render();
-          root.querySelector(`#food-${f._k}`).focus();
+          const n = weekday;
+          const add = (name, food) => {
+            const perPiece = food && (food.basis === 'perPiece' || (food.pieceGrams && food.pieceName && food.source === 'milo'));
+            const f = { _k: key(), name, amount: food ? (perPiece ? 1 : 100) : null, unit: perPiece ? 'pieces' : 'grams' };
+            // A blank row left by "Add meal" is used first.
+            const blank = meal.foods.find(x => !x.name.trim());
+            if (blank) Object.assign(blank, { name: f.name, amount: f.amount, unit: f.unit }); else meal.foods.push(f);
+            saveMeals(n);
+            return blank || f;
+          };
+          BO.foodPicker({
+            title: `Add to ${meal.name || 'this meal'}`,
+            onPick: async food => { const f = add(food.name, food); await reloadFoods(); const input = root.querySelector(`#amount-${f._k}`); if (input) { input.focus(); input.select(); } },
+            onPlain: name => { const f = add(name, null); render(); const input = root.querySelector(`#amount-${f._k}`); if (input) input.focus(); },
+          });
           return;
         }
         const food = foodFrom(meal, t);
+        if (food && t.closest('[data-food-values]')) {
+          if (!food.name.trim()) return;
+          const known = foods.byKey.get(BO.foodKey(food.name));
+          if (known) BO.foodEditor({ food: known, onSaved: reloadFoods, onDeleted: reloadFoods });
+          else BO.foodPicker({ title: `Values for ${food.name}`, hint: 'Pick the closest match: its values are saved under your name for it.', query: food.name, saveAs: food.name, onPick: reloadFoods });
+          return;
+        }
         if (food && t.closest('[data-del-food]')) {
           meal.foods.splice(meal.foods.indexOf(food), 1);
           saveMeals(weekday);
@@ -365,6 +440,7 @@
         }
         const unit = t.closest('[data-unit]');
         if (food && unit) { food.unit = unit.dataset.unit; saveMeals(weekday); render(); }
+        return;
       }
     });
 
@@ -391,8 +467,8 @@
         if (t.matches('[data-meal-name]')) { meal.name = t.value; saveMeals(weekday); return; }
         if (t.matches('[data-meal-time]')) { meal.time = t.value; saveMeals(weekday); return; }
         const food = foodFrom(meal, t);
-        if (food && t.dataset.food === 'name') { food.name = t.value; saveMeals(weekday); }
-        if (food && t.dataset.food === 'amount') { food.amount = Math.max(0, BO.readNumber(t.value) ?? 0); saveMeals(weekday); }
+        if (food && t.dataset.food === 'name') { food.name = t.value; saveMeals(weekday); paintValues(meal); }
+        if (food && t.dataset.food === 'amount') { food.amount = Math.max(0, BO.readNumber(t.value) ?? 0); saveMeals(weekday); paintValues(meal); }
       }
     });
 

@@ -18,6 +18,7 @@
     <Folder Include="Views\" />
     <Folder Include="StoredProcedures\" />
     <Folder Include="StoredProcedures\Days\" />
+    <Folder Include="StoredProcedures\Foods\" />
     <Folder Include="StoredProcedures\Plans\" />
     <Folder Include="StoredProcedures\Settings\" />
     <Folder Include="StoredProcedures\Users\" />

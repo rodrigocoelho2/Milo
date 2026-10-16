@@ -11,6 +11,8 @@ using BodyOps.WebApi.Features.Backups.Services;
 using BodyOps.WebApi.Features.Days.Repositories;
 using BodyOps.WebApi.Features.Days.Services;
 using BodyOps.WebApi.Features.Exercises.Services;
+using BodyOps.WebApi.Features.Foods.Repositories;
+using BodyOps.WebApi.Features.Foods.Services;
 using BodyOps.WebApi.Features.Health.Services;
 using BodyOps.WebApi.Features.Plans.Repositories;
 using BodyOps.WebApi.Features.Plans.Services;
@@ -86,6 +88,12 @@ internal static class BodyOpsStartup
 
         // Exercises
         services.AddSingleton<IExerciseService, ExerciseService>();
+
+        // Foods
+        services.AddMemoryCache();
+        services.AddSingleton<IFoodRepository, FoodRepository>();
+        services.AddSingleton<IPackagedFoodSource, OpenFoodFactsSource>();
+        services.AddSingleton<IFoodService, FoodService>();
 
         // Settings
         services.AddSingleton<ISettingRepository, SettingRepository>();

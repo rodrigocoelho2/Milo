@@ -97,4 +97,19 @@ public enum TranslationKeys
 
     /// <summary>The weight added after a completed rep range is out of range.</summary>
     InvalidStep,
+
+    /// <summary>A food value is out of range.</summary>
+    InvalidFoodValue,
+
+    /// <summary>Another food already has that name.</summary>
+    FoodNameTaken,
+
+    /// <summary>Open Food Facts could not be reached.</summary>
+    PackagedUnavailable,
+
+    /// <summary>Too many Open Food Facts lookups in a minute.</summary>
+    PackagedSlowDown,
+
+    /// <summary>A barcode is not 8–14 digits.</summary>
+    InvalidBarcode,
 }
