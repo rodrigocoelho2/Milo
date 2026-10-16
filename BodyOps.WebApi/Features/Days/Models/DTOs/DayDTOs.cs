@@ -144,6 +144,57 @@ public sealed class DayExerciseDTO
 
     /// <summary>Gets or sets a value indicating whether this load beats every earlier session (a personal record).</summary>
     public bool IsPr { get; set; }
+
+    /// <summary>Gets or sets the lowest reps of each planned set (the bottom of a rep range; same as <see cref="Targets"/> for fixed reps).</summary>
+    public List<int> TargetsMin { get; set; } = [];
+
+    /// <summary>Gets or sets the weight added once every set reaches the top of the range; null when the plan has no range.</summary>
+    public decimal? StepKg { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether this day's sets completed the rep range (the weight goes up next time).</summary>
+    public bool Earned { get; set; }
+
+    /// <summary>Gets or sets the best estimated one-rep max of this day's sets.</summary>
+    public decimal? E1rmKg { get; set; }
+
+    /// <summary>Gets or sets the best estimated one-rep max before this day.</summary>
+    public decimal? BestE1rmBeforeKg { get; set; }
+
+    /// <summary>Gets or sets the heaviest load done for at least 3, 5, 8, 10, 12 and 15 reps before this day.</summary>
+    public List<RepBestDTO> RepBests { get; set; } = [];
+
+    /// <summary>Gets or sets the rep record this day set (the highest rep count it beat), or null.</summary>
+    public RepRecordDTO? RepRecord { get; set; }
+}
+
+/// <summary>
+/// The heaviest load done for at least a number of reps.
+/// </summary>
+public sealed class RepBestDTO
+{
+    /// <summary>Gets or sets the rep count.</summary>
+    public int Reps { get; set; }
+
+    /// <summary>Gets or sets the load.</summary>
+    public decimal LoadKg { get; set; }
+
+    /// <summary>Gets or sets when it was first done (null where not known).</summary>
+    public DateOnly? Date { get; set; }
+}
+
+/// <summary>
+/// A rep-count record: more weight than ever for at least that many reps.
+/// </summary>
+public sealed class RepRecordDTO
+{
+    /// <summary>Gets or sets the rep count.</summary>
+    public int Reps { get; set; }
+
+    /// <summary>Gets or sets the best load before.</summary>
+    public decimal PreviousKg { get; set; }
+
+    /// <summary>Gets or sets the new load.</summary>
+    public decimal LoadKg { get; set; }
 }
 
 /// <summary>
@@ -162,6 +213,9 @@ public sealed class LastSessionDTO
 
     /// <summary>Gets or sets the load of each set done, same length as <see cref="Reps"/>.</summary>
     public List<decimal?> Loads { get; set; } = [];
+
+    /// <summary>Gets or sets a value indicating whether that session completed the current plan's rep range (so the load goes up).</summary>
+    public bool Earned { get; set; }
 }
 
 /// <summary>

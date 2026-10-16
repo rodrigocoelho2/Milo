@@ -47,15 +47,35 @@
     const doneSets = e => e.sets.filter(s => s != null).length;
     const complete = e => isCardio(e) ? (e.cardioMinutes || 0) > 0 || (e.cardioKm || 0) > 0 : doneSets(e) >= Math.max(1, e.targets.length);
     const nextOpen = e => { for (let i = 0; i < count(e); i++) if (e.sets[i] == null) return i; return -1; };
-    const defaultReps = (e, i) => e.targets[i] || (e.last && e.last.reps[i]) || e.sets.slice(0, i).reverse().find(s => s != null) || 10;
+    /** A rep range ("3x8-12") turns on progression: its bottom and top for set i, or null for fixed reps. */
+    const rangeOf = (e, i) => {
+      if (e.stepKg == null) return null;
+      const max = e.targets[i] || Math.max(0, ...e.targets);
+      const min = (e.targetsMin || [])[i] ?? max;
+      return min < max ? { min, max } : null;
+    };
+    const earnedNow = e => e.stepKg != null && e.targets.length > 0 && e.targets.every((t, i) => e.sets[i] != null && e.sets[i] >= t);
+    const stepUp = e => e.last && e.last.earned && e.stepKg != null;
+    const defaultReps = (e, i) => {
+      const range = rangeOf(e, i);
+      if (range) {
+        // After a step up, start at the bottom; otherwise try one more rep than last time, up to the top.
+        if (stepUp(e)) return range.min;
+        const before = e.last && e.last.reps[i];
+        return before ? Math.max(range.min, Math.min(range.max, before + 1)) : range.max;
+      }
+      return e.targets[i] || (e.last && e.last.reps[i]) || e.sets.slice(0, i).reverse().find(s => s != null) || 10;
+    };
     const loadsOf = e => { if (!Array.isArray(e.setLoads)) e.setLoads = []; while (e.setLoads.length < e.sets.length) e.setLoads.push(null); return e.setLoads; };
-    /** The load to suggest for set i: that set last time, else the set before it today, else last time's, else today's. */
+    /** The load to suggest for set i: that set last time, else the set before it today, else last time's, else today's.
+        When last time completed the rep range, last time's loads go up by the exercise's step. */
     const suggestLoad = (e, i) => {
+      const up = stepUp(e) ? e.stepKg : 0;
       const lastSet = e.last && e.last.loads ? e.last.loads[i] : null;
-      if (lastSet != null) return lastSet;
+      if (lastSet != null) return lastSet + up;
       const before = loadsOf(e).slice(0, i).reverse().find(v => v != null);
       if (before != null) return before;
-      return e.last && e.last.loadKg != null ? e.last.loadKg : e.loadKg;
+      return e.last && e.last.loadKg != null ? e.last.loadKg + up : e.loadKg;
     };
     const topLoad = e => { const ls = loadsOf(e).filter((v, i) => v != null && e.sets[i] != null); return ls.length ? Math.max(...ls) : e.loadKg; };
     const kgText = v => v != null ? ` · ${BO.load(v)} kg` : '';
@@ -120,6 +140,11 @@
 
     function beatLine(e) {
       if (isCardio(e)) return e.last ? '' : '';
+      const range = rangeOf(e, 0);
+      if (range) {
+        if (stepUp(e)) return `Up ${BO.load(e.stepKg)} kg: you earned it. Aim for ${range.min}+ reps`;
+        return `${range.min}–${range.max} reps · ${range.max} on every set moves you up`;
+      }
       const target = Math.max(0, ...e.targets);
       if (!e.last) return `First time: find a load you can do ${target || 10} reps with`;
       const hitAll = e.last.reps.length && e.targets.length && e.targets.every((t, i) => (e.last.reps[i] || 0) >= t);
@@ -164,7 +189,9 @@
         const v = e.sets[i];
         if (v != null) return `<button type="button" class="s-set done" data-set="${i}" aria-label="Set ${i + 1}: ${v} reps${ls[i] != null ? ` with ${BO.load(ls[i])} kg` : ''}. Tap to change."><small>Set ${i + 1} · done</small><b class="num">${v}</b><small>reps${kgText(ls[i])}</small></button>`;
         const kg = i === open ? nextLoad : suggestLoad(e, i);
-        return `<button type="button" class="s-set${i === open ? ' now' : ''}" data-set="${i}" aria-label="Log set ${i + 1}"><small>Set ${i + 1}${i === open ? ' · now' : ''}</small><b class="num">${e.targets[i] || defaultReps(e, i)}</b><small>reps${kgText(kg)}</small></button>`;
+        const range = rangeOf(e, i);
+        const goal = range ? `<b class="num rng">${range.min}–${range.max}</b>` : `<b class="num">${e.targets[i] || defaultReps(e, i)}</b>`;
+        return `<button type="button" class="s-set${i === open ? ' now' : ''}" data-set="${i}" aria-label="Log set ${i + 1}"><small>Set ${i + 1}${i === open ? ' · now' : ''}</small>${goal}<small>reps${kgText(kg)}</small></button>`;
       }).join('') + (n < 20 ? '<button type="button" class="s-set add" data-add-set aria-label="Add a set">+</button>' : '');
       if (open >= 0 && reps == null) reps = defaultReps(e, open);
       const action = open >= 0
@@ -197,7 +224,7 @@
     function summary() {
       const d = day();
       const vol = d.exercises.reduce((n, x) => n + (x.volumeKg || 0), 0);
-      const prs = d.exercises.filter(x => x.isPr).length;
+      const prs = d.exercises.filter(x => x.isPr || x.repRecord).length;
       const start = store.get(startKey);
       return `<div class="s-top"><span></span><span class="s-clock">${esc(BO.sessionName(d))}</span><button type="button" class="s-btn" data-close>${icons.x} Close</button></div>
         <div class="s-scroll" style="justify-content:center;text-align:center;align-items:center">
@@ -227,7 +254,7 @@
         <div class="s-scroll">
           <div class="s-prog">${d.exercises.map((x, j) => `<i class="${complete(x) ? 'on' : j === idx ? 'now' : ''}"></i>`).join('')}</div>
           <div><h2 class="s-name">${esc(e.name)}</h2><div class="s-last" style="margin-top:6px">${lastLine(e)}</div></div>
-          ${beatLine(e) ? `<span class="beat">${icons.trend}${esc(beatLine(e))}</span>` : ''}
+          ${beatLine(e) ? `<span class="beat${stepUp(e) ? ' up' : ''}">${stepUp(e) ? icons.up : icons.trend}${esc(beatLine(e))}</span>` : ''}
           ${isCardio(e) ? cardioBody(e) : strengthBody(e)}
           ${upnext.length ? `<div class="upnext"><span class="lbl">The rest of the session</span>${upnext.map(({ x, j }) => `<button type="button" data-goto="${j}" class="${complete(x) ? 'done' : ''}">${esc(x.name)}<span>${complete(x) ? 'done' : isCardio(x) ? esc(x.detail) : `${x.loadKg != null ? BO.load(x.loadKg) + ' kg · ' : x.last && x.last.loadKg != null ? BO.load(x.last.loadKg) + ' kg · ' : ''}${esc(x.detail || '')}`}</span></button>`).join('')}</div>` : ''}
         </div>`;
@@ -237,20 +264,69 @@
 
     /* ---------- the record moment ---------- */
 
-    async function recordMoment(e, setIndex) {
-      celebrated.add(e.planExerciseId);
+    function celebrate(key) {
+      celebrated.add(key);
       store.set(`bodyops.prs.${date}`, [...celebrated]);
+    }
+
+    /** The highest rep count whose best this session beats, from the bests before today (a first time isn't a record). */
+    function repRecordOf(e) {
+      const before = new Map((e.repBests || []).map(b => [b.reps, b.loadKg]));
+      const ls = loadsOf(e);
+      for (const n of [...BO.REP_COUNTS].reverse()) {
+        const best = Math.max(-1, ...e.sets.map((r, i) => r != null && r >= n && ls[i] != null ? ls[i] : -1));
+        if (best > 0 && before.has(n) && best > before.get(n)) return { reps: n, previousKg: before.get(n), loadKg: best };
+      }
+      return null;
+    }
+
+    const newRecBox = rec => `<div class="newrec"><span class="m">${icons.medal}</span><div><b>New ${rec.reps}-rep record</b><span class="sub">${BO.load(rec.loadKg)} kg × ${rec.reps} · was ${BO.load(rec.previousKg)} kg</span></div></div>`;
+
+    /** Every set at the top of the rep range: the weight goes up next time. */
+    function movingUp(e, rec, pr) {
+      celebrate(`up:${e.planExerciseId}`);
+      if (rec) celebrate(`rep:${e.planExerciseId}`);
+      if (pr) celebrate(e.planExerciseId);
       BO.confetti();
       BO.buzz([30, 50, 30, 50, 60]);
-      const kg = loadsOf(e)[setIndex] ?? e.loadKg;
-      const gain = kg - e.bestBeforeKg;
+      const ls = loadsOf(e);
+      const done = e.sets.filter(s => s != null);
+      const loads = ls.filter((v, i) => v != null && e.sets[i] != null);
+      const same = loads.length && loads.every(v => v === loads[0]);
+      const next = topLoad(e) + e.stepKg;
+      const e1 = BO.bestE1rm(e.sets, ls);
+      const gain = e1 != null && e.bestE1rmBeforeKg != null ? e1 - e.bestE1rmBeforeKg : null;
+      const min = (rangeOf(e, 0) || {}).min;
+      BO.sheet((body, closeSheet) => {
+        body.innerHTML = `<div class="medal up">${icons.up}</div>
+          <h3>Moving up</h3>
+          <div class="pr-big num">${BO.load(next)}<small> kg</small></div>
+          <span class="sub" style="font-size:14px">${esc(e.name)}, next time. You hit ${done.join(' · ')}${same ? ` at&nbsp;${BO.load(loads[0])}&nbsp;kg` : ''}.</span>
+          <div class="compare">
+            <div><b class="num">+${BO.load(e.stepKg)} kg</b><span>next session</span></div>
+            <div><b class="num">${e1 != null ? BO.load(Math.round(e1)) + ' kg' : '–'}</b><span>est. 1RM${gain != null && gain > 0 ? `, +${BO.load(Math.round(gain * 10) / 10)}` : ''}</span></div>
+            <div><b class="num">${min != null ? min + '+' : '–'}</b><span>reps to aim for</span></div>
+          </div>
+          ${pr ? `<div class="newrec"><span class="m">${icons.medal}</span><div><b>New personal record</b><span class="sub">${BO.load(topLoad(e))} kg · was ${BO.load(e.bestBeforeKg)} kg</span></div></div>` : rec ? newRecBox(rec) : ''}
+          <button type="button" class="btn ink lg block" data-close-pr>Keep going</button>`;
+        body.querySelector('[data-close-pr]').onclick = closeSheet;
+      }, { label: 'Moving up', cls: 'pr-sheet' });
+    }
+
+    async function recordMoment(e, setIndex, rec) {
+      celebrate(e.planExerciseId);
+      if (rec) celebrate(`rep:${e.planExerciseId}`);
+      BO.confetti();
+      BO.buzz([30, 50, 30, 50, 60]);
+      const kg = rec ? rec.loadKg : loadsOf(e)[setIndex] ?? e.loadKg;
+      const gain = kg - (rec ? rec.previousKg : e.bestBeforeKg);
       BO.sheet((body, closeSheet) => {
         body.innerHTML = `<div class="medal">${icons.medal}</div>
-          <h3>New personal record</h3>
+          <h3>${rec ? `New ${rec.reps}-rep record` : 'New personal record'}</h3>
           <div class="pr-big num">${BO.load(kg)}<small> kg</small></div>
           <span class="sub" style="font-size:14px">${esc(e.name)} · ${e.sets[setIndex]} reps on set ${setIndex + 1}</span>
           <div class="compare">
-            <div><b class="num">+${BO.load(gain)} kg</b><span>vs your best</span></div>
+            <div><b class="num">+${BO.load(gain)} kg</b><span>${rec ? `vs your best for ${rec.reps}` : 'vs your best'}</span></div>
             <div><b class="num" data-since>…</b><span data-since-lbl>since you started</span></div>
             <div><b class="num" data-month>…</b><span>record this month</span></div>
           </div>
@@ -293,7 +369,11 @@
       const more = nextOpen(e) >= 0;
       if (more) startRest(i + 1); else store.set('bodyops.rest', null);
       render();
-      if (e.bestBeforeKg != null && ls[i] != null && ls[i] > e.bestBeforeKg && !celebrated.has(e.planExerciseId)) recordMoment(e, i);
+      const pr = e.bestBeforeKg != null && ls[i] != null && ls[i] > e.bestBeforeKg && !celebrated.has(e.planExerciseId);
+      const rec = celebrated.has(`rep:${e.planExerciseId}`) ? null : repRecordOf(e);
+      if (!more && earnedNow(e) && !celebrated.has(`up:${e.planExerciseId}`)) movingUp(e, rec, pr);
+      else if (pr) recordMoment(e, i);
+      else if (rec && rec.loadKg === ls[i]) recordMoment(e, i, rec);
     }
 
     function goNext() {

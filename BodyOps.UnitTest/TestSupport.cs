@@ -275,6 +275,7 @@ internal sealed class FakePlanRepository : IPlanRepository
             exercise.Notes = item.GetProperty("notes").GetString()!;
             exercise.Muscles = item.GetProperty("muscles").ValueKind == JsonValueKind.String ? item.GetProperty("muscles").GetString() : null;
             exercise.CardioKind = item.TryGetProperty("cardioKind", out var kind) && kind.ValueKind == JsonValueKind.Number ? (CardioKind)kind.GetInt32() : null;
+            exercise.ProgressStepKg = item.TryGetProperty("progressStepKg", out var step) && step.ValueKind == JsonValueKind.Number ? step.GetDecimal() : null;
             exercise.SortOrder = order++;
             keep.Add(exercise);
         }
@@ -327,6 +328,7 @@ internal sealed class FakePlanRepository : IPlanRepository
                     Notes = exercise.Notes,
                     Muscles = exercise.Muscles,
                     CardioKind = exercise.CardioKind,
+                    ProgressStepKg = exercise.ProgressStepKg,
                     SortOrder = exercise.SortOrder,
                 }));
             }

@@ -3,6 +3,7 @@ using BodyOps.Library.Enums;
 using BodyOps.WebApi.Extensions.Time;
 using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Days.Models.Entities;
+using BodyOps.WebApi.Features.Exercises.Services;
 using BodyOps.WebApi.Features.Plans.Models.Entities;
 using BodyOps.WebApi.Features.Plans.Services;
 using BodyOps.WebApi.Features.Weights.Models.Entities;
@@ -147,7 +148,8 @@ internal static class WeekBuilder
                 .Where(exercise => exercise.DayID == row.DayID)
                 .OrderBy(static exercise => exercise.SortOrder)
                 .Select(exercise => Exercise(date, exercise.PlanExerciseID, exercise.ExerciseType, exercise.Name, exercise.Detail, exercise.Notes, exercise.Muscles,
-                    exercise.LoadKg, sets[exercise.DayExerciseID].ToList(), exercise.CardioMinutes, exercise.CardioKm, exercise.CardioKind, history))
+                    exercise.LoadKg, sets[exercise.DayExerciseID].ToList(), exercise.CardioMinutes, exercise.CardioKm, exercise.CardioKind, history,
+                    plan.Exercises.FirstOrDefault(planned => planned.PlanExerciseID == exercise.PlanExerciseID)?.ProgressStepKg))
                 .ToList();
             return dto;
         }
@@ -162,7 +164,7 @@ internal static class WeekBuilder
             .Where(exercise => exercise.Weekday == weekday)
             .OrderBy(static exercise => exercise.SortOrder)
             .Select(exercise => Exercise(date, exercise.PlanExerciseID, exercise.ExerciseType, exercise.Name, exercise.Detail, exercise.Notes, exercise.Muscles,
-                null, [], null, null, exercise.CardioKind, history))
+                null, [], null, null, exercise.CardioKind, history, exercise.ProgressStepKg))
             .ToList();
         return dto;
     }
@@ -243,9 +245,11 @@ internal static class WeekBuilder
         decimal? cardioMinutes,
         decimal? cardioKm,
         CardioKind? cardioKind,
-        IReadOnlyList<ExerciseLogRow> history)
+        IReadOnlyList<ExerciseLogRow> history,
+        decimal? progressStepKg)
     {
-        var targets = type == ExerciseType.Strength ? ExerciseDetailParser.Targets(detail) : [];
+        var planned = type == ExerciseType.Strength ? ExerciseDetailParser.Sets(detail) : [];
+        var targets = planned.Select(static set => set.Max).ToList();
         var length = Math.Max(targets.Count, setRows.Count == 0 ? 0 : setRows.Max(static set => set.SetNumber));
         var rows = Enumerable.Range(1, length).Select(number => setRows.FirstOrDefault(set => set.SetNumber == number)).ToList();
         var sets = rows.Select(static set => set is null ? null : (int?)set.Reps).ToList();
@@ -262,6 +266,8 @@ internal static class WeekBuilder
             Muscles = MuscleDetector.Detect(name, type, muscles).Keys.ToList(),
             MusclesAuto = muscles is null,
             Targets = targets,
+            TargetsMin = planned.Select(static set => set.Min).ToList(),
+            StepKg = Lifting.Step(planned.Any(static set => set.Min < set.Max), progressStepKg),
             LoadKg = loadKg,
             Sets = sets,
             SetLoads = setLoads,
@@ -283,26 +289,51 @@ internal static class WeekBuilder
 
         if (type == ExerciseType.Strength)
         {
+            dto.Earned = Lifting.Earned(planned, sets);
+            dto.E1rmKg = Lifting.BestE1rm(sets, setLoads);
             var key = NameText.Key(name);
             var earlier = history.Where(row => row.NameKey == key && DateOnly.FromDateTime(row.DayDate) < date).ToList();
             if (earlier.Count > 0)
             {
                 var last = earlier.MaxBy(static row => row.DayDate)!;
                 var lastReps = ParseReps(last.Reps);
-                var lastLoads = ParseLoads(last.Loads);
+                var lastLoads = SessionLoads(last);
                 dto.Last = new LastSessionDTO
                 {
                     Date = DateOnly.FromDateTime(last.DayDate),
                     LoadKg = last.LoadKg,
                     Reps = lastReps,
-                    Loads = lastReps.Select((_, i) => (i < lastLoads.Count ? lastLoads[i] : null) ?? last.LoadKg).ToList(),
+                    Loads = lastLoads,
+                    Earned = Lifting.Earned(planned, lastReps.Select(static reps => (int?)reps).ToList()),
                 };
                 dto.BestBeforeKg = earlier.Max(static row => row.LoadKg);
                 dto.IsPr = loadKg is not null && dto.BestBeforeKg is not null && loadKg > dto.BestBeforeKg;
+
+                var earlierSets = earlier.SelectMany(static row => ParseReps(row.Reps).Zip(SessionLoads(row), static (reps, load) => (reps, load))).ToList();
+                dto.BestE1rmBeforeKg = earlierSets.Select(static set => Lifting.E1rm(set.load, set.reps)).Max();
+                var before = Lifting.RepBests(earlierSets);
+                dto.RepBests = before.Select(static pair => new RepBestDTO { Reps = pair.Key, LoadKg = pair.Value }).OrderBy(static best => best.Reps).ToList();
+                var today = Lifting.RepBests(sets.Zip(setLoads, static (reps, load) => (reps ?? 0, load)));
+                if (Lifting.RepRecord(before, today) is { } record)
+                {
+                    dto.RepRecord = new RepRecordDTO { Reps = record.Reps, PreviousKg = record.PreviousKg, LoadKg = record.LoadKg };
+                }
             }
         }
 
         return dto;
+    }
+
+    /// <summary>
+    /// The load of each set of a logged session (sets logged before per-set loads carry the session's load).
+    /// </summary>
+    /// <param name="row">The session.</param>
+    /// <returns>One load per set, same length as its reps.</returns>
+    public static List<decimal?> SessionLoads(ExerciseLogRow row)
+    {
+        var reps = ParseReps(row.Reps);
+        var stored = ParseLoads(row.Loads);
+        return reps.Select((_, i) => (i < stored.Count ? stored[i] : null) ?? row.LoadKg).ToList();
     }
 
     private static WeekTotalsDTO Totals(List<DayDTO> days)

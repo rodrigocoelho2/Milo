@@ -57,8 +57,8 @@ BEGIN
         INNER JOIN @Targets t ON t.[Weekday] = pe.[Weekday]
         WHERE pe.[UserID] = @UserID;
 
-        INSERT INTO [dbo].[PlanExercise] ([UserID], [Weekday], [ExerciseType], [Name], [Detail], [Notes], [Muscles], [CardioKind], [SortOrder])
-        SELECT @UserID, t.[Weekday], pe.[ExerciseType], pe.[Name], pe.[Detail], pe.[Notes], pe.[Muscles], pe.[CardioKind], pe.[SortOrder]
+        INSERT INTO [dbo].[PlanExercise] ([UserID], [Weekday], [ExerciseType], [Name], [Detail], [Notes], [Muscles], [CardioKind], [ProgressStepKg], [SortOrder])
+        SELECT @UserID, t.[Weekday], pe.[ExerciseType], pe.[Name], pe.[Detail], pe.[Notes], pe.[Muscles], pe.[CardioKind], pe.[ProgressStepKg], pe.[SortOrder]
         FROM [dbo].[PlanExercise] pe
         CROSS JOIN @Targets t
         WHERE pe.[UserID] = @UserID AND pe.[Weekday] = @FromWeekday;

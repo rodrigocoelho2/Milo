@@ -62,6 +62,7 @@ internal sealed class GlobalizationHelper : IGlobalizationHelper
         [nameof(TranslationKeys.InvalidAmount)] = "Amount must be between 0 and {0}.",
         [nameof(TranslationKeys.CopyToSameDay)] = "Pick at least one other day to copy to.",
         [nameof(TranslationKeys.InvalidTime)] = "Use a time of day like 08:00.",
+        [nameof(TranslationKeys.InvalidStep)] = "The weight to add must be between {0} and {1} kg.",
         [nameof(TranslationKeys.UnknownPlanItem)] = "That item is not in the plan for this day any more. Reload the page.",
 
         // Days

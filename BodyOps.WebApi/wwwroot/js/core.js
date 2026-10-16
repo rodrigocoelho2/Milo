@@ -227,6 +227,33 @@ BO.setsLine = (reps, loads) => {
   return reps.map((r, i) => r == null ? '–' : varied && loads[i] != null ? `${BO.load(loads[i])}×${r}` : r).join(' · ');
 };
 
+/* ---------- strength maths (mirrors Lifting on the server) ---------- */
+
+/** The rep counts that keep a record of their own. */
+BO.REP_COUNTS = [3, 5, 8, 10, 12, 15];
+
+/** Estimated one-rep max (Epley), for 1–12 reps; null otherwise. */
+BO.e1rm = (load, reps) => load > 0 && reps >= 1 && reps <= 12 ? (reps === 1 ? load : Math.round(load * (1 + reps / 30) * 10) / 10) : null;
+
+/** The best estimated 1RM among sets (reps and loads, same order). */
+BO.bestE1rm = (reps, loads) => {
+  const all = reps.map((r, i) => r == null ? null : BO.e1rm((loads || [])[i], r)).filter(v => v != null);
+  return all.length ? Math.max(...all) : null;
+};
+
+/** The planned sets of a plan text, as the server reads them: "3x8-12" → three of { min: 8, max: 12 }. */
+BO.parseSets = detail => {
+  const sets = [];
+  const text = String(detail || '').replace(/[×X]/g, 'x').replace(/[–—]/g, '-');
+  for (const m of text.matchAll(/(\d{1,2})\s*x\s*(\d{1,3})(?:\s*-\s*(\d{1,3})(?!\d)(?!\s*kg))?/gi)) {
+    let low = Math.min(Number(m[2]), 999), high = m[3] ? Math.min(Number(m[3]), 999) : low;
+    if (high < low) [low, high] = [high, low];
+    for (let i = 0; i < Number(m[1]) && sets.length < 20; i++) sets.push({ min: low, max: high });
+  }
+  return sets;
+};
+BO.isRange = detail => BO.parseSets(detail).some(s => s.min < s.max);
+
 /** Kinds of cardio (CardioKind on the server). Treadmill, elliptical and stairs are logged by time only. */
 BO.CARDIO = { treadmill: 'Treadmill', bike: 'Bike', run: 'Run', walk: 'Walk', elliptical: 'Elliptical', rowing: 'Rowing', stairs: 'Stairs', swim: 'Swim', other: 'Other' };
 BO.cardioDistance = kind => !['treadmill', 'elliptical', 'stairs'].includes(kind);
@@ -269,6 +296,7 @@ BO.icons = {
   copy: svg('<rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
   grip: svg('<path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/>', '0 0 24 24', 'stroke-width="3"'),
   bolt: svg('<path d="M13 2.5 4.5 13.5H11l-1 8 8.5-11H12z"/>'),
+  up: svg('<path d="M12 19V5M6 11l6-6 6 6"/>', '0 0 24 24', 'stroke-width="2.6"'),
 };
 
 /** The logo: a bumper plate with three grip holes (in the current text colour). Each copy gets its own mask id,

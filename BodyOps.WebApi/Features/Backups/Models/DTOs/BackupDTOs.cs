@@ -121,6 +121,9 @@ public sealed class BackupExerciseDTO
 
     /// <summary>Gets or sets the kind of cardio picked by hand, or null to work it out from the name.</summary>
     public CardioKind? CardioKind { get; set; }
+
+    /// <summary>Gets or sets the weight added after a completed rep range, or null for the default.</summary>
+    public decimal? ProgressStepKg { get; set; }
 }
 
 /// <summary>

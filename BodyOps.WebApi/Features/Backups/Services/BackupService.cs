@@ -9,6 +9,7 @@ using BodyOps.WebApi.Features.Backups.Models.DTOs;
 using BodyOps.WebApi.Features.Days.Models.DTOs;
 using BodyOps.WebApi.Features.Days.Repositories;
 using BodyOps.WebApi.Features.Days.Services;
+using BodyOps.WebApi.Features.Exercises.Services;
 using BodyOps.WebApi.Features.Plans.Repositories;
 using BodyOps.WebApi.Features.Plans.Services;
 using BodyOps.WebApi.Features.Settings.Repositories;
@@ -89,6 +90,7 @@ internal sealed class BackupService(
                     Notes = exercise.Notes,
                     Muscles = exercise.Muscles is null ? null : MuscleDetector.Parse(exercise.Muscles),
                     CardioKind = exercise.CardioKind,
+                    ProgressStepKg = exercise.ProgressStepKg,
                 }).ToList(),
             }).ToList(),
             Days = DayBackupMapper.ToBackup(days),
@@ -198,7 +200,8 @@ internal sealed class BackupService(
                     Truncate(NameText.Clean(item.Exercise.Detail), PlanService.MaxDetail),
                     Truncate((item.Exercise.Notes ?? string.Empty).Trim(), PlanService.MaxNotes),
                     MuscleDetector.Format(item.Exercise.Muscles),
-                    item.Exercise.CardioKind)));
+                    item.Exercise.CardioKind,
+                    item.Exercise.ProgressStepKg is >= Lifting.MinStepKg and <= Lifting.MaxStepKg ? item.Exercise.ProgressStepKg : null)));
                 var saved = (await _planRepository.SaveExercisesAsync(userId, day.Weekday, json, syncFrom)).OrderBy(static exercise => exercise.SortOrder).ToList();
                 for (var i = 0; i < exercises.Count && i < saved.Count; i++)
                 {

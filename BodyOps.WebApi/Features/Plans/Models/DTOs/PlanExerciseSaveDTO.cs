@@ -27,4 +27,7 @@ public sealed class PlanExerciseSaveDTO
 
     /// <summary>Gets or sets the kind of cardio picked by hand, or null to work it out from the name (cardio only).</summary>
     public CardioKind? CardioKind { get; set; }
+
+    /// <summary>Gets or sets the weight added once every set reaches the top of a rep range (0.5–20), or null for 2.5 kg.</summary>
+    public decimal? ProgressStepKg { get; set; }
 }

@@ -1,4 +1,5 @@
 using BodyOps.Library.Enums;
+using BodyOps.WebApi.Features.Exercises.Services;
 using BodyOps.WebApi.Features.Plans.Models.Entities;
 using BodyOps.WebApi.Features.Plans.Services;
 
@@ -30,6 +31,13 @@ public sealed class PlanExerciseDTO
         MusclesAuto = entity.Muscles is null;
         Muscles = MuscleDetector.Detect(entity.Name, entity.ExerciseType, entity.Muscles).Keys.ToList();
         Targets = entity.ExerciseType == ExerciseType.Strength ? ExerciseDetailParser.Targets(entity.Detail) : [];
+        if (entity.ExerciseType == ExerciseType.Strength)
+        {
+            TargetsMin = ExerciseDetailParser.Mins(entity.Detail);
+            ProgressStepKg = entity.ProgressStepKg;
+            StepKg = Lifting.Step(ExerciseDetailParser.IsRange(entity.Detail), entity.ProgressStepKg);
+        }
+
         if (entity.ExerciseType == ExerciseType.Cardio)
         {
             CardioKind = CardioKinds.Resolve(entity.Name, entity.CardioKind);
@@ -61,6 +69,15 @@ public sealed class PlanExerciseDTO
 
     /// <summary>Gets or sets the rep target of each planned set (0 = no target); empty when the plan names no sets.</summary>
     public List<int> Targets { get; set; } = [];
+
+    /// <summary>Gets or sets the lowest reps of each planned set (the bottom of a range; same as <see cref="Targets"/> for fixed reps).</summary>
+    public List<int> TargetsMin { get; set; } = [];
+
+    /// <summary>Gets or sets the step set on the exercise (null = the default).</summary>
+    public decimal? ProgressStepKg { get; set; }
+
+    /// <summary>Gets or sets the weight added once every set reaches the top of the range; null when the plan has no range.</summary>
+    public decimal? StepKg { get; set; }
 
     /// <summary>Gets or sets the kind of cardio (null for strength).</summary>
     public CardioKind? CardioKind { get; set; }

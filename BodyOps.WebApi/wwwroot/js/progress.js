@@ -32,6 +32,8 @@
       BO.api('GET', '/api/exercises/records?limit=12'),
     ]);
     let range = RANGES[query.range] ? query.range : '3M';
+    let liftMode = 'e1rm';
+    try { if (localStorage.getItem('bodyops.liftMode') === 'load') liftMode = 'load'; } catch (e) { }
     let editingGoal = false;
     let showAll = false;
     let firstPaint = true;
@@ -104,22 +106,38 @@
       </section>`;
     }
 
+    /** What a record beat, in words: "12 reps", "est. 1RM" or nothing for the heaviest load. */
+    const recordWhat = x => x.kind === 'reps' ? `${x.reps} reps` : x.kind === 'e1rm' ? 'est. 1RM' : '';
+    const recordLine = x => x.kind === 'reps' ? `${x.reps}-rep record` : x.kind === 'e1rm' ? 'est. 1RM record' : 'record';
+
     function liftsCard() {
       const withLoad = lifts.filter(l => l.bestKg != null).sort((a, b) => (b.lastDate || '').localeCompare(a.lastDate || ''));
-      const recent = new Set(records.filter(x => x.date >= BO.monday(today)).map(x => x.name.toLowerCase()));
+      const recent = new Map();
+      records.filter(x => x.date >= BO.monday(today)).forEach(x => { if (!recent.has(x.name.toLowerCase())) recent.set(x.name.toLowerCase(), x); });
+      const e1 = liftMode === 'e1rm';
       const body = withLoad.length
-        ? `<div class="lifts">${withLoad.map(l => `<button type="button" class="lift" data-lift="${esc(l.name)}">
-              <div><b>${esc(l.name)}</b><span class="sub">${recent.has(l.name.toLowerCase()) ? '<span class="pill gold">PR</span> record this week' : `best ${l.bestDate ? BO.shortDate(l.bestDate) : ''} · ${BO.plural(l.sessions, 'session')}`}</span></div>
-              ${BO.sparkline(l.trend.map(p => p.loadKg), recent.has(l.name.toLowerCase()) ? 'var(--gold)' : 'var(--train)')}
-              <span class="val num">${BO.load(l.bestKg)}</span></button>`).join('')}</div>`
+        ? `<div class="lifts">${withLoad.map(l => {
+          const rec = recent.get(l.name.toLowerCase());
+          const sub = rec ? `<span class="pill gold">PR</span> ${recordLine(rec)} this week`
+            : e1 && l.bestE1rmKg != null ? `${BO.load(l.bestE1rmLoadKg)} kg × ${l.bestE1rmReps} · ${BO.shortDate(l.bestE1rmDate)}`
+              : `best ${l.bestDate ? BO.shortDate(l.bestDate) : ''} · ${BO.plural(l.sessions, 'session')}`;
+          const points = e1 ? l.trend.map(p => p.e1rmKg).filter(v => v != null) : l.trend.map(p => p.loadKg);
+          const value = e1 ? (l.bestE1rmKg != null ? BO.load(Math.round(l.bestE1rmKg)) : '–') : BO.load(l.bestKg);
+          return `<button type="button" class="lift" data-lift="${esc(l.name)}">
+              <div><b>${esc(l.name)}</b><span class="sub">${sub}</span></div>
+              ${BO.sparkline(points, rec ? 'var(--gold)' : 'var(--train)') || '<span></span>'}
+              <span class="val num">${value}</span></button>`;
+        }).join('')}</div>
+          ${e1 ? '<p class="fine" style="margin-top:10px">Est. 1RM: what you could lift once, worked out from your best set. Different reps, one comparable number.</p>' : ''}`
         : '<div class="empty"><b>No lifts logged yet.</b><span>Log a session and every exercise shows its best load and trend here.</span></div>';
-      return `<section class="card${r(3)}" aria-labelledby="h-lifts"><div class="card-head"><h2 class="h-l" id="h-lifts">Lifts</h2><span class="sub">best load, kg</span></div>${body}</section>`;
+      return `<section class="card${r(3)}" aria-labelledby="h-lifts"><div class="card-head"><h2 class="h-l" id="h-lifts">Lifts</h2>
+        ${withLoad.length ? `<div class="seg" role="group" aria-label="Show"><button type="button" data-lift-mode="e1rm" aria-pressed="${e1}">Est. 1RM</button><button type="button" data-lift-mode="load" aria-pressed="${!e1}">Best load</button></div>` : ''}</div>${body}</section>`;
     }
 
     function recordsCard() {
       if (!records.length) return '';
       return `<section class="card${r(4)}" aria-labelledby="h-rec"><div class="card-head"><h2 class="h-l" id="h-rec">Records</h2><span class="sub">newest first</span></div>
-        ${records.map(x => `<div class="rec"><span class="m">${icons.medal}</span><div><b>${esc(x.name)}</b><span class="sub">${BO.fullDate(x.date)}</span></div><span class="r num">${BO.load(x.previousKg)} → ${BO.load(x.loadKg)} kg</span></div>`).join('')}</section>`;
+        ${records.map(x => `<div class="rec"><span class="m">${icons.medal}</span><div><b>${esc(x.name)}${recordWhat(x) ? ` · ${recordWhat(x)}` : ''}</b><span class="sub">${BO.fullDate(x.date)}</span></div><span class="r num">${BO.load(x.previousKg)} → ${BO.load(x.loadKg)} kg</span></div>`).join('')}</section>`;
     }
 
     function render() {
@@ -140,12 +158,24 @@
         body.innerHTML = '<div class="loading" style="min-height:200px"><div class="spinner"></div></div>';
         try {
           const h = await BO.api('GET', `/api/exercises/history?name=${encodeURIComponent(name)}`);
-          const sessions = h.sessions.filter(s => s.loadKg != null);
-          const best = sessions.length ? Math.max(...sessions.map(s => s.loadKg)) : null;
-          const bestIndex = sessions.map(s => s.loadKg).lastIndexOf(best);
-          body.innerHTML = `<div><span class="sub">${BO.plural(h.sessions.length, 'session')}</span><h3>${esc(h.name)}</h3></div>
-            ${best != null ? `<div class="row"><span class="pill gold">Best ${BO.load(best)} kg</span>${sessions.length > 1 ? `<span class="pill train">${BO.signed(sessions.at(-1).loadKg - sessions[0].loadKg, 1)} kg since ${BO.shortDate(sessions[0].date)}</span>` : ''}</div>` : ''}
-            ${sessions.length ? `<div style="--c:var(--train)">${BO.lineChart(sessions.map(s => ({ date: s.date, value: s.loadKg })), { highlight: sessions.length > 1 ? bestIndex : -1, height: 170, label: v => BO.load(v) })}</div>` : '<p class="sub">No loads logged yet.</p>'}
+          const e1 = liftMode === 'e1rm' && h.bestE1rmKg != null;
+          const valueOf = s => e1 ? s.e1rmKg : s.loadKg;
+          const sessions = h.sessions.filter(s => valueOf(s) != null);
+          const best = sessions.length ? Math.max(...sessions.map(valueOf)) : null;
+          const bestIndex = sessions.map(valueOf).lastIndexOf(best);
+          const week = BO.monday(today);
+          const reps = new Map((h.repRecords || []).map(x => [x.reps, x]));
+          const grid = reps.size ? `<div class="spread"><h4 class="h-m">Rep records</h4><span class="sub">heaviest for that many reps</span></div>
+            <div class="rr">${BO.REP_COUNTS.map(n => {
+              const x = reps.get(n);
+              if (!x) return `<div class="none"><small>${n} reps</small><b>–</b><span>not yet</span></div>`;
+              const isNew = x.date && x.date >= week;
+              return `<div class="${isNew ? 'new' : ''}"><small>${n} reps${isNew ? ' · new' : ''}</small><b class="num">${BO.load(x.loadKg)}<small> kg</small></b><span>${x.date ? BO.shortDate(x.date) : ''}</span></div>`;
+            }).join('')}</div>` : '';
+          body.innerHTML = `<div><span class="sub">${e1 ? 'Estimated 1RM' : 'Best load'} · ${BO.plural(h.sessions.length, 'session')}</span><h3>${esc(h.name)}</h3></div>
+            ${best != null ? `<div class="row" style="align-items:flex-end;justify-content:space-between;flex-wrap:wrap"><div class="wbig"><b class="num" style="font-size:60px">${BO.load(e1 ? Math.round(best) : best)}</b><span>kg</span></div>${sessions.length > 1 ? `<span class="pill good" style="margin-bottom:8px">${BO.signed(Math.round((valueOf(sessions.at(-1)) - valueOf(sessions[0])) * 10) / 10, 1)} kg since ${BO.shortDate(sessions[0].date)}</span>` : ''}</div>` : ''}
+            ${sessions.length ? `<div style="--c:var(--train)">${BO.lineChart(sessions.map(s => ({ date: s.date, value: valueOf(s) })), { highlight: sessions.length > 1 ? bestIndex : -1, height: 170, label: v => BO.load(Math.round(v)) })}</div>` : '<p class="sub">No loads logged yet.</p>'}
+            ${grid}
             <div class="slist">${h.sessions.slice().reverse().slice(0, 12).map(s => `<div class="srow"><div><b>${BO.fullDate(s.date)}</b><div class="sub">${s.reps.length ? BO.setsLine(s.reps, s.loads) + ' reps' : 'no sets'}${s.volumeKg ? ` · ${BO.volume(s.volumeKg)}` : ''}</div></div><span class="r num">${s.loadKg != null ? BO.load(s.loadKg) + ' kg' : '–'}</span></div>`).join('')}</div>`;
         } catch (e) {
           body.innerHTML = `<div class="empty"><b>Couldn't load.</b><span>${esc(e.message)}</span></div>`;
@@ -170,6 +200,8 @@
         try { await BO.saveSettings({ weightGoalKg: null }); weights.goalKg = null; editingGoal = false; render(); } catch (e) { }
         return;
       }
+      const mode = t.closest('[data-lift-mode]');
+      if (mode) { liftMode = mode.dataset.liftMode; try { localStorage.setItem('bodyops.liftMode', liftMode); } catch (e) { } render(); return; }
       const lift = t.closest('[data-lift]');
       if (lift) { openLift(lift.dataset.lift); return; }
       const del = t.closest('[data-del]');

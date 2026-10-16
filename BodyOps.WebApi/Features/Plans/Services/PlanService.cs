@@ -3,6 +3,7 @@ using BodyOps.Library.Services;
 using BodyOps.WebApi.Extensions.Globalization;
 using BodyOps.WebApi.Extensions.Time;
 using BodyOps.WebApi.Features.Days.Models.DTOs;
+using BodyOps.WebApi.Features.Exercises.Services;
 using BodyOps.WebApi.Features.Plans.Models.DTOs;
 using BodyOps.WebApi.Features.Plans.Models.Entities;
 using BodyOps.WebApi.Features.Plans.Repositories;
@@ -155,8 +156,13 @@ internal sealed class PlanService(
                 return await _globalizationHelper.ValidationProblemAsync<PlanDayDTO>($"exercises[{i}].notes", nameof(TranslationKeys.TextTooLong), MaxNotes);
             }
 
+            if (exercise.ProgressStepKg is { } step && (step < Lifting.MinStepKg || step > Lifting.MaxStepKg))
+            {
+                return await _globalizationHelper.ValidationProblemAsync<PlanDayDTO>($"exercises[{i}].progressStepKg", nameof(TranslationKeys.InvalidStep), Lifting.MinStepKg, Lifting.MaxStepKg);
+            }
+
             var type = Enum.IsDefined(exercise.Type) ? exercise.Type : ExerciseType.Strength;
-            items.Add(PlanJson.Exercise(exercise.Id, type, name, detail, notes, MuscleDetector.Format(exercise.Muscles), exercise.CardioKind));
+            items.Add(PlanJson.Exercise(exercise.Id, type, name, detail, notes, MuscleDetector.Format(exercise.Muscles), exercise.CardioKind, exercise.ProgressStepKg));
         }
 
         await _planRepository.SaveExercisesAsync(userId, weekday, PlanJson.Serialize(items), WeekMath.Monday(_clock.Today));

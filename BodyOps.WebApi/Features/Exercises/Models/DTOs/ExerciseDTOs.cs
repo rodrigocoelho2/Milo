@@ -1,3 +1,6 @@
+using BodyOps.Library.Enums;
+using BodyOps.WebApi.Features.Days.Models.DTOs;
+
 namespace BodyOps.WebApi.Features.Exercises.Models.DTOs;
 
 /// <summary>
@@ -22,6 +25,18 @@ public sealed class ExerciseSummaryDTO
 
     /// <summary>Gets or sets the loads of the last sessions that had one (at most 12), oldest first.</summary>
     public List<ExercisePointDTO> Trend { get; set; } = [];
+
+    /// <summary>Gets or sets the best estimated one-rep max.</summary>
+    public decimal? BestE1rmKg { get; set; }
+
+    /// <summary>Gets or sets the set behind <see cref="BestE1rmKg"/>: its load.</summary>
+    public decimal? BestE1rmLoadKg { get; set; }
+
+    /// <summary>Gets or sets the set behind <see cref="BestE1rmKg"/>: its reps.</summary>
+    public int? BestE1rmReps { get; set; }
+
+    /// <summary>Gets or sets when <see cref="BestE1rmKg"/> was first reached.</summary>
+    public DateOnly? BestE1rmDate { get; set; }
 }
 
 /// <summary>
@@ -35,8 +50,14 @@ public sealed class ExerciseHistoryDTO
     /// <summary>Gets or sets the heaviest load logged.</summary>
     public decimal? BestKg { get; set; }
 
+    /// <summary>Gets or sets the best estimated one-rep max.</summary>
+    public decimal? BestE1rmKg { get; set; }
+
     /// <summary>Gets or sets the sessions, oldest first.</summary>
     public List<ExerciseSessionDTO> Sessions { get; set; } = [];
+
+    /// <summary>Gets or sets the heaviest load for at least 3, 5, 8, 10, 12 and 15 reps, with the day each was first done.</summary>
+    public List<RepBestDTO> RepRecords { get; set; } = [];
 }
 
 /// <summary>
@@ -58,6 +79,9 @@ public sealed class ExerciseSessionDTO
 
     /// <summary>Gets or sets reps × load (null without either).</summary>
     public decimal? VolumeKg { get; set; }
+
+    /// <summary>Gets or sets the best estimated one-rep max of the session's sets.</summary>
+    public decimal? E1rmKg { get; set; }
 }
 
 /// <summary>
@@ -70,20 +94,30 @@ public sealed class ExercisePointDTO
 
     /// <summary>Gets or sets the load.</summary>
     public decimal LoadKg { get; set; }
+
+    /// <summary>Gets or sets the session's best estimated one-rep max (null when no set qualifies).</summary>
+    public decimal? E1rmKg { get; set; }
 }
 
 /// <summary>
-/// A personal record: a session whose load beat every earlier one of that exercise.
+/// A personal record: a session that beat the heaviest load, a rep-count best or the estimated 1RM of that exercise.
+/// One per exercise and session, the strongest kind first (load, then reps, then estimated 1RM).
 /// </summary>
 public sealed class RecordDTO
 {
+    /// <summary>Gets or sets what the record beat.</summary>
+    public RecordKind Kind { get; set; } = RecordKind.Load;
+
+    /// <summary>Gets or sets the rep count of a <see cref="RecordKind.Reps"/> record.</summary>
+    public int? Reps { get; set; }
+
     /// <summary>Gets or sets the date.</summary>
     public DateOnly Date { get; set; }
 
     /// <summary>Gets or sets the exercise name.</summary>
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the new best load.</summary>
+    /// <summary>Gets or sets the new best (the load, or the estimated 1RM for <see cref="RecordKind.E1rm"/>).</summary>
     public decimal LoadKg { get; set; }
 
     /// <summary>Gets or sets the best load before it.</summary>

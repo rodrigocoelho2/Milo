@@ -182,7 +182,8 @@
         const load = ex.type === 'cardio' ? esc(ex.detail)
           : ex.isPr && ex.bestBeforeKg != null ? `${BO.load(ex.bestBeforeKg)} → ${BO.load(ex.loadKg)} kg`
             : ex.loadKg != null ? `${BO.load(ex.loadKg)} kg` : ex.last && ex.last.loadKg != null ? `last ${BO.load(ex.last.loadKg)} kg` : 'no load yet';
-        return `<a class="srow" href="/session?date=${d.date}&ex=${ex.planExerciseId}" data-link><div><b>${esc(ex.name)}</b><div class="sub">${ex.isPr ? '<span class="pill gold">PR</span> ' : ''}${load}</div></div><span class="r num">${right}</span></a>`;
+        const up = ex.earned && ex.stepKg != null && ex.loadKg != null ? ` · <span class="up-next">↑ ${BO.load(ex.loadKg + ex.stepKg)} next time</span>` : '';
+        return `<a class="srow" href="/session?date=${d.date}&ex=${ex.planExerciseId}" data-link><div><b>${esc(ex.name)}</b><div class="sub">${ex.isPr || ex.repRecord ? '<span class="pill gold">PR</span> ' : ''}${load}${up}</div></div><span class="r num">${right}</span></a>`;
       }).join('')}</div>`;
     }
 

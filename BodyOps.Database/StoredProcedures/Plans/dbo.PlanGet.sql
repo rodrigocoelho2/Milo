@@ -41,6 +41,7 @@ BEGIN
            pe.[Notes],
            pe.[Muscles],
            CAST(pe.[CardioKind] AS INT) AS [CardioKind],
+           pe.[ProgressStepKg],
            pe.[SortOrder]
     FROM [dbo].[PlanExercise] pe
     WHERE pe.[UserID] = @UserID

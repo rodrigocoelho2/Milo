@@ -13,6 +13,7 @@
     let tab = query.tab === 'meals' || query.tab === 'diet' ? 'meals' : 'training';
     let openMuscles = null;     // key of the exercise whose muscle picker is open
     let openKind = null;        // key of the cardio exercise whose kind picker is open
+    let openStep = null;        // key of the exercise whose progression panel is open
     let copyOpen = false;
     let copyTargets = new Set();
     let firstPaint = true;
@@ -25,7 +26,7 @@
         weekday: day.weekday,
         name: day.name || '',
         muscles: day.muscles,
-        exercises: day.exercises.map(e => ({ _k: key(), id: e.id, type: e.type, name: e.name, detail: e.detail, notes: e.notes, muscles: e.muscles, musclesAuto: e.musclesAuto, targets: e.targets, cardioKind: e.cardioKind, cardioKindAuto: e.cardioKindAuto !== false })),
+        exercises: day.exercises.map(e => ({ _k: key(), id: e.id, type: e.type, name: e.name, detail: e.detail, notes: e.notes, muscles: e.muscles, musclesAuto: e.musclesAuto, targets: e.targets, cardioKind: e.cardioKind, cardioKindAuto: e.cardioKindAuto !== false, progressStepKg: e.progressStepKg ?? null })),
         meals: day.meals.map(m => ({ _k: key(), id: m.id, name: m.name, time: m.time || '', foods: m.foods.map(f => ({ _k: key(), name: f.name, amount: f.amount, unit: f.unit })) })),
       };
     }
@@ -41,6 +42,7 @@
           const result = await BO.saving(BO.api('PUT', `/api/plan/${n}/exercises`, sent.map(e => ({
             id: e.id, type: e.type, name: e.name, detail: e.detail, notes: e.notes, muscles: e.musclesAuto ? null : e.muscles,
             cardioKind: e.type === 'cardio' && !e.cardioKindAuto ? e.cardioKind : null,
+            progressStepKg: e.type === 'strength' ? e.progressStepKg : null,
           }))));
           sent.forEach((e, i) => {
             const saved = result.exercises[i];
@@ -111,11 +113,13 @@
           <span class="sub">Pick the muscles this exercise works. ${e.musclesAuto ? 'Now detected from the name.' : 'Picked by hand.'}</span>
           <div class="chips">${Object.entries(BO.MUSCLES).map(([id, label]) => `<button type="button" data-muscle="${id}" aria-pressed="${e.muscles.includes(id)}">${label}</button>`).join('')}</div>
           <div class="spread">${e.musclesAuto ? '<span></span>' : '<button type="button" class="link-btn" data-muscles-auto>Detect from the name again</button>'}<button type="button" class="btn" data-muscles-close>Done</button></div>
-        </div>` : openKind === k && e.type === 'cardio' ? `<div class="mpicker">
+        </div>` : openStep === k && e.type === 'strength' && BO.isRange(e.detail) ? progressPanel(e) : openKind === k && e.type === 'cardio' ? `<div class="mpicker">
           <span class="sub">What kind of cardio? Treadmill, elliptical and stairs are logged by time only; the others by time and distance. ${e.cardioKindAuto ? 'Now worked out from the name.' : 'Picked by hand.'}</span>
           <div class="chips">${Object.entries(BO.CARDIO).map(([id, label]) => `<button type="button" data-kind="${id}" aria-pressed="${e.cardioKind === id}">${label}</button>`).join('')}</div>
           <div class="spread">${e.cardioKindAuto ? '<span></span>' : '<button type="button" class="link-btn" data-kind-auto>Work it out from the name again</button>'}<button type="button" class="btn" data-kind-close>Done</button></div>
         </div>` : '';
+      const range = e.type === 'strength' ? BO.parseSets(e.detail).find(s => s.min < s.max) : null;
+      const stepTag = range ? `<button type="button" class="mtag up" data-step-open title="Automatic progression">↑ ${BO.load(e.progressStepKg ?? 2.5)} kg at ${range.max}</button>` : '';
       const kindTag = e.type === 'cardio'
         ? `<button type="button" class="mtag${e.cardioKindAuto ? '' : ' on'}" data-kind-open title="Kind of cardio">${BO.CARDIO[e.cardioKind] || 'Kind'} · ${BO.cardioDistance(e.cardioKind || 'other') ? 'time + km' : 'time'}</button>`
         : '';
@@ -123,7 +127,7 @@
         <span class="n" data-grip title="Drag to reorder" aria-label="Exercise ${index + 1}, drag to reorder">${index + 1}</span>
         <div class="main-in">
           <input class="nm" id="name-${k}" data-f="name" value="${esc(e.name)}" placeholder="${e.type === 'cardio' ? 'Cardio, e.g. Treadmill' : 'Exercise, e.g. Pec deck'}" aria-label="Exercise name" maxlength="100">
-          <div class="tags"><button type="button" class="mtag ${e.type === 'cardio' ? '' : 'on'}" data-type title="Switch between strength and cardio">${e.type === 'cardio' ? 'Cardio' : 'Strength'}</button>${kindTag}${e.type === 'strength' ? tags : ''}${e.type === 'strength' ? `<button type="button" class="link-btn" style="font-size:12px" data-muscles-open>${openMuscles === k ? 'Close' : 'Edit muscles'}</button>` : ''}</div>
+          <div class="tags"><button type="button" class="mtag ${e.type === 'cardio' ? '' : 'on'}" data-type title="Switch between strength and cardio">${e.type === 'cardio' ? 'Cardio' : 'Strength'}</button>${kindTag}${e.type === 'strength' ? tags + stepTag : ''}${e.type === 'strength' ? `<button type="button" class="link-btn" style="font-size:12px" data-muscles-open>${openMuscles === k ? 'Close' : 'Edit muscles'}</button>` : ''}</div>
           <input class="nt" id="notes-${k}" data-f="notes" value="${esc(e.notes)}" placeholder="Add a note" aria-label="Notes" maxlength="200">
         </div>
         <div class="side-in">
@@ -132,6 +136,20 @@
         </div>
         ${picker}
       </div>`;
+    }
+
+    /** The rep-range rule of one exercise: how much weight to add once every set reaches the top. */
+    function progressPanel(e) {
+      const range = BO.parseSets(e.detail).find(s => s.min < s.max);
+      const step = e.progressStepKg ?? 2.5;
+      const steps = [1, 2.5, 5];
+      if (!steps.includes(step)) steps.push(step);
+      return `<div class="mpicker">
+          <span class="sub">A range: Milo pushes reps until every set reaches <b>${range.max}</b>, then adds weight for next time and you start again at <b>${range.min}</b>.</span>
+          <div class="spread"><span class="sub" style="font-weight:700;color:var(--ink)">Add each time</span>
+            <div class="seg" role="group" aria-label="Weight to add">${steps.sort((a, b) => a - b).map(v => `<button type="button" data-stepkg="${v}" aria-pressed="${v === step}">${BO.load(v)} kg</button>`).join('')}</div></div>
+          <div class="spread"><button type="button" class="link-btn" data-step-fixed>Use fixed reps (${range.max})</button><button type="button" class="btn" data-step-close>Done</button></div>
+        </div>`;
     }
 
     function mealCard(m, i) {
@@ -278,6 +296,18 @@
         }
         if (t.closest('[data-type]')) { ex.type = ex.type === 'cardio' ? 'strength' : 'cardio'; if (ex.type === 'cardio' && !ex.cardioKind) ex.cardioKind = 'other'; saveExercises(weekday); render(); return; }
         if (t.closest('[data-kind-open]')) { openKind = openKind === ex._k ? null : ex._k; render(); return; }
+        if (t.closest('[data-step-open]')) { openStep = openStep === ex._k ? null : ex._k; openMuscles = null; render(); return; }
+        if (t.closest('[data-step-close]')) { openStep = null; render(); return; }
+        const stepKg = t.closest('[data-stepkg]');
+        if (stepKg) { const v = Number(stepKg.dataset.stepkg); ex.progressStepKg = v === 2.5 ? null : v; saveExercises(weekday); render(); return; }
+        if (t.closest('[data-step-fixed]')) {
+          // "3x8-12" → "3x12": the top of each range.
+          ex.detail = ex.detail.replace(/[–—]/g, '-').replace(/(\d{1,3})\s*-\s*(\d{1,3})(?!\d)(?!\s*kg)/gi, (_, a, b) => String(Math.max(Number(a), Number(b))));
+          openStep = null;
+          saveExercises(weekday);
+          render();
+          return;
+        }
         if (t.closest('[data-kind-close]')) { openKind = null; render(); return; }
         if (t.closest('[data-kind-auto]')) { ex.cardioKindAuto = true; saveExercises(weekday); render(); return; }
         const kind = t.closest('[data-kind]');
@@ -349,8 +379,11 @@
       }
       const ex = exFrom(t);
       if (ex && t.dataset.f) {
+        const wasRange = BO.isRange(ex.detail);
         ex[t.dataset.f] = t.value;
         saveExercises(weekday);
+        // Typing a range ("3x8-12") shows the progression tag; removing it hides the tag.
+        if (t.dataset.f === 'detail' && ex.type === 'strength' && wasRange !== BO.isRange(ex.detail)) BO.rerender(render);
         return;
       }
       const meal = mealFrom(t);

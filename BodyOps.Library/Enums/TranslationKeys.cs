@@ -94,4 +94,7 @@ public enum TranslationKeys
 
     /// <summary>A rest between sets out of range.</summary>
     InvalidRest,
+
+    /// <summary>The weight added after a completed rep range is out of range.</summary>
+    InvalidStep,
 }
