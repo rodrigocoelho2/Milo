@@ -1,0 +1,4 @@
+NAME             IMAGE                                        COMMAND                  SERVICE     CREATED              STATUS                        PORTS
+milo             milo:latest                                  "dotnet BodyOps.WebA…"   milo        About a minute ago   Up 48 seconds                 0.0.0.0:8086->8080/tcp, [::]:8086->8080/tcp
+milo-db-deploy   milo-db-deploy:latest                        "/bin/bash /deploy/d…"   db-deploy   About a minute ago   Exited (0) 49 seconds ago     
+milo-sql         mcr.microsoft.com/mssql/server:2022-latest   "/opt/mssql/bin/laun…"   sqlserver   About a minute ago   Up About a minute (healthy)   0.0.0.0:1434->1433/tcp, [::]:1434->1433/tcp

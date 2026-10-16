@@ -1,0 +1,4 @@
+{"status":"ok","firstRun":true,"registration":true}
+{"id":1,"uniqueId":"dcbbe978-0dcd-43eb-883b-9c16b5efe92c","username":"Rodas","isAdmin":true}
+{"weekday":2,"name":"","meals":[],"exercises":[{"id":1,"type":"strength","name":"Pec deck","detail":"3x12","notes":"","muscles":["chest","triceps","shoulders"],"musclesAuto":true,"targets":[12,12,12],"targetsMin":[12,12,12],"progressStepKg":null,"stepKg":null,"cardioKind":null,"cardioKindAuto":true,"cardioDistance":false}],"muscles":[{"muscle":"chest","sets":3},{"muscle":"triceps","sets":1.5},{"muscle":"shoulders","sets":1.2}]}
+{"from":"2026-10-12","to":"2026-10-18","today":"2026-10-16","days":[{"date":"2026-10-12","weekday":1,"logged":false,"trainingState":"pending","name":"","weightKg":null,"setsPlanned":0,"setsDone":0,"score":0,"meals":[],"exercises":[],"food":null},{"date":"2026-10-13","weekday":2,"logged":false,"trainingState":"pending","name":"","weightKg":null,"setsPlanned":3,"setsDone":0,"score":0,"meals":[],"exe
