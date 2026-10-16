@@ -35,8 +35,8 @@ public sealed class RecordTests
         var service = new ExerciseService(days, plan, TestSupport.Globalization);
 
         plan.Exercises.Add(new() { PlanExerciseID = 10, Weekday = 2, ExerciseType = BodyOps.Library.Enums.ExerciseType.Strength, Name = "Pec deck", Detail = "3x12" });
-        await days.LogExerciseAsync(1, TestSupport.Tuesday.AddDays(-7), 10, 65, [12, 12, 12], null, null);
-        await days.LogExerciseAsync(1, TestSupport.Tuesday, 10, 70, [12, 12], null, null);
+        await days.LogExerciseAsync(1, TestSupport.Tuesday.AddDays(-7), 10, 65, [12, 12, 12], [], null, null);
+        await days.LogExerciseAsync(1, TestSupport.Tuesday, 10, 70, [12, 12], [], null, null);
 
         var summary = Assert.Single((await service.ListAsync(1)).Result!);
         Assert.Equal(70, summary.BestKg);
