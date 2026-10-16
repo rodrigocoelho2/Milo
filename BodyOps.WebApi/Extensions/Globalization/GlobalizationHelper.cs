@@ -90,6 +90,10 @@ internal sealed class GlobalizationHelper : IGlobalizationHelper
         [nameof(TranslationKeys.PushDisabled)] = "Push reminders are turned off on this server.",
         [nameof(TranslationKeys.PushNoDevices)] = "Turn on reminders on this device first.",
 
+        // Apple Watch & Health
+        [nameof(TranslationKeys.WatchKeyInvalid)] = "This key isn't valid any more. Make a new one in Milo › Settings › Apple Watch & Health and paste it in the Shortcut.",
+        [nameof(TranslationKeys.WatchPayloadInvalid)] = "Milo couldn't read what the Shortcut sent.",
+
         // Backups
         [nameof(TranslationKeys.InvalidBackup)] = "This file is not a Milo (BodyOps) or CorpoOps backup.",
         [nameof(TranslationKeys.BackupTooLarge)] = "The backup is larger than {0} MB.",

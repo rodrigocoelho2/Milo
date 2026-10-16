@@ -291,6 +291,39 @@ public sealed class ApiTests
     }
 
     [SqlFact]
+    public async Task Watch_ShortcutSendsWithItsKey_NoCookieNorAppHeader()
+    {
+        using var app = new TestApp();
+        var client = app.NewClient();
+        await Register(client, "Rodas");
+        await SaveExercises(client, Weekday(Today), new { type = "cardio", name = "Passadeira", detail = "20 min", cardioKind = "treadmill" });
+
+        var created = await Json(await client.PostAsync("/api/watch/key", null));
+        var key = created.GetProperty("key").GetString()!;
+        Assert.True(created.GetProperty("watch").GetProperty("connected").GetBoolean());
+
+        using var shortcut = app.CreateClient();   // no cookie, no X-BodyOps
+        var start = $"{Iso(Today)}T00:01:00";
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/watch/ingest")
+        {
+            Content = JsonContent.Create(new { type = "Indoor Walk", start, duration = "22 min", activeEnergy = "186 kcal", heartRate = "110\n120\n130" }),
+        };
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", key);
+        var result = await Json(await shortcut.SendAsync(request));
+        Assert.Equal("Passadeira, 22 min", result.GetProperty("filledCardio").GetString());
+
+        var day = DayOf(await Json(await client.GetAsync($"/api/days/week?date={Iso(Today)}")), Today);
+        Assert.Equal(22m, day.GetProperty("exercises")[0].GetProperty("cardioMinutes").GetDecimal());
+        var watch = await Json(await client.GetAsync("/api/watch"));
+        var workout = Assert.Single(watch.GetProperty("workouts").EnumerateArray());
+        Assert.Equal(120, workout.GetProperty("avgBpm").GetInt32());
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await shortcut.PostAsJsonAsync("/api/watch/ingest", new { key = "milo_hk_nope", weight = 80 })).StatusCode);
+        await Json(await client.DeleteAsync("/api/watch/key"));
+        Assert.Equal(HttpStatusCode.Unauthorized, (await shortcut.PostAsJsonAsync("/api/watch/ingest", new { key, weight = 80 })).StatusCode);
+    }
+
+    [SqlFact]
     public async Task Weights_AndGoal()
     {
         using var app = new TestApp();

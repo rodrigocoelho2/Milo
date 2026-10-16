@@ -57,6 +57,10 @@
   the next set (each set keeps its own load, for progressive loading: 60 × 10, 65 × 8, 70 × 6), last time's loads
   and reps to beat, a tile per set, and the rest timer starts by itself after each set (+30 s or skip; its length is
   in Settings). It survives locking the phone and keeps the screen awake.
+- **Apple Watch and Apple Health**: an iOS Shortcut sends Milo each Watch workout when it ends (time, active
+  calories, average and max heart rate, the heart-rate curve, distance) and your latest weight every morning, with a
+  personal key you can revoke. The numbers show on the session summary and Today; an indoor walk or run fills in the
+  planned treadmill minutes if you haven't logged them. Set-up steps are in Settings › Apple Watch & Health.
 - **Cardio by type**: treadmill, elliptical and stairs are logged by time; bike, run, walk, rowing and swimming by
   time and distance.
 - **Rep ranges and automatic progression**: write `3×8–12` and Milo pushes reps until every set reaches the top,
@@ -249,6 +253,8 @@ All under `/api`, JSON, cookie sign-in. Writes need the `X-BodyOps: 1` header.
 | `GET weights`, `PUT weights/{date}`, `DELETE weights/{date}`, `GET`/`PUT settings` | weight, goal, rest, weigh-in interval, reminders |
 | `GET`/`POST foods`, `PUT`/`DELETE foods/{id}`, `GET foods/search?q=`, `GET foods/packaged?q=`, `GET foods/barcode/{code}` | your foods, the built-in list, Open Food Facts |
 | `GET push`, `POST push/subscribe` · `push/unsubscribe` · `push/test` | push reminders on this device |
+| `GET watch`, `POST`/`DELETE watch/key` | Apple Watch: the Shortcut key and recent workouts |
+| `POST watch/ingest` | what the Shortcut sends (workout and/or weight); authenticated with `Authorization: Bearer milo_hk_…`, no cookie or `X-BodyOps` header |
 | `GET backup`, `POST backup` | export, import (Milo/BodyOps or CorpoOps) |
 
 ## Licences

@@ -16,4 +16,7 @@ internal static class RateLimitPolicies
 {
     /// <summary>Sign-in, sign-up and password attempts: a few per minute per address, to slow down guessing.</summary>
     public const string Auth = "auth";
+
+    /// <summary>What the Apple Health Shortcut sends: plenty for a phone, a wall for guessing keys.</summary>
+    public const string Watch = "watch";
 }

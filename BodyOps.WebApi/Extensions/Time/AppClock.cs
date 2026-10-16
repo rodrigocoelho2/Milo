@@ -13,6 +13,9 @@ internal interface IAppClock
 
     /// <summary>Gets the wall-clock time in the configured time zone.</summary>
     DateTime Now { get; }
+
+    /// <summary>Gets the configured time zone.</summary>
+    TimeZoneInfo Zone { get; }
 }
 
 /// <summary>
@@ -30,6 +33,9 @@ internal sealed class AppClock(TimeProvider timeProvider, IOptions<BodyOpsOption
 
     /// <inheritdoc />
     public DateTime Now => TimeZoneInfo.ConvertTime(_timeProvider.GetUtcNow(), _zone).DateTime;
+
+    /// <inheritdoc />
+    public TimeZoneInfo Zone => _zone;
 
     private static TimeZoneInfo FindZone(string id)
     {

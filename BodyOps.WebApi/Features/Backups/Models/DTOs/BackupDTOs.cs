@@ -35,6 +35,45 @@ public sealed class BackupDTO
 
     /// <summary>Gets or sets the account's foods with their values (older backups have none).</summary>
     public List<FoodBackupDTO> Foods { get; set; } = [];
+
+    /// <summary>Gets or sets the Apple Watch workouts.</summary>
+    public List<WatchWorkoutBackupDTO>? WatchWorkouts { get; set; }
+}
+
+/// <summary>
+/// An Apple Watch workout in a backup.
+/// </summary>
+public sealed class WatchWorkoutBackupDTO
+{
+    /// <summary>Gets or sets when it started (app time zone).</summary>
+    public DateTime StartedAt { get; set; }
+
+    /// <summary>Gets or sets when it ended.</summary>
+    public DateTime EndedAt { get; set; }
+
+    /// <summary>Gets or sets the Watch's workout type.</summary>
+    public string Kind { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets how long it lasted.</summary>
+    public int DurationSeconds { get; set; }
+
+    /// <summary>Gets or sets the active calories.</summary>
+    public decimal? ActiveKcal { get; set; }
+
+    /// <summary>Gets or sets the average heart rate.</summary>
+    public int? AvgBpm { get; set; }
+
+    /// <summary>Gets or sets the maximum heart rate.</summary>
+    public int? MaxBpm { get; set; }
+
+    /// <summary>Gets or sets the distance.</summary>
+    public decimal? DistanceKm { get; set; }
+
+    /// <summary>Gets or sets the heart-rate curve.</summary>
+    public List<int>? HeartRates { get; set; }
+
+    /// <summary>Gets or sets the planned cardio it filled in (the plan id in this backup).</summary>
+    public long? PlanExerciseId { get; set; }
 }
 
 /// <summary>
@@ -206,4 +245,7 @@ public sealed class BackupImportResultDTO
 
     /// <summary>Gets or sets how many foods were imported.</summary>
     public int Foods { get; set; }
+
+    /// <summary>Gets or sets the Apple Watch workouts imported.</summary>
+    public int WatchWorkouts { get; set; }
 }

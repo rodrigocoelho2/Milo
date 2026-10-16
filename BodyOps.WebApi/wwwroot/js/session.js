@@ -236,12 +236,30 @@
             <div style="background:rgba(255,255,255,.12)"><b class="num">${vol ? BO.volume(vol) : '–'}</b><span style="color:inherit;opacity:.8">lifted</span></div>
             <div style="background:rgba(255,255,255,.12)"><b class="num">${prs}</b><span style="color:inherit;opacity:.8">${prs === 1 ? 'record' : 'records'}</span></div>
           </div>
+          ${BO.watchCard(d, watch)}
           <button type="button" class="log-set" style="max-width:420px;justify-content:center" data-close><b>Back to today</b></button>
         </div>`;
     }
 
+    /** The Watch numbers arrive a little after the workout ends on the Watch: look for them for a few minutes. */
+    let watch = null, watchPoll = null;
+    function pollWatch() {
+      if (watchPoll) return;
+      const until = Date.now() + 3 * 60 * 1000;
+      const tick = async () => {
+        if (!el.isConnected || !finished) { watchPoll = null; return; }
+        try {
+          const before = JSON.stringify(BO.watchFor(watch, day().date));
+          watch = await BO.watchLoad(true);
+          if (JSON.stringify(BO.watchFor(watch, day().date)) !== before && finished && el.isConnected) el.innerHTML = summary();
+        } catch (e) { }
+        watchPoll = Date.now() < until && BO.watchFor(watch, day().date).session == null ? setTimeout(tick, 10000) : null;
+      };
+      watchPoll = setTimeout(tick, 0);
+    }
+
     function render() {
-      if (finished) { el.innerHTML = summary(); return; }
+      if (finished) { el.innerHTML = summary(); pollWatch(); return; }
       const d = day();
       const e = ex();
       const upnext = d.exercises.map((x, j) => ({ x, j })).filter(({ j }) => j !== idx);

@@ -65,6 +65,9 @@ internal static class AuthenticationExtensions
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0,
                 }));
+            options.AddPolicy(RateLimitPolicies.Watch, http => RateLimitPartition.GetFixedWindowLimiter(
+                http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
         });
 
         services.AddHttpContextAccessor();

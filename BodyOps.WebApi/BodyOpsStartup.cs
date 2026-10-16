@@ -18,6 +18,8 @@ using BodyOps.WebApi.Features.Plans.Repositories;
 using BodyOps.WebApi.Features.Plans.Services;
 using BodyOps.WebApi.Features.Push.Repositories;
 using BodyOps.WebApi.Features.Push.Services;
+using BodyOps.WebApi.Features.Watch.Repositories;
+using BodyOps.WebApi.Features.Watch.Services;
 using BodyOps.WebApi.Features.Settings.Repositories;
 using BodyOps.WebApi.Features.Settings.Services;
 using BodyOps.WebApi.Features.Weights.Repositories;
@@ -117,6 +119,10 @@ internal static class BodyOpsStartup
         services.AddSingleton<IPushService, PushService>();
         services.AddSingleton<ReminderWorker>();
         services.AddHostedService(static provider => provider.GetRequiredService<ReminderWorker>());
+
+        // Apple Watch & Health (iOS Shortcut)
+        services.AddSingleton<IWatchRepository, WatchRepository>();
+        services.AddSingleton<IWatchService, WatchService>();
 
         return services;
     }

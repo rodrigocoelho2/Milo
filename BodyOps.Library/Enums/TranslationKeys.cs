@@ -127,4 +127,10 @@ public enum TranslationKeys
 
     /// <summary>The account has no device with push on.</summary>
     PushNoDevices,
+
+    /// <summary>The Shortcut sent no key, or one that isn't (or no longer is) an account's.</summary>
+    WatchKeyInvalid,
+
+    /// <summary>What the Shortcut sent can't be read.</summary>
+    WatchPayloadInvalid,
 }

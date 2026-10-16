@@ -45,6 +45,8 @@
       BO.api('GET', '/api/weights').catch(() => ({ entries: [], goalKg: null })),
       BO.settings().catch(() => ({ weighEveryDays: 1 })),
     ]);
+    let watch = null;   // Apple Watch workouts, loaded after the first paint
+    BO.watchLoad().then(w => { watch = w; if (root.isConnected && w.workouts.length) render(); }).catch(() => { });
     const every = prefs.weighEveryDays || 1;
     let week = first;
     let date = query.date && week.days.some(d => d.date === query.date) ? query.date : (week.days.some(d => d.date === week.today) ? week.today : week.from);
@@ -59,6 +61,7 @@
       if (BO.busy()) return;
       week = await BO.api('GET', `/api/days/week?date=${date}`);
       week.days.forEach(BO.scoreDay);
+      watch = await BO.watchLoad(true).catch(() => watch);
       if (root.isConnected) render();
     }
     BO.onResume = () => { if (root.isConnected) refresh().catch(() => { }); };
@@ -108,10 +111,12 @@
       });
       if (d.exercises.length) {
         const state = BO.sessionState(d);
+        const w = BO.watchFor(watch, d.date).session;
+        const onWatch = w ? ` · ${BO.watchMinutes(w)} min on Apple Watch` : '';
         list.push({
           kind: 'train', key: timed ? WORKOUT_AT : 99 * 60, time: state === 'live' ? 'Now' : '',
           name: BO.sessionName(d), done: state === 'done', missed: state === 'missed', live: state === 'live',
-          sub: state === 'done' ? `${d.setsDone} of ${d.setsPlanned} sets · done` : state === 'live' ? `In progress · ${d.setsDone} of ${d.setsPlanned} sets` : state === 'missed' ? 'Skipped' : `${BO.plural(d.exercises.length, 'exercise')} · ${d.setsPlanned} sets · about ${BO.sessionMinutes(d)} min`,
+          sub: state === 'done' ? `${d.setsDone} of ${d.setsPlanned} sets · done${onWatch}` : state === 'live' ? `In progress · ${d.setsDone} of ${d.setsPlanned} sets` : state === 'missed' ? 'Skipped' : `${BO.plural(d.exercises.length, 'exercise')} · ${d.setsPlanned} sets · about ${BO.sessionMinutes(d)} min`,
         });
       }
       list.sort((a, b) => a.key - b.key);
@@ -150,7 +155,8 @@
       if (state === 'done') {
         const vol = d.exercises.reduce((n, ex) => n + (ex.volumeKg || 0), 0);
         const prs = d.exercises.filter(ex => ex.isPr).length;
-        return `<div class="hero done"><div><div class="tag">${esc(name)} · done</div><h3>Session done</h3><div class="meta">${d.setsDone} sets${vol ? ` · ${BO.volume(vol)} lifted` : ''}${prs ? ` · ${BO.plural(prs, 'record')}` : ''}</div></div>${go('See the session')}</div>`;
+        const w = BO.watchFor(watch, d.date).session;
+        return `<div class="hero done"><div><div class="tag">${esc(name)} · done</div><h3>Session done</h3><div class="meta">${d.setsDone} sets${vol ? ` · ${BO.volume(vol)} lifted` : ''}${prs ? ` · ${BO.plural(prs, 'record')}` : ''}</div></div>${w ? BO.watchStats(w) : ''}${go('See the session')}</div>`;
       }
       if (state === 'missed') {
         return `<div class="hero" style="background:var(--mute)"><div><div class="tag">${esc(name)}</div><h3>Skipped</h3><div class="meta">Changed your mind? You can still log it.</div></div>${go('Log it anyway')}</div>`;
@@ -189,11 +195,13 @@
     function sessionList(d) {
       if (!d.exercises.length) return '<p class="sub" style="margin:0">Rest day. Nothing to lift.</p>';
       const next = BO.nextExercise(d);
+      const fromWatch = BO.watchFor(watch, d.date).cardio;
       return `<div class="slist">${d.exercises.map(ex => {
         let right;
         if (ex.type === 'cardio') right = [ex.cardioMinutes ? `${BO.load(ex.cardioMinutes)} min` : '', ex.cardioKm ? `${BO.load(ex.cardioKm)} km` : ''].filter(Boolean).join(' · ') || (ex === next ? 'next' : esc(ex.detail));
         else right = ex.sets.some(s => s != null) ? ex.sets.map(s => s == null ? '–' : s).join(' · ') : ex === next ? 'next' : esc(ex.detail);
-        const load = ex.type === 'cardio' ? esc(ex.detail)
+        const w = fromWatch[ex.planExerciseId];
+        const load = ex.type === 'cardio' ? (w ? `<span class="wsub">from Apple Watch</span>${w.activeKcal != null ? ` · ${BO.kcalText(w.activeKcal)} kcal` : ''}` : esc(ex.detail))
           : ex.isPr && ex.bestBeforeKg != null ? `${BO.load(ex.bestBeforeKg)} → ${BO.load(ex.loadKg)} kg`
             : ex.loadKg != null ? `${BO.load(ex.loadKg)} kg` : ex.last && ex.last.loadKg != null ? `last ${BO.load(ex.last.loadKg)} kg` : 'no load yet';
         const up = ex.earned && ex.stepKg != null && ex.loadKg != null ? ` · <span class="up-next">↑ ${BO.load(ex.loadKg + ex.stepKg)} next time</span>` : '';

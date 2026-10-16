@@ -19,6 +19,8 @@ using BodyOps.WebApi.Features.Plans.Models.Entities;
 using BodyOps.WebApi.Features.Plans.Repositories;
 using BodyOps.WebApi.Features.Push.Models.Entities;
 using BodyOps.WebApi.Features.Push.Repositories;
+using BodyOps.WebApi.Features.Watch.Models.Entities;
+using BodyOps.WebApi.Features.Watch.Repositories;
 using BodyOps.WebApi.Features.Settings.Models.Entities;
 using BodyOps.WebApi.Features.Settings.Repositories;
 using BodyOps.WebApi.Features.Weights.Models.Entities;
@@ -72,6 +74,8 @@ internal sealed class FakeClock(DateOnly today) : IAppClock
     private DateTime? _now;
 
     public DateOnly Today { get; set; } = today;
+
+    public TimeZoneInfo Zone { get; set; } = TimeZoneInfo.Utc;
 
     public DateTime Now
     {
@@ -685,4 +689,74 @@ internal sealed class FakePushRepository : IPushRepository
     }
 
     public Task<bool> ClaimAsync(long userId, string key) => Task.FromResult(Sent.Add((userId, key)));
+}
+
+/// <summary>
+/// Shortcut keys and Watch workouts in memory, like the dbo.Watch* procedures.
+/// </summary>
+internal sealed class FakeWatchRepository : IWatchRepository
+{
+    private long _nextId = 700;
+
+    public Dictionary<long, (byte[] Hash, WatchKeyRow Row)> Keys { get; } = [];
+
+    public List<WatchWorkoutRow> Workouts { get; } = [];
+
+    public Task<WatchKeyRow?> GetKeyAsync(long userId) => Task.FromResult(Keys.TryGetValue(userId, out var key) ? key.Row : null);
+
+    public Task<WatchKeyRow> SaveKeyAsync(long userId, byte[] keyHash, string keyHint)
+    {
+        var row = new WatchKeyRow { UserID = userId, KeyHint = keyHint, CreatedAt = DateTime.UtcNow };
+        Keys[userId] = (keyHash, row);
+        return Task.FromResult(row);
+    }
+
+    public Task DeleteKeyAsync(long userId)
+    {
+        Keys.Remove(userId);
+        return Task.CompletedTask;
+    }
+
+    public Task<WatchKeyRow?> UseKeyAsync(byte[] keyHash)
+    {
+        var match = Keys.Values.FirstOrDefault(key => key.Hash.AsSpan().SequenceEqual(keyHash));
+        if (match.Row is not null)
+        {
+            match.Row.LastUsedAt = DateTime.UtcNow;
+        }
+
+        return Task.FromResult(match.Row);
+    }
+
+    public Task MarkKeyAsync(long userId, string error)
+    {
+        if (Keys.TryGetValue(userId, out var key))
+        {
+            key.Row.LastError = error;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<List<WatchWorkoutRow>> ListWorkoutsAsync(long userId, DateOnly from, DateOnly to) =>
+        Task.FromResult(Workouts.Where(workout => workout.UserID == userId && DateOnly.FromDateTime(workout.DayDate) >= from && DateOnly.FromDateTime(workout.DayDate) <= to).OrderBy(workout => workout.StartedAt).ToList());
+
+    public Task<WatchWorkoutRow> SaveWorkoutAsync(long userId, WatchWorkoutRow workout)
+    {
+        var existing = Workouts.FirstOrDefault(other => other.UserID == userId && other.StartedAt == workout.StartedAt);
+        workout.UserID = userId;
+        if (existing is null)
+        {
+            workout.WatchWorkoutID = ++_nextId;
+            workout.CreatedAt = DateTime.UtcNow;
+            Workouts.Add(workout);
+            return Task.FromResult(workout);
+        }
+
+        workout.WatchWorkoutID = existing.WatchWorkoutID;
+        workout.PlanExerciseID ??= existing.PlanExerciseID;
+        workout.CreatedAt = existing.CreatedAt;
+        Workouts[Workouts.IndexOf(existing)] = workout;
+        return Task.FromResult(workout);
+    }
 }

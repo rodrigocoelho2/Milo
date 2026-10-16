@@ -13,6 +13,10 @@ using BodyOps.WebApi.Features.Exercises.Services;
 using BodyOps.WebApi.Features.Foods.Models.Entities;
 using BodyOps.WebApi.Features.Foods.Repositories;
 using BodyOps.WebApi.Features.Foods.Services;
+using BodyOps.WebApi.Features.Watch.Models.DTOs;
+using BodyOps.WebApi.Features.Watch.Models.Entities;
+using BodyOps.WebApi.Features.Watch.Repositories;
+using BodyOps.WebApi.Features.Watch.Services;
 using BodyOps.WebApi.Features.Plans.Repositories;
 using BodyOps.WebApi.Features.Plans.Services;
 using BodyOps.WebApi.Features.Settings.Repositories;
@@ -37,6 +41,7 @@ namespace BodyOps.WebApi.Features.Backups.Services;
 /// <param name="globalizationHelper">Translations.</param>
 /// <param name="options">The BodyOps options.</param>
 /// <param name="foodRepository">Food data access.</param>
+/// <param name="watchRepository">Apple Watch workouts.</param>
 internal sealed class BackupService(
     IUserRepository userRepository,
     IPlanRepository planRepository,
@@ -47,7 +52,8 @@ internal sealed class BackupService(
     TimeProvider timeProvider,
     IGlobalizationHelper globalizationHelper,
     IOptions<BodyOpsOptions> options,
-    IFoodRepository? foodRepository = null) : IBackupService
+    IFoodRepository? foodRepository = null,
+    IWatchRepository? watchRepository = null) : IBackupService
 {
     private static readonly JsonSerializerOptions ReadOptions = CreateReadOptions();
 
@@ -68,6 +74,7 @@ internal sealed class BackupService(
         var days = await _dayRepository.ListRangeAsync(userId, DayService.MinDate, _clock.Today.AddDays(366));
         var weights = await _weightRepository.ListAsync(userId);
         var library = foodRepository is null ? [] : await foodRepository.ListAsync(userId);
+        var watch = watchRepository is null ? [] : await watchRepository.ListWorkoutsAsync(userId, DayService.MinDate, _clock.Today.AddDays(1));
         var setting = await _settingRepository.GetAsync(userId);
 
         var foods = plan.Foods.ToLookup(static food => food.PlanMealID);
@@ -119,6 +126,19 @@ internal sealed class BackupService(
                 FatG = food.FatG,
                 Source = food.Source,
                 SourceRef = food.SourceRef,
+            }).ToList(),
+            WatchWorkouts = watch.Select(static workout => new WatchWorkoutBackupDTO
+            {
+                StartedAt = workout.StartedAt,
+                EndedAt = workout.EndedAt,
+                Kind = workout.Kind,
+                DurationSeconds = workout.DurationSeconds,
+                ActiveKcal = workout.ActiveKcal,
+                AvgBpm = workout.AvgBpm,
+                MaxBpm = workout.MaxBpm,
+                DistanceKm = workout.DistanceKm,
+                HeartRates = new WatchWorkoutDTO(workout).HeartRates,
+                PlanExerciseId = workout.PlanExerciseID,
             }).ToList(),
         };
 
@@ -308,6 +328,35 @@ internal sealed class BackupService(
         }
 
         result.Foods = foods.Count;
+
+        var workouts = (backup.WatchWorkouts ?? [])
+            .Where(static workout => workout.DurationSeconds > 0 && workout.DurationSeconds <= WatchPayload.MaxDuration.TotalSeconds && workout.StartedAt.Year >= 2000)
+            .GroupBy(static workout => workout.StartedAt)
+            .Select(static group => group.First())
+            .ToList();
+        if (watchRepository is not null)
+        {
+            foreach (var workout in workouts)
+            {
+                static short? Bpm(int? value) => value is >= 25 and <= 250 ? (short)value : null;
+                await watchRepository.SaveWorkoutAsync(userId, new WatchWorkoutRow
+                {
+                    DayDate = workout.StartedAt.Date,
+                    StartedAt = workout.StartedAt,
+                    EndedAt = workout.EndedAt < workout.StartedAt ? workout.StartedAt.AddSeconds(workout.DurationSeconds) : workout.EndedAt,
+                    Kind = Truncate(NameText.Clean(workout.Kind), 60),
+                    DurationSeconds = workout.DurationSeconds,
+                    ActiveKcal = workout.ActiveKcal is > 0 and < 20000 ? workout.ActiveKcal : null,
+                    AvgBpm = Bpm(workout.AvgBpm),
+                    MaxBpm = Bpm(workout.MaxBpm),
+                    DistanceKm = workout.DistanceKm is > 0 and < 1000 ? workout.DistanceKm : null,
+                    HeartRates = string.Join(',', WatchPayload.Curve([.. (workout.HeartRates ?? []).Where(static bpm => bpm is >= 25 and <= 250)])),
+                    PlanExerciseID = workout.PlanExerciseId is { } old && exerciseMap.TryGetValue(old, out var mapped) ? mapped : null,
+                });
+            }
+
+            result.WatchWorkouts = workouts.Count;
+        }
 
         var goal = backup.Settings?.WeightGoalKg is >= WeightService.MinWeightKg and <= WeightService.MaxWeightKg ? backup.Settings.WeightGoalKg : null;
         var rest = backup.Settings?.RestSeconds is >= SettingService.MinRestSeconds and <= SettingService.MaxRestSeconds ? backup.Settings.RestSeconds : null;

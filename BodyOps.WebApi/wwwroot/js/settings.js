@@ -20,6 +20,8 @@
     }
     const push = BO.push;
     push.load().then(() => { if (root.isConnected) render(); });
+    let watch = null;
+    BO.watchLoad(true).then(w => { watch = w; if (root.isConnected) render(); }).catch(() => { watch = { connected: false, workouts: [], failed: true }; if (root.isConnected) render(); });
     let firstPaint = true;
     let panel = null;          // 'password' | 'delete' while one of those forms is open
     let confirmUser = null;    // user id waiting for "Delete" confirmation
@@ -141,9 +143,13 @@
           </div>
           <div class="stack">
             ${remindersCard()}
+            <section class="set-card ${firstPaint ? 'rise' : ''}" style="--i:4" aria-labelledby="h-watch">
+              <h3 id="h-watch">Apple Watch &amp; Health</h3>
+              ${BO.watchRow(watch, weights)}
+            </section>
             <section class="set-card ${firstPaint ? 'rise' : ''}" style="--i:4" aria-labelledby="h-data">
               <h3 id="h-data">Your data</h3>
-              <div class="set-row"><div><b>Export backup</b><span class="sub">Downloads your plan, days, weigh-ins and foods as JSON.</span></div><button type="button" class="btn" id="export">Export</button></div>
+              <div class="set-row"><div><b>Export backup</b><span class="sub">Downloads your plan, days, weigh-ins, foods and Watch workouts as JSON.</span></div><button type="button" class="btn" id="export">Export</button></div>
               <div class="set-row"><div><b>Import backup</b><span class="sub">Milo (BodyOps) or old CorpoOps file. Replaces your data, with Undo.</span></div>
                 <label class="btn" style="cursor:pointer">Import<input type="file" id="importFile" accept="application/json,.json" hidden></label></div>
               <div class="set-row"><div><b>Reset this week</b><span class="sub">Clears this week's ticks, sets and sessions.</span></div><button type="button" class="btn danger" id="resetWeek">Reset</button></div>
@@ -171,6 +177,7 @@
       const panelBtn = t.closest('[data-panel]');
       if (panelBtn) { panel = panel === panelBtn.dataset.panel ? null : panelBtn.dataset.panel; render(); return; }
 
+      if (t.closest('[data-watch-setup]')) { BO.watchSetup({ onChange: w => { watch = w; render(); } }); return; }
       if (t.closest('[data-push-on]')) { await push.enable(); render(); return; }
       if (t.closest('[data-push-off]')) { await push.disable(); render(); return; }
       if (t.closest('[data-push-test]')) { await push.test(); render(); return; }

@@ -981,3 +981,39 @@ canvas.confetti{position:fixed; inset:0; z-index:90; pointer-events:none; width:
 .set-devs .set-row{border-top:0; padding:8px 0}
 .warn-t{color:var(--bad, #D9480F)}
 @media (prefers-reduced-motion: reduce){ .sw, .sw::after{transition:none} }
+
+/* ---------- Apple Watch & Health ---------- */
+.wstats{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12.5px; font-weight:700}
+.wstats span{display:inline-flex; align-items:center; gap:5px}
+.wstats svg{width:14px; height:14px}
+.hero .wstats{background:rgba(255,255,255,.14); border-radius:12px; padding:8px 10px; opacity:.95}
+.watch-card{background:rgba(255,255,255,.1); border-radius:22px; padding:14px; display:flex; flex-direction:column; gap:10px; width:100%; max-width:420px; text-align:left}
+.watch-card .hd{display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12px; font-weight:700; opacity:.85}
+.watch-card .hd svg, .watch-card .line svg{width:14px; height:14px; flex:none}
+.watch-card .nums{display:grid; grid-template-columns:repeat(4,1fr); gap:6px}
+.watch-card .nums b{display:block; font:850 20px/1 var(--font); letter-spacing:-.03em}
+.watch-card .nums span{font-size:11px; opacity:.75; font-weight:600}
+.watch-card svg.hr{width:100%; height:54px; opacity:.9}
+.watch-card .line{font-size:12.5px; opacity:.85; display:flex; gap:6px; align-items:center}
+.hk-icon{width:34px; height:34px; border-radius:11px; background:var(--bad-soft); color:var(--bad); display:grid; place-items:center; flex:none}
+.hk-icon svg{width:19px; height:19px}
+.hk-steps{display:flex; flex-direction:column}
+.hk-step{display:grid; grid-template-columns:30px minmax(0,1fr); gap:12px; padding:12px 0; border-top:1px solid var(--line)}
+.hk-step:first-child{border-top:0}
+.hk-step .n{width:30px; height:30px; border-radius:10px; display:grid; place-items:center; background:var(--bad-soft); color:var(--bad); font-weight:850; font-size:13px}
+.hk-step b{display:block; font-weight:750}
+.hk-step b.inl{display:inline; font-weight:700}
+.hk-step .sub{display:block; margin-top:2px}
+.hk-step .row{margin-top:8px; flex-wrap:wrap}
+.hk-list{margin:8px 0 0; padding-left:18px; font-size:13px; color:var(--mute); display:flex; flex-direction:column; gap:5px}
+.hk-list i, .hk-step .sub i{font-style:normal; color:var(--ink); font-weight:600}
+.hk-fields{display:grid; grid-template-columns:auto 1fr; gap:4px 10px; margin-top:8px; font-size:12.5px; color:var(--mute); align-items:baseline}
+.hk-fields > div{display:contents}
+.hk-step code, .hk-fields code{font:700 12px/1.3 ui-monospace,Menlo,monospace; color:var(--ink); background:var(--card2); border-radius:6px; padding:2px 5px}
+.keybox{font:700 13.5px/1.2 ui-monospace,Menlo,monospace; background:var(--card2); border-radius:10px; padding:10px 12px; flex:1 1 180px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.keybox.fresh{white-space:normal; word-break:break-all; box-shadow:inset 0 0 0 1.5px var(--good); background:var(--good-soft)}
+.auto{display:flex; align-items:center; gap:8px; background:var(--card2); border-radius:12px; padding:9px 11px; font-size:12.5px; font-weight:650; margin-top:6px}
+.auto svg{width:15px; height:15px; color:var(--mute); flex:none}
+.auto span{flex:1}
+.auto i{font-style:normal; color:var(--mute); font-weight:500}
+.srow .wsub{color:var(--bad)}
