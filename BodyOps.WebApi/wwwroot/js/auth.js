@@ -50,7 +50,7 @@
             <div class="lp-phone"><div class="lp-screen">
               <div><div class="hi">Good evening, Rodas</div><h4>Tuesday 13</h4></div>
               <div class="mini-score"><b class="num" data-count="64">0<small>/100</small></b>
-                <div class="mini-bars"><div>Training<span><i data-w="40%" style="background:#3355FF"></i></span></div><div>Meals<span><i data-w="100%" style="background:#FF7A2F"></i></span></div></div></div>
+                <div class="mini-bars"><div>Training<span><i data-w="40%" style="background:#3355FF"></i></span></div><div>Meals<span><i data-w="100%" style="background:#FF7A2F"></i></span></div><div>Weigh-in<span><i data-w="100%" style="background:#8A5CF6"></i></span></div></div></div>
               <div class="mini-hero"><small>Up next · Upper body</small><b>Back to it</b><div class="pg">${'<i class="on"></i>'.repeat(5)}${'<i></i>'.repeat(13)}</div></div>
               <div class="mini-tl">
                 <div><em>07:30</em><i style="background:#8A5CF6">${icons.check}</i><b>Weigh-in · 97.6 kg</b></div>

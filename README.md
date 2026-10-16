@@ -38,8 +38,9 @@
 
 - **Today is a timeline**: the weigh-in, each meal at its planned time and the workout, in the order you live them.
   The next thing is highlighted and one tap ticks it off.
-- **Day score and streak**: each day scores out of 100 (training 60, meals 40) and fills as you go. The weigh-in is
-  optional: it stays on the timeline but doesn't count, so weighing in every week or two costs nothing.
+- **Day score and streak**: each day scores out of 100 (training 60, meals 40) and fills as you go. The weigh-in
+  still shows on the timeline, the day card and the week bars, but doesn't count toward the score, so weighing in
+  every week or two costs nothing.
   Days of 60 or more in a row make the streak, shown on Today, the side bar and the week.
 - **Quick log**: the **+** button logs a weigh-in, ticks the next meal or starts the workout from any screen.
 
@@ -56,7 +57,7 @@
 
 **The week and the long run**
 
-- **Week**: a stacked bar per day (training and meals), sessions, meals, volume lifted against last week,
+- **Week**: a stacked bar per day (training and meals, with the weigh-in on top), sessions, meals, volume lifted against last week,
   records, the sets each muscle got on a body map and a recap. Tap a day to fix its meals or session.
   Reset week has Undo.
 - **Progress**: body weight against your goal, with the pace ("90 kg is roughly 9 months away"), every lift's best

@@ -112,26 +112,28 @@
 
   /** How much of a day's score came from training, meals and the weigh-in (0–100 each, summing to the score). */
   BO.scoreParts = function scoreParts(day) {
+    // Training and meals make the day score; the weigh-in shows as a cap on top but doesn't change the number.
+    const CAP = 12;
     let weight = 0;
     if (day.setsPlanned > 0) weight += 60;
     if (day.meals.length) weight += 40;
-    if (!weight) return { train: 0, eat: 0 };
-    const train = day.setsPlanned > 0 && day.trainingState !== 'missed' ? 60 * day.setsDone / day.setsPlanned : 0;
-    const eat = day.meals.length ? 40 * day.meals.filter(m => m.eaten).length / day.meals.length : 0;
-    return { train: 100 * train / weight, eat: 100 * eat / weight };
+    const scale = (100 - CAP) / 100;
+    const train = weight && day.setsPlanned > 0 && day.trainingState !== 'missed' ? 60 * day.setsDone / day.setsPlanned / weight * 100 : 0;
+    const eat = weight && day.meals.length ? 40 * day.meals.filter(m => m.eaten).length / day.meals.length / weight * 100 : 0;
+    return { train: train * scale, eat: eat * scale, weigh: day.weightKg != null ? CAP : 0 };
   };
 
-  /** One stacked bar per day: training and meals, as tall as the day score. */
+  /** One stacked bar per day: training and meals (the day score), with the weigh-in as a cap on top. */
   BO.weekBars = function weekBars(week, { picked = null, height = 170, buttons = false } = {}) {
     return `<div class="wbars" style="height:${height}px">${week.days.map((d, i) => {
       const parts = BO.scoreParts(d);
       const future = d.date > week.today;
-      const empty = future || d.score === 0;
+      const empty = future || (d.score === 0 && d.weightKg == null);
       const seg = (v, c) => v > 0.5 ? `<i style="height:${v.toFixed(1)}%;background:${c};--i:${i}"></i>` : '';
       const tag = buttons ? 'button type="button"' : 'div';
       const end = buttons ? 'button' : 'div';
       return `<${tag} class="wb${d.date === week.today ? ' today' : ''}" data-day="${d.date}"${buttons ? ` aria-pressed="${d.date === picked}"` : ''} aria-label="${BO.DAYS[d.weekday - 1]}: score ${d.score}">
-        <span class="stack${empty ? ' empty' : ''}">${empty ? '' : seg(parts.eat, 'var(--eat)') + seg(parts.train, 'var(--train)')}</span>
+        <span class="stack${empty ? ' empty' : ''}">${empty ? '' : seg(parts.weigh, 'var(--weigh)') + seg(parts.eat, 'var(--eat)') + seg(parts.train, 'var(--train)')}</span>
         <small>${BO.DAYS_SHORT[d.weekday - 1][0]}</small></${end}>`;
     }).join('')}</div>`;
   };

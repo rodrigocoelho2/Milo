@@ -115,7 +115,7 @@
           <div class="col">
             <section class="card ${firstPaint ? 'rise' : ''}" style="--i:1" aria-label="Day scores">
               ${BO.weekBars(week, { buttons: true, height: 170 })}
-              <div class="legend"><span class="pill train">Training</span><span class="pill eat">Meals</span></div>
+              <div class="legend"><span class="pill train">Training</span><span class="pill eat">Meals</span><span class="pill weigh">Weigh-in</span></div>
             </section>
             ${tiles()}
             <section aria-labelledby="h-days"><div class="spread" style="margin:4px 0 8px"><h2 class="h-l" id="h-days">Day by day</h2><span class="sub">tap a day</span></div>${dayRows()}</section>

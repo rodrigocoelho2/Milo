@@ -87,8 +87,7 @@
     function items(d) {
       const list = [];
       const w = weighIn(d);
-      // Optional: on the timeline, but never "next" and not part of the day score.
-      list.push({ kind: 'weigh', key: 6 * 60, time: 'AM', name: 'Weigh-in', sub: w.sub, done: w.done || d.weightKg != null, optional: true });
+      list.push({ kind: 'weigh', key: 6 * 60, time: 'AM', name: 'Weigh-in', sub: w.sub, done: w.done || d.weightKg != null });
       let last = 7 * 60;
       const timed = d.meals.some(m => m.time);
       d.meals.forEach((m, i) => {
@@ -105,7 +104,7 @@
         });
       }
       list.sort((a, b) => a.key - b.key);
-      const next = list.findIndex(x => !x.done && !x.missed && !x.live && !x.optional);
+      const next = list.findIndex(x => !x.done && !x.missed && !x.live);
       if (next >= 0) list[next].next = true;
       return list;
     }
@@ -113,7 +112,7 @@
     function timeline(d) {
       return `<div class="tl">${items(d).map(x => {
         const cls = `ti ${x.kind}${x.done ? ' done' : ''}${x.live ? ' live' : ''}${x.next ? ' next' : ''}${x.missed ? ' missed' : ''}`;
-        const pill = x.live ? '<span class="pill train">Live</span>' : x.next ? `<span class="pill ${x.kind}">Next</span>` : x.optional && !x.done ? '<span class="opt">optional</span>' : '';
+        const pill = x.live ? '<span class="pill train">Live</span>' : x.next ? `<span class="pill ${x.kind}">Next</span>` : '';
         const inner = `<span class="time num">${esc(x.time)}</span>
           <span class="rail"><span class="dot">${x.done ? icons.check : ''}</span><span class="ln"></span></span>
           <span class="body"><b>${esc(x.name)} ${pill}</b><span>${esc(x.sub)}</span></span>`;
@@ -131,7 +130,7 @@
       const prog = segs > 1 ? `<div class="prog" aria-label="${d.setsDone} of ${d.setsPlanned} sets">${Array.from({ length: segs }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</div>` : '';
       const go = (label, href = `/session?date=${d.date}`) => `<a class="go" href="${href}" data-link>${label} ${icons.arrow}</a>`;
       if (state === 'rest') {
-        return `<div class="hero rest"><div><div class="tag">${esc(d.name || 'Rest day')}</div><h3>Recover today</h3><div class="meta">Nothing planned to lift. Eat well and sleep.</div></div>
+        return `<div class="hero rest"><div><div class="tag">${esc(d.name || 'Rest day')}</div><h3>Recover today</h3><div class="meta">Nothing planned to lift. Eat well, sleep, and weigh in.</div></div>
           <button type="button" class="go" data-quick>Quick log ${icons.arrow}</button></div>`;
       }
       if (state === 'done') {
@@ -157,6 +156,7 @@
         <div class="bars">
           ${d.setsPlanned ? bar('Training', d.setsDone / d.setsPlanned, 'var(--train)', `${d.setsDone}/${d.setsPlanned}`) : bar('Training', 0, 'var(--train)', 'rest')}
           ${d.meals.length ? bar('Meals', eaten / d.meals.length, 'var(--eat)', `${eaten}/${d.meals.length}`) : bar('Meals', 0, 'var(--eat)', '–')}
+          ${bar('Weigh-in', d.weightKg != null ? 1 : 0, 'var(--weigh)', d.weightKg != null ? 'done' : '–')}
         </div></div>`;
     }
 
