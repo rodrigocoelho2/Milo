@@ -1,0 +1,496 @@
+Test run for /home/runner/work/Milo/Milo/BodyOps.UnitTest/bin/Release/net10.0/BodyOps.UnitTest.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.13)
+[xUnit.net 00:00:00.09]   Discovering: BodyOps.UnitTest
+[xUnit.net 00:00:00.20]   Discovered:  BodyOps.UnitTest
+[xUnit.net 00:00:00.28]   Starting:    BodyOps.UnitTest
+  Passed BodyOps.UnitTest.Days.DayServiceTests.LoggingSets_MarksTheDayTrained [131 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.LastSession_CarriesTheLoadOfEachSet [25 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.GetWeek_StartsOnMonday_AndKnowsToday [3 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.LoggingSets_WithTheirOwnLoads_KeepsEachLoad_AndTheHeaviestIsTheExercisesLoad [1 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.Consistency_CoversWholeWeeksUpToToday [8 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.LoggingOutOfRangeLoadOrReps_IsAValidationProblem(load: -1, reps: 10) [5 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.LoggingOutOfRangeLoadOrReps_IsAValidationProblem(load: 1001, reps: 10) [< 1 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.LoggingOutOfRangeLoadOrReps_IsAValidationProblem(load: 50, reps: 1000) [< 1 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.TickingAMeal_LogsTheDay_AndAnswersWithTheWeek [4 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.TickingAMealThatIsNotOnThatDay_IsNotFound [< 1 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.LoggingANegativeSetLoad_IsAValidationProblem [< 1 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.DatesFarInTheFuture_AreRefused [1 ms]
+  Passed BodyOps.UnitTest.Days.DayServiceTests.ResetWeek_RemovesTheDays_AndHandsThemBackForUndo [34 ms]
+  Passed BodyOps.UnitTest.Accounts.UserAdminServiceTests.Delete_OwnAccountIsRefused_OthersAreDeleted [411 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.E1rm_IsEpley(load: 100, reps: 1, expected: 100) [1 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.E1rm_IsEpley(load: 75, reps: 8, expected: 95) [< 1 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.E1rm_IsEpley(load: 65, reps: 10, expected: 86.700000000000003) [< 1 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.E1rm_IsEpley(load: 70, reps: 12, expected: 98) [< 1 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.E1rm_LeavesOutSetsItCantEstimate(load: 70, reps: 13) [< 1 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.E1rm_LeavesOutSetsItCantEstimate(load: 70, reps: 0) [< 1 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.E1rm_LeavesOutSetsItCantEstimate(load: 0, reps: 10) [< 1 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.BestE1rm_PicksTheBestSet_IgnoringSetsNotDone [5 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.RepRecord_IsTheHighestCountBeaten_AndAFirstTimeIsNotOne [20 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.Plan_SavesTheStep_AndRejectsOneOutOfRange [3 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.Records_E1rmBeatenWithoutAnyOtherRecord [8 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.History_HasE1rmPerSessionAndRepRecords [23 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.Records_OnePerSession_LoadThenRepsThenE1rm [13 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.Week_FixedRepsPlan_HasNoStep [< 1 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.RepBests_KeepTheHeaviestLoadForAtLeastEachCount [< 1 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.Earned_NeedsARange_AndEverySetAtTheTop [2 ms]
+  Passed BodyOps.UnitTest.Exercises.LiftingTests.Week_RangePlan_ShowsTheStep_TheEarnedLastSession_AndRepRecords [8 ms]
+  Passed BodyOps.UnitTest.Accounts.PasswordHasherTests.Verify_MalformedHash_IsFalse(stored: "pbkdf2-sha512$1000$not-base64!$def") [< 1 ms]
+  Passed BodyOps.UnitTest.Accounts.PasswordHasherTests.Verify_MalformedHash_IsFalse(stored: "") [< 1 ms]
+  Passed BodyOps.UnitTest.Accounts.PasswordHasherTests.Verify_MalformedHash_IsFalse(stored: "plain") [< 1 ms]
+  Passed BodyOps.UnitTest.Accounts.PasswordHasherTests.Verify_MalformedHash_IsFalse(stored: "pbkdf2-sha512$x$abc$def") [< 1 ms]
+  Passed BodyOps.UnitTest.Accounts.PasswordHasherTests.GenerateTemporary_IsReadable [3 ms]
+  Passed BodyOps.UnitTest.Accounts.UserAdminServiceTests.List_ShowsWhatEachAccountHasPlanned [676 ms]
+  Passed BodyOps.UnitTest.Accounts.PasswordHasherTests.Hash_VerifiesOnlyTheSamePassword [1 s]
+  Passed BodyOps.UnitTest.Accounts.UserAdminServiceTests.ResetPassword_OwnAccountOrUnknown_IsRefused [1 s]
+  Passed BodyOps.UnitTest.Accounts.PasswordHasherTests.Hash_UsesANewSaltEveryTime [754 ms]
+  Passed BodyOps.UnitTest.Weights.WeightServiceTests.Delete_Unknown_IsNotFound [4 ms]
+  Passed BodyOps.UnitTest.Weights.WeightServiceTests.Goal_CanBeCleared_ButNotSilly [5 ms]
+  Passed BodyOps.UnitTest.Weights.WeightServiceTests.Settings_RestDefaultsTo90_IsChecked_AndKeptWhenNotSent [3 ms]
+  Passed BodyOps.UnitTest.Weights.WeightServiceTests.Save_FutureDateOrSillyWeight_IsAValidationProblem [2 ms]
+  Passed BodyOps.UnitTest.Weights.WeightServiceTests.Save_RoundsToOneDecimal_ReplacesTheSameDate_AndListsWithTheGoal [6 ms]
+  Passed BodyOps.UnitTest.Exercises.RecordTests.List_HasTheBestDateAndATrend [7 ms]
+  Passed BodyOps.UnitTest.Exercises.RecordTests.Records_AreLoadsThatBeatEveryEarlierOne_TheFirstSessionIsNot [4 ms]
+  Passed BodyOps.UnitTest.Extensions.UtcDateTimeJsonConverterTests.DatabaseTimestamps_AreWrittenAsUtc [12 ms]
+  Passed BodyOps.UnitTest.Extensions.UtcDateTimeJsonConverterTests.EnumsAreCamelCaseStrings [10 ms]
+  Passed BodyOps.UnitTest.Backups.BackupServiceTests.Import_CorpoOpsBackup_ReplacesTheAccountsData_AndLinksDaysToTheNewPlan [113 ms]
+  Passed BodyOps.UnitTest.Backups.BackupServiceTests.ExportThenImport_KeepsEachSetsLoad_AndTheKindOfCardio [132 ms]
+  Passed BodyOps.UnitTest.Backups.BackupServiceTests.ExportThenImport_GivesTheSamePlan [9 ms]
+  Passed BodyOps.UnitTest.Backups.BackupServiceTests.ExportThenImport_KeepsTheFoods_AndOffPlanMeals [20 ms]
+  Passed BodyOps.UnitTest.Backups.BackupServiceTests.Import_SomethingElse_IsRefused_AndChangesNothing(json: "[1,2,3]") [< 1 ms]
+  Passed BodyOps.UnitTest.Backups.BackupServiceTests.Import_SomethingElse_IsRefused_AndChangesNothing(json: "{\"format\":\"bodyops-backup\",\"plan\":\"not a li"···) [1 ms]
+  Passed BodyOps.UnitTest.Backups.BackupServiceTests.Import_SomethingElse_IsRefused_AndChangesNothing(json: "{\"hello\":\"world\"}") [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.Detect_WorksOutTheKindFromTheName(name: "Bicicleta", expected: Bike) [3 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.Detect_WorksOutTheKindFromTheName(name: "Remo", expected: Rowing) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.Detect_WorksOutTheKindFromTheName(name: "Treadmill walk", expected: Treadmill) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.Detect_WorksOutTheKindFromTheName(name: "Natação", expected: Swim) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.Detect_WorksOutTheKindFromTheName(name: "Corrida", expected: Run) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.Detect_WorksOutTheKindFromTheName(name: "Passadeira", expected: Treadmill) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.Detect_WorksOutTheKindFromTheName(name: "Elíptica", expected: Elliptical) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.Detect_WorksOutTheKindFromTheName(name: "Cycling", expected: Bike) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.Detect_WorksOutTheKindFromTheName(name: "Cardio na passadeira", expected: Treadmill) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.Detect_WorksOutTheKindFromTheName(name: "HIIT", expected: Other) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.UsesDistance_IsTimeOnlyForTreadmillEllipticalAndStairs(kind: Bike, expected: True) [8 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.UsesDistance_IsTimeOnlyForTreadmillEllipticalAndStairs(kind: Run, expected: True) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.UsesDistance_IsTimeOnlyForTreadmillEllipticalAndStairs(kind: Elliptical, expected: False) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.UsesDistance_IsTimeOnlyForTreadmillEllipticalAndStairs(kind: Stairs, expected: False) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.UsesDistance_IsTimeOnlyForTreadmillEllipticalAndStairs(kind: Other, expected: True) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.UsesDistance_IsTimeOnlyForTreadmillEllipticalAndStairs(kind: Treadmill, expected: False) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.Resolve_PrefersTheKindPickedByHand [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.CardioKindsTests.SavingTheKind_KeepsItForCardio_AndDropsItForStrength [6 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.Keys_AreMadeOnce_AndKept [47 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.OnlyThePushServices_AreAccepted(endpoint: "https://notfcm.googleapis.com.evil.example/x", expected: False) [< 1 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.OnlyThePushServices_AreAccepted(endpoint: "https://wns2-db5p.notify.windows.com/w/?token=x", expected: True) [< 1 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.OnlyThePushServices_AreAccepted(endpoint: "http://fcm.googleapis.com/fcm/send/x", expected: False) [< 1 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.OnlyThePushServices_AreAccepted(endpoint: "https://fcm.googleapis.com/fcm/send/x", expected: True) [< 1 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.OnlyThePushServices_AreAccepted(endpoint: "https://192.168.1.10/push", expected: False) [< 1 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.OnlyThePushServices_AreAccepted(endpoint: "https://evil.example/fcm.googleapis.com", expected: False) [1 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.OnlyThePushServices_AreAccepted(endpoint: "https://web.push.apple.com/QOx", expected: True) [< 1 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.OnlyThePushServices_AreAccepted(endpoint: "https://updates.push.services.mozilla.com/wpush/v2"···, expected: True) [< 1 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.OnlyThePushServices_AreAccepted(endpoint: "https://fcm.googleapis.com:8443/x", expected: False) [< 1 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.Disabled_RefusesSubscribeAndTest [11 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.Unsubscribe_ById_OnlyRemovesTheAccountsOwnDevice [19 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.Test_PostsAnEncryptedMessage_WithVapid [40 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.Subscribe_TheSameEndpointTwice_KeepsOneDevice_ForTheAccountSignedIn [9 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.Payload_IsCutToFitOneRecord_AndCarriesTheButtons [5 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.Subscribe_RefusesOtherHostsAndBadKeys [3 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.Send_ToADeviceThatIsGone_RemovesIt [8 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.Send_ThatFails_KeepsTheError [6 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.VapidToken_IsSignedForThePushServiceOrigin [3 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.Encrypt_UsesAFreshKeyAndSaltEveryTime [2 ms]
+  Passed BodyOps.UnitTest.Push.WebPushTests.Encrypt_CanBeOpenedByTheBrowser [4 ms]
+  Passed BodyOps.UnitTest.Push.ReminderTests.Meal_WithoutATime_OrRemindersOff_SendsNothing [2 ms]
+  Passed BodyOps.UnitTest.Push.ReminderTests.Meal_GoesOutAtItsTime_WithThePlateAndButtons_UntilEaten [40 ms]
+  Passed BodyOps.UnitTest.Push.ReminderTests.Streak_AtRisk_SaysWhatIsLeft [10 ms]
+  Passed BodyOps.UnitTest.Push.ReminderTests.Worker_SendsEachReminderOnce_ToTheAccountsDevices [29 ms]
+  Passed BodyOps.UnitTest.Push.ReminderTests.WeighIn_OnlyOnTheDueDay_AndNotOnceDone [4 ms]
+  Passed BodyOps.UnitTest.Push.ReminderTests.Workout_OnlyOnATrainingDay_NothingLogged [1 ms]
+  Passed BodyOps.UnitTest.Backups.LegacyBackupConverterTests.Convert_ReadsWeighInsAndGoal [1 ms]
+  Passed BodyOps.UnitTest.Backups.LegacyBackupConverterTests.ParseSets_ReadsTheRealField(real: "3x10", expected: [10, 10, 10]) [2 ms]
+  Passed BodyOps.UnitTest.Backups.LegacyBackupConverterTests.ParseSets_ReadsTheRealField(real: "", expected: []) [< 1 ms]
+  Passed BodyOps.UnitTest.Backups.LegacyBackupConverterTests.ParseSets_ReadsTheRealField(real: "3×12, 3×10", expected: [12, 12, 12, 10, 10, ···]) [1 ms]
+  Passed BodyOps.UnitTest.Backups.LegacyBackupConverterTests.ParseSets_ReadsTheRealField(real: "12, 11, 10", expected: [12, 11, 10]) [< 1 ms]
+  Passed BodyOps.UnitTest.Backups.LegacyBackupConverterTests.Convert_ReadsThePlan_WithUnitsMusclesAndCleanNames [21 ms]
+  Passed BodyOps.UnitTest.Backups.LegacyBackupConverterTests.Convert_ReadsCardio_AndSkipsDaysWithNothingLogged [2 ms]
+  Passed BodyOps.UnitTest.Backups.LegacyBackupConverterTests.Convert_UsesTheWeeksSnapshot_AndTheLoggedValues [4 ms]
+  Passed BodyOps.UnitTest.Backups.LegacyBackupConverterTests.IsLegacy_NeedsDietAndWorkout [< 1 ms]
+  Passed BodyOps.UnitTest.Accounts.AccountServiceTests.Register_InvalidUsernameOrPassword_IsAValidationProblem(username: "has space", password: "squat-2026") [7 ms]
+  Passed BodyOps.UnitTest.Accounts.AccountServiceTests.Register_InvalidUsernameOrPassword_IsAValidationProblem(username: "Rodas", password: "short") [1 ms]
+  Passed BodyOps.UnitTest.Accounts.AccountServiceTests.Register_InvalidUsernameOrPassword_IsAValidationProblem(username: "ab", password: "squat-2026") [< 1 ms]
+  Passed BodyOps.UnitTest.Accounts.UserAdminServiceTests.ResetPassword_SetsATemporaryPasswordAndNewStamp [1 s]
+  Passed BodyOps.UnitTest.Plans.PlanServiceTests.SaveMeals_WithTheSameId_UpdatesInsteadOfAdding [2 ms]
+  Passed BodyOps.UnitTest.Plans.PlanServiceTests.Save_WeekdayOutOfRange_IsAValidationProblem(weekday: 0) [1 ms]
+  Passed BodyOps.UnitTest.Plans.PlanServiceTests.Save_WeekdayOutOfRange_IsAValidationProblem(weekday: 8) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.PlanServiceTests.SaveMeals_EmptyNameOrNegativeAmount_IsAValidationProblem [1 ms]
+  Passed BodyOps.UnitTest.Plans.PlanServiceTests.Get_AlwaysHasSevenDays_MondayFirst [2 ms]
+  Passed BodyOps.UnitTest.Plans.PlanServiceTests.SaveName_NamesTheDay_EmptyRemovesIt_AndCopyingExercisesCopiesIt [7 ms]
+  Passed BodyOps.UnitTest.Plans.PlanServiceTests.Copy_OnlyToItself_IsAValidationProblem [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.PlanServiceTests.SaveMeals_CleansNames_KeepsOrder_AndSyncsFromThisMonday [7 ms]
+  Passed BodyOps.UnitTest.Plans.PlanServiceTests.SaveMeals_KeepsTheTime_AndRejectsOneThatIsNotATimeOfDay [1 ms]
+  Passed BodyOps.UnitTest.Plans.PlanServiceTests.SaveExercises_DetectsMusclesAndPlannedSets_UnlessPickedByHand [5 ms]
+  Passed BodyOps.UnitTest.Plans.PlanServiceTests.Copy_ToOtherDays_ReplacesTheirExercises [2 ms]
+  Passed BodyOps.UnitTest.Settings.SettingAndScheduleTests.Settings_HaveDefaults_SavesKeepWhatIsLeftOut_AndCheckValues [8 ms]
+  Passed BodyOps.UnitTest.Settings.SettingAndScheduleTests.NextDue_EveryDay_IsTodayUntilDone [< 1 ms]
+  Passed BodyOps.UnitTest.Settings.SettingAndScheduleTests.NextDue_EveryFifteenDays_CountsFromTheLastWeighIn [< 1 ms]
+  Passed BodyOps.UnitTest.Extensions.ServiceApiResponseExtensionsTests.ConflictWithTheCurrentRecord_Is409WithThePayload [2 ms]
+  Passed BodyOps.UnitTest.Extensions.ServiceApiResponseExtensionsTests.CreatedAndAccepted_CarryTheLocation [< 1 ms]
+  Passed BodyOps.UnitTest.Extensions.ServiceApiResponseExtensionsTests.Failures_AreProblemDetailsWithTheirStatus(status: 413) [3 ms]
+  Passed BodyOps.UnitTest.Extensions.ServiceApiResponseExtensionsTests.Failures_AreProblemDetailsWithTheirStatus(status: 404) [< 1 ms]
+  Passed BodyOps.UnitTest.Extensions.ServiceApiResponseExtensionsTests.Failures_AreProblemDetailsWithTheirStatus(status: 403) [< 1 ms]
+  Passed BodyOps.UnitTest.Extensions.ServiceApiResponseExtensionsTests.Failures_AreProblemDetailsWithTheirStatus(status: 401) [< 1 ms]
+  Passed BodyOps.UnitTest.Extensions.ServiceApiResponseExtensionsTests.Failures_AreProblemDetailsWithTheirStatus(status: 409) [< 1 ms]
+  Passed BodyOps.UnitTest.Extensions.ServiceApiResponseExtensionsTests.Failures_AreProblemDetailsWithTheirStatus(status: 400) [< 1 ms]
+  Passed BodyOps.UnitTest.Extensions.ServiceApiResponseExtensionsTests.Success_WithAndWithoutPayload [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_CardioHasNoMuscles_UnlessPickedByHand [5 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Hack squat", main: Quads) [9 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Incline chest press", main: Chest) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Low-pulley French press", main: Triceps) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Cadeira Flexora", main: Hamstrings) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Bulgarian split squat", main: Quads) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Machine triceps pushdown", main: Triceps) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Incline dumbbell press", main: Chest) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Leg press 45°", main: Quads) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Machine shoulder press", main: Shoulders) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Maquina Elevações Laterais", main: Shoulders) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Puxador à Frente Pega Aberta", main: Lats) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Wide-grip lat pulldown", main: Lats) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Supino Inclinado com Halteres", main: Chest) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Hip abductor machine", main: Glutes) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Leg extension", main: Quads) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Pec deck", main: Chest) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Machine biceps curl", main: Biceps) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Leg curl", main: Hamstrings) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Wide-grip chest-supported T-bar row", main: Lats) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Rear delt machine", main: Shoulders) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Machine lateral raises", main: Shoulders) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_FindsTheMainMover(name: "Machine preacher curl", main: Biceps) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.FormatAndParse_RoundTrip_IgnoringUnknownAndRepeated [2 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_HandPickedMusclesWin_AndAnEmptyPickMeansNone [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.MuscleDetectorTests.Detect_MatchesWholeWordsOnly_SoLateralIsNotLats [4 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.Meal_EatenSomethingElse_IsKept_AndUntickingClearsIt [9 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.Search_MineFirst_ThenMiloListWithoutWhatIsAlreadyMine [43 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.Sum_AddsWhatIsKnown_AndCountsTheRest [6 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.Packaged_AndBarcode_MapTheSourcesAnswers [5 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.SearchKey_FoldsCaseAndAccents(text: "Pão  de Centeio", key: "pao de centeio") [< 1 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.SearchKey_FoldsCaseAndAccents(text: "  AÇAÍ ", key: "acai") [< 1 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.OpenFoodFacts_ReadsAProduct_KcalFromKjWhenNeeded [2 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.ParseFoodsLine_ReadsBackTheLoggedDaysLine [8 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.For_Per100g_InGrams_AndInPiecesThroughThePieceWeight [3 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.Save_UpsertsByName_RejectsATakenName_AndBadValues [7 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.MiloList_FindsByPortugueseOrEnglish_AndNamesItInTheQuerysLanguage [1 ms]
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {93e0c8dc-123c-4443-a595-8194f378a48e} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+  Passed BodyOps.UnitTest.Foods.FoodTests.Week_MealsGetTheirMacros_AndTheDayAddsPlannedEatenAndLeft [8 ms]
+  Passed BodyOps.UnitTest.Foods.FoodTests.For_PerPiece_InPieces_AndGramsOnlyWithAPieceWeight [< 1 ms]
+  Passed BodyOps.UnitTest.Accounts.AccountServiceTests.ChangePassword_WrongCurrentPassword_IsRefused [948 ms]
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveMeals 1 3 1
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveMeals 1 3 2
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanCopy 1 3 Meals
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+  Passed BodyOps.UnitTest.Accounts.AccountServiceTests.ChangePassword_NewStampAndFreshCookie [893 ms]
+  Passed BodyOps.UnitTest.Accounts.AccountServiceTests.Register_ClosedRegistration_AllowsOnlyTheFirstAccount [794 ms]
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {f4d583cf-cde1-456e-b47a-2a1047b6a5ac} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveExercises 1 5 1
+warn: Microsoft.AspNetCore.Routing.EndpointRoutingMiddleware[9]
+      A request body size limit could not be applied. This server does not support the IHttpMaxRequestBodySizeFeature.
+warn: Microsoft.AspNetCore.Mvc.Filters.RequestSizeLimitFilter[1]
+      A request body size limit could not be applied. This server does not support the IHttpRequestBodySizeFeature.
+  Passed BodyOps.UnitTest.Integration.ApiTests.Plan_SaveKeepsIdsOfItemsSentBack_AndReplacesFoods [3 s]
+  Passed BodyOps.UnitTest.Accounts.AccountServiceTests.Login_UnknownUserAndWrongPassword_LookTheSame [868 ms]
+  Passed BodyOps.UnitTest.Accounts.AccountServiceTests.DeleteAccount_NeedsThePassword_ThenSignsOut [850 ms]
+  Passed BodyOps.UnitTest.Accounts.AccountServiceTests.Register_FirstAccount_IsAdminCreatedAndSignedIn [255 ms]
+warn: Microsoft.AspNetCore.Routing.EndpointRoutingMiddleware[9]
+      A request body size limit could not be applied. This server does not support the IHttpMaxRequestBodySizeFeature.
+warn: Microsoft.AspNetCore.Mvc.Filters.RequestSizeLimitFilter[1]
+      A request body size limit could not be applied. This server does not support the IHttpRequestBodySizeFeature.
+warn: Microsoft.AspNetCore.Routing.EndpointRoutingMiddleware[9]
+      A request body size limit could not be applied. This server does not support the IHttpMaxRequestBodySizeFeature.
+warn: Microsoft.AspNetCore.Mvc.Filters.RequestSizeLimitFilter[1]
+      A request body size limit could not be applied. This server does not support the IHttpRequestBodySizeFeature.
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {adeba72a-fe13-4fc1-bdbc-2c30f874ccb4} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+  Passed BodyOps.UnitTest.Integration.ApiTests.Watch_ShortcutSendsWithItsKey_NoCookieNorAppHeader [1 s]
+  Passed BodyOps.UnitTest.Accounts.AccountServiceTests.Register_SameNameDifferentCase_IsAConflict [558 ms]
+  Passed BodyOps.UnitTest.Accounts.AccountServiceTests.Login_IgnoresCase [555 ms]
+  Passed BodyOps.UnitTest.Days.DayScoreTests.Streak_BestRemembersAnEarlierLongerRun [1 ms]
+  Passed BodyOps.UnitTest.Days.DayScoreTests.Score_RestDay_LeavesTrainingOut [< 1 ms]
+  Passed BodyOps.UnitTest.Days.DayScoreTests.Streak_CountsGoodDaysInARow_SkipsEmptyDays_AndTodayOnlyAdds [< 1 ms]
+  Passed BodyOps.UnitTest.Days.DayScoreTests.Score_SkippedSession_ScoresTrainingAsZero [1 ms]
+  Passed BodyOps.UnitTest.Days.DayScoreTests.Day_CarriesTheDayNameAndMealTimes_FromThePlanOrTheLoggedCopy [< 1 ms]
+  Passed BodyOps.UnitTest.Days.DayScoreTests.Score_AWeighInAlone_DoesNotScoreOrCount [< 1 ms]
+  Passed BodyOps.UnitTest.Days.DayScoreTests.Score_WeighsTrainingAndMeals_NotTheWeighIn [< 1 ms]
+  Passed BodyOps.UnitTest.Days.DayScoreTests.Score_IsHundred_WhenEverythingIsDone_AndTrainedCountsAllSets [< 1 ms]
+  Passed BodyOps.UnitTest.Days.DayScoreTests.SetProgress_LoggingMarksTheDayTrained_ButOnlyLoggedSetsCount [< 1 ms]
+  Passed BodyOps.UnitTest.Days.WeekBuilderTests.Week_UnloggedDay_ShowsTheCurrentPlan_WithNothingDone [2 ms]
+  Passed BodyOps.UnitTest.Days.WeekBuilderTests.FoodsLine_WritesAmountsLikeTheDatabaseView [< 1 ms]
+  Passed BodyOps.UnitTest.Days.WeekBuilderTests.Week_SameLoadAsBefore_IsNotARecord [1 ms]
+  Passed BodyOps.UnitTest.Days.WeekBuilderTests.Score_AveragesMealsAndSession_AndIsNullWhenNothingLogged [< 1 ms]
+  Passed BodyOps.UnitTest.Days.WeekBuilderTests.Week_LoggedDay_ShowsItsOwnCopy_WithSetsVolumeLastSessionAndRecord [1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Duration_ReadsSecondsMinutesAndClocks(json: "\"0:58:12\"", unit: null, expected: 3492) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Duration_ReadsSecondsMinutesAndClocks(json: "\"58:12\"", unit: null, expected: 3492) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Duration_ReadsSecondsMinutesAndClocks(json: "\"58 min\"", unit: null, expected: 3480) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Duration_ReadsSecondsMinutesAndClocks(json: "3492", unit: null, expected: 3492) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Duration_ReadsSecondsMinutesAndClocks(json: "58", unit: "seconds", expected: 58) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Duration_ReadsSecondsMinutesAndClocks(json: "\"1 hr 2 min\"", unit: null, expected: 3720) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Duration_ReadsSecondsMinutesAndClocks(json: "58", unit: null, expected: 3480) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Duration_ReadsSecondsMinutesAndClocks(json: "\"1:05\"", unit: null, expected: 3900) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Duration_ReadsSecondsMinutesAndClocks(json: "\"58,5\"", unit: "minutes", expected: 3510) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Duration_ReadsSecondsMinutesAndClocks(json: "\"58m 12s\"", unit: null, expected: 3492) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Parse_OnlyADuration_EndsNow_AndAWeightComesWithItsDate [5 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Parse_AWeightAlone_InPounds [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Date_ReadsIsoAndThePhonesOwnFormat(text: "2026-10-13T17:05:00Z", hour: 18, minute: 5) [3 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Date_ReadsIsoAndThePhonesOwnFormat(text: "13/10/2026, 18:05", hour: 18, minute: 5) [1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Date_ReadsIsoAndThePhonesOwnFormat(text: "Oct 13, 2026 at 6:05 PM", hour: 18, minute: 5) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Date_ReadsIsoAndThePhonesOwnFormat(text: "13 Oct 2026 at 18:05", hour: 18, minute: 5) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Date_ReadsIsoAndThePhonesOwnFormat(text: "2026-10-13T18:05:00", hour: 18, minute: 5) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Date_ReadsIsoAndThePhonesOwnFormat(text: "2026-10-13T18:05:00+01:00", hour: 18, minute: 5) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Date_ReadsIsoAndThePhonesOwnFormat(text: "13 de outubro de 2026 às 18:05", hour: 18, minute: 5) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Unreadable_IsRefused_AndTheErrorShowsInSettings [10 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Number_ReadsWhatShortcutsWrites(text: "412", expected: 412) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Number_ReadsWhatShortcutsWrites(text: "412 kcal", expected: 412) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Number_ReadsWhatShortcutsWrites(text: "82,4 kg", expected: 82.400000000000006) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Number_ReadsWhatShortcutsWrites(text: "1.234,5", expected: 1234.5) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Number_ReadsWhatShortcutsWrites(text: "1,234.5", expected: 1234.5) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Number_ReadsWhatShortcutsWrites(text: "  58 min", expected: 58) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Number_ReadsWhatShortcutsWrites(text: "1,234", expected: 1234) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.IndoorWalk_FillsInThePlannedTreadmill_Once_AndKeepsWhatWasLogged [25 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Weight_IsSaved_UnlessThatDayAlreadyHasOne [5 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.CardioKinds_BestMatchFirst(kind: "Indoor Walk", expected: [Treadmill, Walk]) [2 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.CardioKinds_BestMatchFirst(kind: "Corrida interior", expected: [Treadmill, Run]) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.CardioKinds_BestMatchFirst(kind: "Indoor Cycle", expected: [Bike]) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.CardioKinds_BestMatchFirst(kind: "Elliptical", expected: [Elliptical]) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.CardioKinds_BestMatchFirst(kind: "Outdoor Walk", expected: [Walk, Treadmill]) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.CardioKinds_BestMatchFirst(kind: "Traditional Strength Training", expected: []) [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Parse_HealthAutoExport_WorkoutsAndWeight [22 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Parse_AFullWorkout_FromAShortcut [10 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Date_DayAndMonthEitherWay_TakesTheReadingNearNow [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Key_IsShownOnce_OnlyItsHashIsKept_AndANewOneReplacesIt [4 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Parse_Nonsense_SaysWhatIsMissing [< 1 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Curve_KeepsAtMostSixtyPoints [5 ms]
+  Passed BodyOps.UnitTest.Watch.WatchTests.Parse_TheFreeShortcutsRoute_StartFromTheFile_EndNow [4 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Ranges_TargetIsTheTop_MinsAreTheBottom(detail: "3x10-60kg", targets: [10, 10, 10], mins: [10, 10, 10], isRange: False) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Ranges_TargetIsTheTop_MinsAreTheBottom(detail: "3x10 - 60 kg", targets: [10, 10, 10], mins: [10, 10, 10], isRange: False) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Ranges_TargetIsTheTop_MinsAreTheBottom(detail: "3x8-12", targets: [12, 12, 12], mins: [8, 8, 8], isRange: True) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Ranges_TargetIsTheTop_MinsAreTheBottom(detail: "2x12-10", targets: [12, 12], mins: [10, 10], isRange: True) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Ranges_TargetIsTheTop_MinsAreTheBottom(detail: "2x10-12, 1x6", targets: [12, 12, 6], mins: [10, 10, 6], isRange: True) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Ranges_TargetIsTheTop_MinsAreTheBottom(detail: "3 × 8–12", targets: [12, 12, 12], mins: [8, 8, 8], isRange: True) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Ranges_TargetIsTheTop_MinsAreTheBottom(detail: "3x10", targets: [10, 10, 10], mins: [10, 10, 10], isRange: False) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Targets_ReadsSetsAndReps(detail: "", expected: []) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Targets_ReadsSetsAndReps(detail: "2x12, 2x8", expected: [12, 12, 8, 8]) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Targets_ReadsSetsAndReps(detail: "20 km", expected: []) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Targets_ReadsSetsAndReps(detail: "3x12", expected: [12, 12, 12]) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Targets_ReadsSetsAndReps(detail: "4 sets", expected: [0, 0, 0, 0]) [2 ms]
+warn: Microsoft.AspNetCore.Routing.EndpointRoutingMiddleware[9]
+      A request body size limit could not be applied. This server does not support the IHttpMaxRequestBodySizeFeature.
+warn: Microsoft.AspNetCore.Mvc.Filters.RequestSizeLimitFilter[1]
+      A request body size limit could not be applied. This server does not support the IHttpRequestBodySizeFeature.
+info: BodyOps.WebApi.Features.Backups.Controllers.BackupController[0]
+      BackupImport 1
+warn: Microsoft.AspNetCore.Routing.EndpointRoutingMiddleware[9]
+      A request body size limit could not be applied. This server does not support the IHttpMaxRequestBodySizeFeature.
+warn: Microsoft.AspNetCore.Mvc.Filters.RequestSizeLimitFilter[1]
+      A request body size limit could not be applied. This server does not support the IHttpRequestBodySizeFeature.
+info: BodyOps.WebApi.Features.Backups.Controllers.BackupController[0]
+      BackupImport 1
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {c1a4d4b1-71f9-41b1-b3fa-5173b3122131} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveMeals 1 5 2
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Targets_ReadsSetsAndReps(detail: "3 × 12", expected: [12, 12, 12]) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Targets_ReadsSetsAndReps(detail: "3X10 @ 60kg", expected: [10, 10, 10]) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Targets_ReadsSetsAndReps(detail: "4 séries", expected: [0, 0, 0, 0]) [< 1 ms]
+  Passed BodyOps.UnitTest.Plans.ExerciseDetailParserTests.Targets_NeverMoreThanTheSetLimit [< 1 ms]
+  Passed BodyOps.UnitTest.Integration.ApiTests.Backup_ImportsACorpoOpsFile_AndExportsItBack [1 s]
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {d4e2dcfc-3f60-4840-a356-acde2ab66c9a} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveExercises 1 5 1
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveMeals 1 5 1
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveMeals 1 5 1
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanCopy 1 5 Exercises
+  Passed BodyOps.UnitTest.Integration.ApiTests.Foods_GiveMealsTheirMacros_AndAnOffPlanMealCountsWhatWasEaten [1 s]
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {2c7df9e7-8371-42ee-961d-fabdb0576f37} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveExercises 1 5 1
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveMeals 1 5 1
+  Passed BodyOps.UnitTest.Integration.ApiTests.DayNamesMealTimesScoreStreakAndRecords [1 s]
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveExercises 1 5 1
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {4ce33e29-0e32-4e97-bba8-b298ee6fc092} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Ana
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveExercises 1 2 1
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+  Passed BodyOps.UnitTest.Integration.ApiTests.LoggingADay_CopiesThePlan_AndLaterPlanEditsOnlyChangeThisWeek [1 s]
+  Passed BodyOps.UnitTest.Integration.ApiTests.EachAccount_HasItsOwnPlan [933 ms]
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {2add0e8f-dcc0-4711-8f98-48804813463e} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+info: BodyOps.WebApi.Features.Push.Services.PushSender[0]
+      Push: new VAPID keys created in /tmp/bodyops-tests/385b78227196405aa1f5b9c49d520f70/push-vapid.json
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {54696ccf-b7b1-41f8-baa0-18b85c58ddec} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+  Passed BodyOps.UnitTest.Integration.ApiTests.Push_SubscribeKeepsOneDevicePerBrowser_AndUnsubscribeRemovesIt [860 ms]
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {e3bc9d24-9696-4ec8-9207-0804cd13bf1f} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+info: BodyOps.WebApi.Features.Days.Controllers.DayController[0]
+      DayWeekReset 1 10/16/2026
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+  Passed BodyOps.UnitTest.Integration.ApiTests.Weights_AndGoal [857 ms]
+  Passed BodyOps.UnitTest.Integration.ApiTests.ResetWeek_CanBeUndone [1 s]
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {a44f8cab-293d-4c7d-825f-9669cfd2f6f4} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+info: BodyOps.WebApi.Features.Plans.Controllers.PlanController[0]
+      PlanSaveExercises 1 1 1
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountDelete 1
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {305194fd-74dc-42d8-9b4e-9ebc3448479e} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+  Passed BodyOps.UnitTest.Integration.ApiTests.DeletingAnAccount_RemovesItsData [1 s]
+  Passed BodyOps.UnitTest.Integration.ApiTests.Api_RequiresASignedInUser_AndTheAppHeaderOnWrites [620 ms]
+warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
+      No XML encryptor configured. Key {40e1319f-4257-4d73-9a46-a01ba40ed5da} may be persisted to storage in unencrypted form.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/runner/work/Milo/Milo/BodyOps.WebApi
+info: BodyOps.WebApi.Features.Accounts.Controllers.AccountController[0]
+      AccountRegister Rodas
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+[xUnit.net 00:00:20.88]   Finished:    BodyOps.UnitTest
+  Passed BodyOps.UnitTest.Integration.ApiTests.Health_ReportsFirstRunUntilTheFirstAccount [875 ms]
+Results File: /home/runner/work/Milo/Milo/TestResults/tests.trx
+
+Test Run Successful.
+Total tests: 269
+     Passed: 269
+ Total time: 21.3798 Seconds
