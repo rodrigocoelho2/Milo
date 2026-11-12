@@ -133,4 +133,16 @@ public enum TranslationKeys
 
     /// <summary>What the Shortcut sent can't be read.</summary>
     WatchPayloadInvalid,
+
+    /// <summary>No account is linked to that Discord account.</summary>
+    DiscordNotLinked,
+
+    /// <summary>That Discord account is linked to another account.</summary>
+    DiscordTaken,
+
+    /// <summary>Discord's answer is missing or too old.</summary>
+    DiscordExpired,
+
+    /// <summary>Discord is the only way into the account, so it can't be unlinked before a password is set.</summary>
+    DiscordNeedsPassword,
 }

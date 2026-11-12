@@ -73,6 +73,8 @@ services:
       BodyOps__AllowRegistration: ${MILO_ALLOW_REGISTRATION:-${BODYOPS_ALLOW_REGISTRATION:-true}}
       # Set to "true" when Nginx Proxy Manager (or another reverse proxy) sits in front of the app.
       BodyOps__BehindProxy: ${MILO_BEHIND_PROXY:-${BODYOPS_BEHIND_PROXY:-false}}
+      BodyOps__DiscordClientId: ${DISCORD_CLIENT_ID:-}
+      BodyOps__DiscordClientSecret: ${DISCORD_CLIENT_SECRET:-}
       BodyOps__TimeZone: Europe/Lisbon
       # Push reminders: "false" turns them off. The subject is how Apple, Google and Mozilla can reach whoever runs
       # this server (mailto: or an https URL); Apple refuses pushes without a valid one.

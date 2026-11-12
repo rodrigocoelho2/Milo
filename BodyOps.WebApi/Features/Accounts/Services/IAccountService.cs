@@ -50,4 +50,36 @@ internal interface IAccountService
     /// <param name="request">The password, as confirmation.</param>
     /// <returns>No content, or why not.</returns>
     Task<ServiceApiResponse<string>> DeleteAccountAsync(long userId, AccountDeleteDTO request);
+
+    /// <summary>
+    /// Signs in the account a (checked) Discord account is linked to.
+    /// </summary>
+    /// <param name="discordId">The Discord account's id.</param>
+    /// <returns>The account, or not found.</returns>
+    Task<ServiceApiResponse<MeDTO>> DiscordSignInAsync(string discordId);
+
+    /// <summary>
+    /// Creates an account that signs in with a (checked) Discord account, without a password, and signs it in.
+    /// </summary>
+    /// <param name="username">The user name picked.</param>
+    /// <param name="discordId">The Discord account's id.</param>
+    /// <param name="discordName">The Discord account's name.</param>
+    /// <returns>The new account, or the problem.</returns>
+    Task<ServiceApiResponse<MeDTO>> DiscordRegisterAsync(string? username, string discordId, string? discordName);
+
+    /// <summary>
+    /// Links a (checked) Discord account to an account.
+    /// </summary>
+    /// <param name="userId">The account.</param>
+    /// <param name="discordId">The Discord account's id.</param>
+    /// <param name="discordName">The Discord account's name.</param>
+    /// <returns>Done, or conflict when it is linked to someone else.</returns>
+    Task<ServiceApiResponse<string>> DiscordLinkAsync(long userId, string discordId, string? discordName);
+
+    /// <summary>
+    /// Unlinks Discord (refused while it is the only way into the account).
+    /// </summary>
+    /// <param name="userId">The account.</param>
+    /// <returns>Done, or the problem.</returns>
+    Task<ServiceApiResponse<string>> DiscordUnlinkAsync(long userId);
 }

@@ -8,11 +8,18 @@ CREATE TABLE [dbo].[User]
     [SecurityStamp] NVARCHAR (64)    NOT NULL,
     [CreatedAt]     DATETIME2 (3)    NOT NULL CONSTRAINT [DF_User_CreatedAt] DEFAULT (SYSUTCDATETIME()),
     [LastLoginAt]   DATETIME2 (3)    NULL,
+    [DiscordID]     VARCHAR (32)     NULL,
+    [DiscordName]   NVARCHAR (64)    NULL,
     CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED ([UserID] ASC),
     CONSTRAINT [UQ_User_UserUniqueID] UNIQUE NONCLUSTERED ([UserUniqueID] ASC),
     CONSTRAINT [UQ_User_Username] UNIQUE NONCLUSTERED ([Username] ASC)
 );
 GO
 
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Accounts. Usernames are unique ignoring case; the first account is the admin. Every plan, day and weigh-in belongs to one account.',
+-- One Discord account signs in to one account at most.
+CREATE UNIQUE NONCLUSTERED INDEX [UX_User_DiscordID]
+    ON [dbo].[User] ([DiscordID] ASC) WHERE [DiscordID] IS NOT NULL;
+GO
+
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Accounts. Usernames are unique ignoring case; the first account is the admin. DiscordID (with the Discord name it had) is set when the person links Discord in Settings, or signs up with Discord, and then signs in to this account. An account made with Discord has an empty PasswordHash (it never verifies) until a password is set. Every plan, day and weigh-in belongs to one account.',
     @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'User';

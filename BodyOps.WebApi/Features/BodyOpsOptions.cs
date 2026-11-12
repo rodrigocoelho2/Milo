@@ -15,6 +15,15 @@ public sealed class BodyOpsOptions
     /// <summary>Gets or sets a value indicating whether people can create their own account. The first account can always be created, and becomes the admin.</summary>
     public bool AllowRegistration { get; set; } = true;
 
+    /// <summary>Gets or sets the Discord application's client id (DISCORD_CLIENT_ID; empty: no Discord sign-in).</summary>
+    public string DiscordClientId { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the Discord application's client secret (DISCORD_CLIENT_SECRET).</summary>
+    public string DiscordClientSecret { get; set; } = string.Empty;
+
+    /// <summary>Gets a value indicating whether "Sign in with Discord" is on (both Discord settings are set).</summary>
+    public bool DiscordEnabled => !string.IsNullOrWhiteSpace(DiscordClientId) && !string.IsNullOrWhiteSpace(DiscordClientSecret);
+
     /// <summary>Gets or sets a value indicating whether X-Forwarded-For / X-Forwarded-Proto from a reverse proxy are trusted.</summary>
     public bool BehindProxy { get; set; }
 

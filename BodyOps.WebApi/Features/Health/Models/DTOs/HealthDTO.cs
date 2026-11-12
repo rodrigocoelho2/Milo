@@ -13,4 +13,7 @@ public sealed class HealthDTO
 
     /// <summary>Gets or sets a value indicating whether a new account can be created.</summary>
     public bool Registration { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether "Sign in with Discord" is set up.</summary>
+    public bool Discord { get; set; }
 }

@@ -107,7 +107,8 @@ internal sealed partial class AccountService(
             return ServiceApiResponse<string>.Unauthorized(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.WrongCredentials)));
         }
 
-        if (!PasswordHasher.Verify(request.CurrentPassword ?? string.Empty, user.PasswordHash))
+        // An account made with Discord has no password yet: its first one needs no current password.
+        if (!string.IsNullOrEmpty(user.PasswordHash) && !PasswordHasher.Verify(request.CurrentPassword ?? string.Empty, user.PasswordHash))
         {
             return await _globalizationHelper.ValidationProblemAsync<string>("currentPassword", nameof(TranslationKeys.WrongCurrentPassword));
         }
@@ -133,13 +134,108 @@ internal sealed partial class AccountService(
             return ServiceApiResponse<string>.Unauthorized(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.WrongCredentials)));
         }
 
-        if (!PasswordHasher.Verify(request.Password ?? string.Empty, user.PasswordHash))
+        // An account made with Discord and no password yet confirms with the session alone.
+        if (!string.IsNullOrEmpty(user.PasswordHash) && !PasswordHasher.Verify(request.Password ?? string.Empty, user.PasswordHash))
         {
             return await _globalizationHelper.ValidationProblemAsync<string>("password", nameof(TranslationKeys.WrongPassword));
         }
 
         await _userRepository.DeleteAsync(user.UserID);
         await _userSession.SignOutAsync();
+        return ServiceApiResponse<string>.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<ServiceApiResponse<MeDTO>> DiscordSignInAsync(string discordId)
+    {
+        var user = UserRules.IsDiscordId(discordId) ? await _userRepository.GetByDiscordAsync(discordId) : null;
+        if (user is null)
+        {
+            return ServiceApiResponse<MeDTO>.NotFound(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.DiscordNotLinked)));
+        }
+
+        await _userRepository.TouchLoginAsync(user.UserID);
+        await _userSession.SignInAsync(user, remember: true);
+        return ServiceApiResponse<MeDTO>.Success(new MeDTO(user));
+    }
+
+    /// <inheritdoc />
+    public async Task<ServiceApiResponse<MeDTO>> DiscordRegisterAsync(string? username, string discordId, string? discordName)
+    {
+        username = username?.Trim() ?? string.Empty;
+        if (!UsernamePattern().IsMatch(username))
+        {
+            return await _globalizationHelper.ValidationProblemAsync<MeDTO>("username", nameof(TranslationKeys.InvalidUsername));
+        }
+
+        if (!UserRules.IsDiscordId(discordId))
+        {
+            return ServiceApiResponse<MeDTO>.Unauthorized(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.DiscordExpired)));
+        }
+
+        if (await _userRepository.GetByDiscordAsync(discordId) is not null)
+        {
+            return ServiceApiResponse<MeDTO>.Conflict(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.DiscordTaken)));
+        }
+
+        // The first account (the admin) is made with a password, from the sign-up form.
+        if (await _userRepository.CountAsync() == 0)
+        {
+            return ServiceApiResponse<MeDTO>.Forbidden(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.RegistrationClosed)));
+        }
+
+        // No password: the empty hash never verifies, so only Discord opens the account until one is set.
+        var result = await _userRepository.CreateAsync(username, string.Empty, PasswordHasher.NewSecurityStamp(), _options.Value.AllowRegistration);
+        switch (result.Outcome)
+        {
+            case UserCreateOutcome.RegistrationClosed:
+                return ServiceApiResponse<MeDTO>.Forbidden(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.RegistrationClosed)));
+            case UserCreateOutcome.UsernameTaken:
+                return ServiceApiResponse<MeDTO>.Conflict(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.UsernameTaken)));
+        }
+
+        var user = result.User!;
+        if (!await _userRepository.SetDiscordAsync(user.UserID, discordId, UserRules.DiscordName(discordName)))
+        {
+            // Linked somewhere else a moment ago: don't leave an account nobody can open.
+            await _userRepository.DeleteAsync(user.UserID);
+            return ServiceApiResponse<MeDTO>.Conflict(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.DiscordTaken)));
+        }
+
+        user = (await _userRepository.GetAsync(user.UserID))!;
+        await _userRepository.TouchLoginAsync(user.UserID);
+        await _userSession.SignInAsync(user, remember: true);
+        return ServiceApiResponse<MeDTO>.Created(new MeDTO(user));
+    }
+
+    /// <inheritdoc />
+    public async Task<ServiceApiResponse<string>> DiscordLinkAsync(long userId, string discordId, string? discordName)
+    {
+        if (await _userRepository.GetAsync(userId) is null || !UserRules.IsDiscordId(discordId))
+        {
+            return ServiceApiResponse<string>.Unauthorized(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.WrongCredentials)));
+        }
+
+        return await _userRepository.SetDiscordAsync(userId, discordId, UserRules.DiscordName(discordName))
+            ? ServiceApiResponse<string>.Success()
+            : ServiceApiResponse<string>.Conflict(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.DiscordTaken)));
+    }
+
+    /// <inheritdoc />
+    public async Task<ServiceApiResponse<string>> DiscordUnlinkAsync(long userId)
+    {
+        var user = await _userRepository.GetAsync(userId);
+        if (user is null)
+        {
+            return ServiceApiResponse<string>.Unauthorized(await _globalizationHelper.TranslateAsync(nameof(TranslationKeys.WrongCredentials)));
+        }
+
+        if (string.IsNullOrEmpty(user.PasswordHash))
+        {
+            return await _globalizationHelper.ValidationProblemAsync<string>("discord", nameof(TranslationKeys.DiscordNeedsPassword));
+        }
+
+        await _userRepository.SetDiscordAsync(userId, null, null);
         return ServiceApiResponse<string>.Success();
     }
 

@@ -60,6 +60,18 @@ internal interface IUserRepository
     /// <returns>A task that completes when saved.</returns>
     Task TouchLoginAsync(long userId);
 
+    /// <summary>The account a Discord account is linked to.</summary>
+    /// <param name="discordId">The Discord account's id.</param>
+    /// <returns>The account, or null.</returns>
+    Task<UserAccount?> GetByDiscordAsync(string discordId);
+
+    /// <summary>Links (or with null unlinks) a Discord account.</summary>
+    /// <param name="userId">The account.</param>
+    /// <param name="discordId">The Discord account's id, or null.</param>
+    /// <param name="discordName">Its name.</param>
+    /// <returns>False when that Discord account is linked to someone else.</returns>
+    Task<bool> SetDiscordAsync(long userId, string? discordId, string? discordName);
+
     /// <summary>
     /// Deletes an account and all its data (dbo.UserDelete).
     /// </summary>

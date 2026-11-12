@@ -190,7 +190,8 @@
 
   BO.screens.auth = function auth(root, { mode }) {
     const health = BO.health || { registration: true, firstRun: false };
-    const signup = mode === 'signup';
+    const discordMode = mode === 'discord';
+    const signup = mode === 'signup' || discordMode;
     if (signup && !health.registration) {
       BO.go('/signin', { replace: true });
       return;
@@ -238,14 +239,20 @@
             <div class="goal-row" data-goals hidden>${['−5 kg', '−10 kg', 'Keep it'].map(g => `<button type="button" data-goal="${g}" aria-pressed="false">${g}</button>`).join('')}</div>` : ''}
           <label class="chk"><input type="checkbox" id="authRemember" checked><i>${icons.check}</i>Keep me signed in on this device</label>
           <button type="submit" class="btn primary" id="authSubmit">${signup ? 'Create account' : 'Sign in'} ${icons.arrow}</button>
+          ${health.discord && !(signup && health.firstRun) ? `<div class="au-or" aria-hidden="true"><span>or</span></div>
+            <a class="btn discord" href="/api/auth/discord"><span class="discord-mark" aria-hidden="true"></span>${signup ? 'Sign up' : 'Sign in'} with Discord</a>` : ''}
           <p class="fine">${signup ? 'Your password is stored hashed, never in plain text.' : 'Forgot it? The server admin can reset it from Settings › Users.'}</p>
         </form>
       </main>
     </div>`;
 
+    if (discordMode) { discordForm(root); return; }
+
     const form = root.querySelector('#authForm');
     const err = root.querySelector('#authErr');
     const pass = root.querySelector('#authPass');
+    const note = { 'not-linked': 'No account here is linked to that Discord account yet. Sign in with your password, then link Discord in Settings.', failed: "Signing in with Discord didn't finish. Try again, or use your password." }[BO.query().discord];
+    if (note) { err.textContent = note; err.hidden = false; BO.setQuery({ discord: null }); }
     if (matchMedia('(min-width: 861px)').matches) root.querySelector('#authUser').focus();
 
     root.querySelector('[data-eye]').addEventListener('click', () => { pass.type = pass.type === 'password' ? 'text' : 'password'; });
@@ -322,4 +329,51 @@
       }
     });
   };
+
+  /** Someone new back from Discord: Discord said who they are, so only the username is left to pick. */
+  function discordForm(root) {
+    const form = root.querySelector('#authForm');
+    form.innerHTML = `
+      <div><h1>Almost there</h1><p class="lead" data-discord-who>You're signed in to Discord. Pick a username for Milo.</p></div>
+      <div class="form-err" id="authErr" role="alert" hidden></div>
+      <label class="fld" id="userField">Username
+        <span class="in">${icons.user}<input id="authUser" name="username" autocapitalize="off" spellcheck="false" required placeholder="Pick a username"></span>
+        <small>3–24 letters, numbers, dots, dashes or underscores.</small>
+      </label>
+      <button type="submit" class="btn discord" id="authSubmit"><span class="discord-mark" aria-hidden="true"></span>Create account with Discord</button>
+      <p class="fine">Already have an account here? <a href="/signin" data-link>Sign in with your password</a>, then link Discord in Settings to keep your plan.</p>`;
+    const err = form.querySelector('#authErr');
+    const user = form.querySelector('#authUser');
+
+    BO.api('GET', '/api/auth/discord/pending').then(pending => {
+      form.querySelector('[data-discord-who]').innerHTML = `You're signed in to Discord as <b>${esc(pending.name)}</b>. Pick a username for Milo.`;
+      if (!user.value) user.value = pending.suggestion || '';
+      user.focus();
+    }).catch(() => BO.go('/signin?discord=failed', { replace: true }));
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      err.hidden = true;
+      const label = form.querySelector('#userField');
+      label.classList.remove('err');
+      const button = form.querySelector('#authSubmit');
+      button.disabled = true;
+      try {
+        BO.me = await BO.api('POST', '/api/auth/discord/register', { username: user.value.trim() });
+        BO.cache = {};
+        BO.go('/plan', { replace: true });
+        BO.toast('Account created. Start by planning your week.');
+      } catch (e) {
+        if (e.status === 404) { BO.go('/signin?discord=failed', { replace: true }); return; }
+        if (e.field === 'username' || e.status === 409) {
+          label.classList.add('err');
+          label.querySelector('small').textContent = e.message;
+        } else {
+          err.textContent = e.message;
+          err.hidden = false;
+        }
+        button.disabled = false;
+      }
+    });
+  }
 })();

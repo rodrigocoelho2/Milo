@@ -16,7 +16,9 @@ BEGIN
            u.[IsAdmin],
            u.[SecurityStamp],
            u.[CreatedAt],
-           u.[LastLoginAt]
+           u.[LastLoginAt],
+           u.[DiscordID],
+           u.[DiscordName]
     FROM [dbo].[User] u
     WHERE u.[Username] = @Username;   -- the column is case-insensitive, so "rodas" finds "Rodas"
 END

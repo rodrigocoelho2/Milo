@@ -150,6 +150,24 @@ internal sealed class FakeUserRepository : IUserRepository
         return Task.FromResult(user);
     }
 
+    public Task<UserAccount?> GetByDiscordAsync(string discordId) => Task.FromResult(Users.FirstOrDefault(user => user.DiscordID == discordId));
+
+    public Task<bool> SetDiscordAsync(long userId, string? discordId, string? discordName)
+    {
+        if (discordId is not null && Users.Any(user => user.DiscordID == discordId && user.UserID != userId))
+        {
+            return Task.FromResult(false);
+        }
+
+        if (Users.FirstOrDefault(candidate => candidate.UserID == userId) is { } user)
+        {
+            user.DiscordID = discordId;
+            user.DiscordName = discordId is null ? null : discordName;
+        }
+
+        return Task.FromResult(true);
+    }
+
     public Task TouchLoginAsync(long userId)
     {
         var user = Users.FirstOrDefault(candidate => candidate.UserID == userId);

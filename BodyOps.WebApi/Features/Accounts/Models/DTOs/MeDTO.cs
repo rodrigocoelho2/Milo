@@ -24,6 +24,9 @@ public sealed class MeDTO
         UniqueId = entity.UserUniqueID;
         Username = entity.Username;
         IsAdmin = entity.IsAdmin;
+        DiscordLinked = !string.IsNullOrEmpty(entity.DiscordID);
+        DiscordName = DiscordLinked ? entity.DiscordName : null;
+        HasPassword = !string.IsNullOrEmpty(entity.PasswordHash);
     }
 
     /// <summary>Gets or sets the account identifier.</summary>
@@ -37,4 +40,13 @@ public sealed class MeDTO
 
     /// <summary>Gets or sets a value indicating whether the account is the server admin.</summary>
     public bool IsAdmin { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether a Discord account is linked (it can sign in to this one).</summary>
+    public bool DiscordLinked { get; set; }
+
+    /// <summary>Gets or sets the linked Discord account's name.</summary>
+    public string? DiscordName { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether the account has a password (one made with Discord has none until one is set).</summary>
+    public bool HasPassword { get; set; }
 }

@@ -27,7 +27,7 @@ internal static class AuthenticationExtensions
             .SetApplicationName("BodyOps")
             .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(settings.DataDirectory, "keys")));
 
-        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+        var authentication = services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
                 options.Cookie.Name = "bodyops.auth";
@@ -50,6 +50,11 @@ internal static class AuthenticationExtensions
                 };
                 options.Events.OnValidatePrincipal = ValidatePrincipalAsync;
             });
+
+        if (settings.DiscordEnabled)
+        {
+            authentication.AddDiscord(settings);
+        }
 
         services.AddAuthorizationBuilder()
             .AddPolicy(AuthPolicies.Admin, static policy => policy.RequireAuthenticatedUser().RequireClaim(ClaimsPrincipalExtensions.AdminClaim, "1"));

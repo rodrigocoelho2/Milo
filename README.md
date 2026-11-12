@@ -95,6 +95,7 @@
   from a dacpac, applied again on every update) and the **app**.
 - **Accounts**: everyone has their own plan and history; the first account is the admin, who can reset a forgotten
   password. Sign-ups can be closed.
+- **Sign in with Discord**: link it to your account in Settings (the password keeps working), or sign up with it.
 - **Installs as an app** on iPhone and Android, with an offline page; light and dark themes follow the device.
 - **Nothing from the internet at runtime** except what you ask for (Open Food Facts lookups, push delivery): the
   Geist font, icons and the food list ship with the app.
@@ -159,6 +160,7 @@ Three containers start: **milo-sql** (SQL Server 2022 Express), **milo-db-deploy
 | `SQL_MEMORY_LIMIT_MB` | `1024` | Keeps SQL Server from taking most of the NAS memory. |
 | `MILO_PORT` | `8086` | Host port of the app. |
 | `MILO_ALLOW_REGISTRATION` | `true` | `false` once everyone has an account (the first account can always be created). |
+| `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` | — | Turn on **Sign in with Discord** (see below). |
 | `MILO_BEHIND_PROXY` | `false` | `true` when Nginx Proxy Manager sits in front (trusts `X-Forwarded-*`). |
 | `MILO_PUSH_ENABLED` | `true` | `false` turns push reminders off. |
 | `MILO_PUSH_SUBJECT` | the repo URL | How the browsers' push services can reach you (`mailto:you@example.com` or an https URL). |
@@ -176,6 +178,23 @@ for the whole server, back up the database (`BACKUP DATABASE Milo TO DISK = …`
 **Already running SQL Server for HOME Living Dex?** Milo can share it: drop the `sqlserver` service, point
 `db-deploy`'s `SQL_SERVER` and the app's connection string at `livingdex-sql`, and put both stacks on one network.
 The database is called `Milo`, so it never touches `LivingDex`.
+
+## Sign in with Discord
+
+Optional:
+
+1. At [discord.com/developers/applications](https://discord.com/developers/applications) make an application (one is
+   enough for all your apps). In **OAuth2**, copy the **Client ID**, **Reset Secret** and copy the **Client Secret**,
+   and under **Redirects** add `https://<where you open Milo>/signin-discord` (one per address).
+2. Put them in `.env` as `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`, and update Milo.
+3. Already have an account? Sign in with your password, open **Settings › Account › Link Discord**. From then on
+   **Sign in with Discord** opens that same account, with everything in it.
+4. Someone new presses **Sign in with Discord** (or **Sign up with Discord**), picks a username, and has an account
+   with no password. They can add one in Settings; until then Discord can't be unlinked, so nobody gets locked out.
+
+Milo only asks Discord who you are (the `identify` scope). New accounts through Discord follow `MILO_ALLOW_REGISTRATION`:
+with it off, a Discord account that isn't linked can't sign in and doesn't create one. Behind HTTPS (Cloudflare,
+Nginx Proxy Manager) the address Discord sends you back to is the https one even with the proxy setting off.
 
 ## Moving from CorpoOps
 
@@ -244,6 +263,7 @@ All under `/api`, JSON, cookie sign-in. Writes need the `X-BodyOps: 1` header.
 | --- | --- |
 | `GET health` | first run, sign-up open |
 | `POST auth/register` · `auth/login` · `auth/logout` · `auth/password` · `auth/delete-account`, `GET auth/me` | account |
+| `GET auth/discord` · `GET auth/discord/done` · `GET auth/discord/pending` · `POST auth/discord/register` · `auth/discord/link` · `auth/discord/unlink` | Sign in with Discord |
 | `GET admin/users`, `POST admin/users/{id}/reset-password`, `DELETE admin/users/{id}` | admin only |
 | `GET plan`, `PUT plan/{weekday}/meals`, `PUT plan/{weekday}/exercises`, `PUT plan/{weekday}/name`, `POST plan/{weekday}/copy` | weekday 1 = Monday |
 | `GET days/week?date=`, `GET days/streak`, `GET days/consistency?weeks=` | weeks (with each day's score), the streak |

@@ -142,6 +142,15 @@ internal static class BodyOpsStartup
             forwarded.KnownProxies.Clear();
             app.UseForwardedHeaders(forwarded);
         }
+        else if (settings.DiscordEnabled)
+        {
+            // Discord must get back the same https address it was given: behind HTTPS (Cloudflare, Nginx Proxy Manager)
+            // only the scheme is taken from the proxy, so the sign-in works even when BehindProxy is off.
+            var scheme = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedProto };
+            scheme.KnownIPNetworks.Clear();
+            scheme.KnownProxies.Clear();
+            app.UseForwardedHeaders(scheme);
+        }
 
         app.UseExceptionHandler();
         app.UseResponseCompression();

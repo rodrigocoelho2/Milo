@@ -76,7 +76,7 @@
     if (!keepScroll) window.scrollTo(0, 0);
     BO.onResume = null;
 
-    if (path === '/' || path === '/signin' || path === '/signup') {
+    if (path === '/' || path === '/signin' || path === '/signup' || path === '/signup/discord') {
       if (BO.me) {
         BO.go('/today', { replace: true });
         return;
@@ -84,8 +84,8 @@
       current = null;
       BO.paintThemeColor('#3355FF');
       if (path === '/') BO.screens.landing(app);
-      else BO.screens.auth(app, { mode: path === '/signup' ? 'signup' : 'signin' });
-      document.title = path === '/' ? 'Milo' : (path === '/signup' ? 'Create account · Milo' : 'Sign in · Milo');
+      else BO.screens.auth(app, { mode: path === '/signup/discord' ? 'discord' : path === '/signup' ? 'signup' : 'signin' });
+      document.title = path === '/' ? 'Milo' : (path.startsWith('/signup') ? 'Create account · Milo' : 'Sign in · Milo');
       return;
     }
 

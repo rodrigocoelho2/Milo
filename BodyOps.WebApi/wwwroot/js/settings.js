@@ -27,6 +27,23 @@
     let confirmUser = null;    // user id waiting for "Delete" confirmation
     const tempPasswords = {};  // user id → temporary password just set
 
+    let hasPassword = BO.me.hasPassword !== false;
+    const discordNote = { linked: ['Discord is linked. Next time, use "Sign in with Discord".'], taken: ['That Discord account is already linked to another account here.', true], failed: ["Discord didn't finish. Try again.", true] }[BO.query().discord];
+    if (discordNote) { BO.toast(discordNote[0], { error: Boolean(discordNote[1]) }); BO.setQuery({ discord: null }); }
+
+    /** The Discord row of the Account card: link it (a plain form post: off to Discord and back), or unlink it once there's a password. */
+    function discordRow() {
+      if (!BO.health || !BO.health.discord) return '';
+      if (!BO.me.discordLinked) {
+        return `<div class="set-row"><div><b>Discord</b><span class="sub">Link your Discord account to sign in with it instead of your password.</span></div>
+          <form method="post" action="/api/auth/discord/link" id="discordLink"><button class="btn discord" type="submit"><span class="discord-mark" aria-hidden="true"></span>Link Discord</button></form></div>`;
+      }
+      const who = esc(BO.me.discordName || 'your Discord account');
+      return hasPassword
+        ? `<div class="set-row"><div><b>Discord</b><span class="sub">Linked to ${who}. "Sign in with Discord" opens this account; your password still works too.</span></div><button type="button" class="btn" data-discord-unlink>Unlink</button></div>`
+        : `<div class="set-row"><div><b>Discord</b><span class="sub">Linked to ${who}. It's the only way into this account until you set a password.</span></div></div>`;
+    }
+
     /** When the next weigh-in is, in words. */
     function weighText() {
       const every = prefs.weighEveryDays || 1;
@@ -98,16 +115,17 @@
             <section class="set-card ${firstPaint ? 'rise' : ''}" style="--i:1" aria-labelledby="h-account">
               <h3 id="h-account">Account</h3>
               <div class="set-row"><div><b>${esc(BO.me.username)}${BO.me.isAdmin ? '<span class="badge">Admin</span>' : ''}</b><span class="sub">Your plan, days and weigh-ins belong to this account.</span></div><button type="button" class="btn" id="signOut">Sign out</button></div>
-              <div class="set-row"><div><b>Password</b><span class="sub">Changing it signs out your other devices.</span></div><button type="button" class="btn" data-panel="password">${panel === 'password' ? 'Cancel' : 'Change'}</button></div>
+              <div class="set-row"><div><b>Password</b><span class="sub">${hasPassword ? 'Changing it signs out your other devices.' : 'You signed up with Discord. Add a password to sign in with your username too.'}</span></div><button type="button" class="btn" data-panel="password">${panel === 'password' ? 'Cancel' : hasPassword ? 'Change' : 'Set'}</button></div>
               ${panel === 'password' ? `<form class="set-form" id="passwordForm">
-                <label class="lbl-f">Current password<input class="field" type="password" id="curPass" autocomplete="current-password" required></label>
+                ${hasPassword ? '<label class="lbl-f">Current password<input class="field" type="password" id="curPass" autocomplete="current-password" required></label>' : ''}
                 <label class="lbl-f">New password<input class="field" type="password" id="newPass" autocomplete="new-password" required><small>At least 8 characters.</small></label>
-                <button class="btn primary" type="submit">Change password</button>
+                <button class="btn primary" type="submit">${hasPassword ? 'Change password' : 'Set password'}</button>
               </form>` : ''}
+              ${discordRow()}
               <div class="set-row"><div><b>Delete account</b><span class="sub">Removes the account with its plan, days and weigh-ins.</span></div><button type="button" class="btn danger" data-panel="delete">${panel === 'delete' ? 'Cancel' : 'Delete'}</button></div>
               ${panel === 'delete' ? `<form class="set-form" id="deleteForm">
                 <span class="sub">Export a backup first if you might want this data again.</span>
-                <label class="lbl-f">Your password, to confirm<input class="field" type="password" id="delPass" autocomplete="current-password" required></label>
+                ${hasPassword ? '<label class="lbl-f">Your password, to confirm<input class="field" type="password" id="delPass" autocomplete="current-password" required></label>' : ''}
                 <button class="btn danger" type="submit">Delete my account for good</button>
               </form>` : ''}
             </section>
@@ -205,6 +223,16 @@
       const themeBtn = t.closest('[data-theme-set]');
       if (themeBtn) { BO.setTheme(themeBtn.dataset.themeSet); render(); return; }
 
+      if (t.closest('[data-discord-unlink]')) {
+        try {
+          await BO.saving(BO.api('POST', '/api/auth/discord/unlink'));
+          BO.me = Object.assign({}, BO.me, { discordLinked: false, discordName: null });
+          render();
+          BO.toast('Discord is unlinked. Sign in with your password.');
+        } catch (e) { }
+        return;
+      }
+
       if (t.closest('#export')) {
         try {
           const backup = await BO.api('GET', '/api/backup');
@@ -271,17 +299,21 @@
     });
 
     root.addEventListener('submit', async event => {
+      if (event.target.id === 'discordLink') return;   // a real form post: the browser goes to Discord and back
       event.preventDefault();
       if (event.target.id === 'passwordForm') {
         try {
-          await BO.saving(BO.api('POST', '/api/auth/password', { currentPassword: root.querySelector('#curPass').value, newPassword: root.querySelector('#newPass').value }));
+          await BO.saving(BO.api('POST', '/api/auth/password', { currentPassword: root.querySelector('#curPass')?.value ?? '', newPassword: root.querySelector('#newPass').value }));
+          const first = !hasPassword;
+          hasPassword = true;
+          BO.me = Object.assign({}, BO.me, { hasPassword: true });
           panel = null;
           render();
-          BO.toast('Password changed. Your other devices are signed out.');
+          BO.toast(first ? 'Password set. You can sign in with it too.' : 'Password changed. Your other devices are signed out.');
         } catch (e) { }
       } else if (event.target.id === 'deleteForm') {
         try {
-          await BO.saving(BO.api('POST', '/api/auth/delete-account', { password: root.querySelector('#delPass').value }));
+          await BO.saving(BO.api('POST', '/api/auth/delete-account', { password: root.querySelector('#delPass')?.value ?? '' }));
           BO.me = null;
           BO.go('/', { replace: true });
           BO.toast('Your account was deleted.');

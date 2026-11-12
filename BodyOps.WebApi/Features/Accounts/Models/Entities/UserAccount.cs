@@ -28,4 +28,10 @@ public sealed class UserAccount
 
     /// <summary>Gets or sets the last sign-in (UTC).</summary>
     public DateTime? LastLoginAt { get; set; }
+
+    /// <summary>Gets or sets the linked Discord account's id (null: none).</summary>
+    public string? DiscordID { get; set; }
+
+    /// <summary>Gets or sets the linked Discord account's name when it was linked.</summary>
+    public string? DiscordName { get; set; }
 }

@@ -124,4 +124,50 @@ public sealed class AccountServiceTests
         Assert.Empty(_users.Users);
         Assert.True(_session.SignedOut);
     }
+
+    [Fact]
+    public async Task DiscordRegister_CreatesAnAccountWithoutPasswordLinkedAndSignedIn()
+    {
+        await Service().RegisterAsync(Credentials("Rodas"));
+
+        var response = await Service().DiscordRegisterAsync(" Ana ", "80351110224678912", "Ana B");
+
+        Assert.Equal(ServiceApiResponseStatus.Created, response.Status);
+        Assert.True(response.Result!.DiscordLinked);
+        Assert.False(response.Result.HasPassword);
+        Assert.Equal("Ana", _session.SignedIn!.Username);
+        Assert.Equal("80351110224678912", _users.Users.Single(user => user.Username == "Ana").DiscordID);
+    }
+
+    [Fact]
+    public async Task DiscordRegister_DiscordAlreadyLinked_IsAConflict()
+    {
+        await Service().RegisterAsync(Credentials("Rodas"));
+        await Service().DiscordLinkAsync(_users.Users[0].UserID, "80351110224678912", "Rodas");
+
+        var response = await Service().DiscordRegisterAsync("Ana", "80351110224678912", "Ana");
+
+        Assert.Equal(ServiceApiResponseStatus.Conflict, response.Status);
+        Assert.Single(_users.Users);
+    }
+
+    [Fact]
+    public async Task DiscordAccount_SetsAFirstPasswordWithoutTheCurrentOne_AndOnlyThenUnlinks()
+    {
+        await Service().RegisterAsync(Credentials("Rodas"));
+        var ana = (await Service().DiscordRegisterAsync("Ana", "80351110224678912", "Ana")).Result!;
+
+        Assert.Equal(ServiceApiResponseStatus.ValidationProblems, (await Service().DiscordUnlinkAsync(ana.Id)).Status);
+        Assert.True((await Service().ChangePasswordAsync(ana.Id, new PasswordChangeDTO { NewPassword = "deadlift-2026" })).IsSuccess);
+        Assert.True((await Service().DiscordUnlinkAsync(ana.Id)).IsSuccess);
+        Assert.Null(_users.Users.Single(user => user.UserID == ana.Id).DiscordID);
+    }
+
+    [Fact]
+    public async Task DiscordSignIn_UnlinkedDiscord_IsNotFound()
+    {
+        await Service().RegisterAsync(Credentials("Rodas"));
+
+        Assert.Equal(ServiceApiResponseStatus.NotFound, (await Service().DiscordSignInAsync("80351110224678912")).Status);
+    }
 }
