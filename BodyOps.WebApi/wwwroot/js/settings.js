@@ -31,12 +31,12 @@
     const discordNote = { linked: ['Discord is linked. Next time, use "Sign in with Discord".'], taken: ['That Discord account is already linked to another account here.', true], failed: ["Discord didn't finish. Try again.", true] }[BO.query().discord];
     if (discordNote) { BO.toast(discordNote[0], { error: Boolean(discordNote[1]) }); BO.setQuery({ discord: null }); }
 
-    /** The Discord row of the Account card: link it (a plain form post: off to Discord and back), or unlink it once there's a password. */
+    /** The Discord row of the Account card: link it (a plain link: off to Discord and back), or unlink it once there's a password. */
     function discordRow() {
       if (!BO.health || !BO.health.discord) return '';
       if (!BO.me.discordLinked) {
         return `<div class="set-row"><div><b>Discord</b><span class="sub">Link your Discord account to sign in with it instead of your password.</span></div>
-          <form method="post" action="/api/auth/discord/link" id="discordLink"><button class="btn discord" type="submit"><span class="discord-mark" aria-hidden="true"></span>Link Discord</button></form></div>`;
+          <a class="btn discord" href="/api/auth/discord/link"><span class="discord-mark" aria-hidden="true"></span>Link Discord</a></div>`;
       }
       const who = esc(BO.me.discordName || 'your Discord account');
       return hasPassword
@@ -299,7 +299,6 @@
     });
 
     root.addEventListener('submit', async event => {
-      if (event.target.id === 'discordLink') return;   // a real form post: the browser goes to Discord and back
       event.preventDefault();
       if (event.target.id === 'passwordForm') {
         try {

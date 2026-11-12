@@ -56,10 +56,11 @@ internal sealed class DiscordController(
     }
 
     /// <summary>
-    /// Sends the browser to Discord to link a Discord account to the signed-in account (a plain form post from Settings).
+    /// Sends the browser to Discord to link a Discord account to the signed-in account. A plain link (the app's header
+    /// can't ride along on a page change): a forged one only links the visitor's own Discord to their own account.
     /// </summary>
     /// <returns>A redirect to Discord.</returns>
-    [HttpPost("link")]
+    [HttpGet("link")]
     [SwaggerOperation(Summary = "DiscordLink", OperationId = "DiscordLink")]
     public IActionResult DiscordLink()
     {

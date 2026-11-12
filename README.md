@@ -263,7 +263,7 @@ All under `/api`, JSON, cookie sign-in. Writes need the `X-BodyOps: 1` header.
 | --- | --- |
 | `GET health` | first run, sign-up open |
 | `POST auth/register` · `auth/login` · `auth/logout` · `auth/password` · `auth/delete-account`, `GET auth/me` | account |
-| `GET auth/discord` · `GET auth/discord/done` · `GET auth/discord/pending` · `POST auth/discord/register` · `auth/discord/link` · `auth/discord/unlink` | Sign in with Discord |
+| `GET auth/discord` · `GET auth/discord/done` · `GET auth/discord/pending` · `GET auth/discord/link` · `POST auth/discord/register` · `auth/discord/unlink` | Sign in with Discord |
 | `GET admin/users`, `POST admin/users/{id}/reset-password`, `DELETE admin/users/{id}` | admin only |
 | `GET plan`, `PUT plan/{weekday}/meals`, `PUT plan/{weekday}/exercises`, `PUT plan/{weekday}/name`, `POST plan/{weekday}/copy` | weekday 1 = Monday |
 | `GET days/week?date=`, `GET days/streak`, `GET days/consistency?weeks=` | weeks (with each day's score), the streak |
